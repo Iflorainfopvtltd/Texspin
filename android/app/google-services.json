@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "873899912878",
+    "project_id": "texspin-22abe",
+    "storage_bucket": "texspin-22abe.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:873899912878:android:ed3740aaaa8bfaeab4873f",
+        "android_client_info": {
+          "package_name": "com.iflorapnfopvtltd.texspin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA8VIYz4J8cojxJBeA_HPnsr1DEh9RsK0U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
