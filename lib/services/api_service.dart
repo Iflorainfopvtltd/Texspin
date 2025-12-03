@@ -17,9 +17,9 @@ class ApiService {
       ),
     );
 
-    _dio.interceptors.add(
-      LogInterceptor(requestBody: true, responseBody: true, error: true),
-    );
+    // _dio.interceptors.add(
+    //   LogInterceptor(requestBody: true, responseBody: true, error: true),
+    // );
   }
 
   // Create Activity
@@ -433,10 +433,7 @@ class ApiService {
   }) async {
     try {
       final token = bearerToken ?? await _getToken();
-      final data = <String, dynamic>{
-        'phase': phase,
-        'activity': activity,
-      };
+      final data = <String, dynamic>{'phase': phase, 'activity': activity};
       if (staff != null) data['staff'] = staff;
       if (numberOfWeeks != null) data['numberOfWeeks'] = numberOfWeeks;
       if (fileUrl != null) data['fileUrl'] = fileUrl;
