@@ -17,9 +17,9 @@ class ApiService {
       ),
     );
 
-    // _dio.interceptors.add(
-    //   LogInterceptor(requestBody: true, responseBody: true, error: true),
-    // );
+    _dio.interceptors.add(
+      LogInterceptor(requestBody: true, responseBody: true, error: true),
+    );
   }
 
   // Create Activity
