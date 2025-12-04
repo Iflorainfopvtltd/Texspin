@@ -189,31 +189,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           label: 'Create Project',
           onTap: widget.onCreateProject,
         ),
-        // NavigationItem(
-        //   icon: Icons.folder_outlined,
-        //   label: 'New Projects',
-        //   onTap: () {},
-        // ),
-        // NavigationItem(
-        //   icon: Icons.check_circle_outline,
-        //   label: 'Audit Tasks',
-        //   onTap: () {},
-        // ),
-        // NavigationItem(
-        //   icon: Icons.assignment_outlined,
-        //   label: 'Department Tasks',
-        //   onTap: () {},
-        // ),
-        // NavigationItem(
-        //   icon: Icons.help_outline,
-        //   label: 'Task Help',
-        //   onTap: () {},
-        // ),
-        // NavigationItem(
-        //   icon: Icons.person_outline,
-        //   label: 'Individual Tasks',
-        //   onTap: () {},
-        // ),
+      
         NavigationItem(
           icon: Icons.notifications_outlined,
           label: 'Notifications',
@@ -225,11 +201,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             );
           },
         ),
-        // NavigationItem(
-        //   icon: Icons.account_circle_outlined,
-        //   label: 'Profile',
-        //   onTap: () {},
-        // ),
+       
       ],
       onLogout: widget.onLogout,
       onNotification: () {
