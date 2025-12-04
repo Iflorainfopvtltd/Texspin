@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../theme/app_theme.dart';
 
 class DashboardLayout extends StatefulWidget {
@@ -96,7 +97,7 @@ class _DashboardLayoutState extends State<DashboardLayout> {
               if (!isMobile) ...[
                 const SizedBox(width: 8),
                 Text(
-                  'Thursday, December 4, 2025',
+                  DateFormat('EEEE, MMMM d, y').format(DateTime.now()),
                   style: TextStyle(
                     fontSize: 14,
                     color: AppTheme.gray600,
