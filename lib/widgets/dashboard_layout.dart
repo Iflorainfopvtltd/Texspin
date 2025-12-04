@@ -306,13 +306,27 @@ class _DashboardLayoutState extends State<DashboardLayout> {
             color: isSelected ? AppTheme.blue600 : AppTheme.gray700,
           ),
         ),
-        onTap: () {
+        onTap: () async {
           if (index >= 0) {
             setState(() {
               _selectedIndex = index;
             });
           }
-          item.onTap();
+          
+          // Execute the callback
+          final result = item.onTap();
+          
+          // If it's a Future, wait for it to complete
+          if (result is Future) {
+            await result;
+          }
+          
+          // Reset to Dashboard (index 0) after action completes, but only for non-Dashboard items
+          if (index > 0 && mounted) {
+            setState(() {
+              _selectedIndex = 0;
+            });
+          }
         },
         dense: true,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16),
@@ -324,7 +338,7 @@ class _DashboardLayoutState extends State<DashboardLayout> {
 class NavigationItem {
   final IconData icon;
   final String label;
-  final VoidCallback onTap;
+  final dynamic Function() onTap;
 
   NavigationItem({
     required this.icon,

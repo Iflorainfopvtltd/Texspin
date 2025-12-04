@@ -120,12 +120,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return filtered;
   }
 
-  void _handleSearch(BuildContext context) {
-    showDialog(
+  Future<void> _handleSearch(BuildContext context) async {
+    await showDialog(
       context: context,
       builder: (dialogContext) => SearchDialog(
-        onEntitySelected: (entityType) {
-          showDialog(
+        onEntitySelected: (entityType) async {
+          await showDialog(
             context: context,
             builder: (detailContext) => BlocProvider.value(
               value: context.read<EntityBloc>(),
