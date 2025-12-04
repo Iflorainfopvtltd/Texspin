@@ -1,3 +1,4 @@
+import 'package:convert2dart/screens/inquiry_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'dart:developer' as developer;
@@ -9,20 +10,19 @@ import '../widgets/custom_progress.dart';
 import '../widgets/dashboard_layout.dart';
 import '../theme/app_theme.dart';
 import '../bloc/manager/manager_bloc.dart';
-import '../bloc/entity/entity_bloc.dart';
 import '../utils/shared_preferences_manager.dart';
-import 'inquiry_screen.dart';
-import 'search_dialog.dart';
-import 'entity_detail_dialog.dart';
+
 
 class ManagerDashboardScreen extends StatefulWidget {
   final Function(Project project) onViewProject;
   final VoidCallback? onLogout;
+    final VoidCallback onInquiry;
   final String? userName;
 
   const ManagerDashboardScreen({
     super.key,
     required this.onViewProject,
+    required this.onInquiry,
     this.onLogout,
     this.userName,
   });
@@ -157,13 +157,7 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
         NavigationItem(
           icon: Icons.notifications_outlined,
           label: 'Notifications',
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => const InquiryScreen(),
-              ),
-            );
-          },
+         onTap: widget.onInquiry,
         ),
         NavigationItem(
           icon: Icons.account_circle_outlined,
@@ -175,7 +169,9 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
       onNotification: () {
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (_) => const InquiryScreen(),
+            builder: (_) => InquiryScreen(
+              onCancel: () => Navigator.of(context).pop(),
+            ),
           ),
         );
       },

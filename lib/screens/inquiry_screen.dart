@@ -2,6 +2,7 @@ import 'package:convert2dart/bloc/inqueiry/bloc/inqueiry_bloc.dart';
 import 'package:convert2dart/bloc/inqueiry/bloc/inqueiry_event.dart';
 import 'package:convert2dart/bloc/inqueiry/bloc/inqueiry_state.dart';
 import 'package:convert2dart/services/api_service.dart';
+import 'package:convert2dart/theme/app_theme.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -10,7 +11,8 @@ import 'package:url_launcher/url_launcher.dart';
 import '../widgets/custom_button.dart';
 
 class InquiryScreen extends StatefulWidget {
-  const InquiryScreen({super.key});
+  final VoidCallback onCancel;
+  InquiryScreen({super.key, required this.onCancel});
 
   @override
   State<InquiryScreen> createState() => _InquiryScreenState();
@@ -37,7 +39,24 @@ class _InquiryScreenState extends State<InquiryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Inquiries')),
+      // appBar: AppBar(title: const Text('Inquiries')),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, size: 20),
+          onPressed: widget.onCancel,
+          color: AppTheme.gray900,
+        ),
+        title: const Text(
+          'Inquiries',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+            color: AppTheme.gray900,
+          ),
+        ),
+      ),
       body: BlocProvider.value(
         value: _bloc,
         child: BlocBuilder<InquiryBloc, InquiryState>(
@@ -232,37 +251,68 @@ class _InquiryScreenState extends State<InquiryScreen> {
                                   itemCount: filteredInquiriesList.length,
                                   itemBuilder: (context, index) {
                                     return Padding(
-                                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                      child: _InquiryCard(data: filteredInquiriesList[index]),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 8.0,
+                                      ),
+                                      child: _InquiryCard(
+                                        data: filteredInquiriesList[index],
+                                      ),
                                     );
                                   },
                                 );
                               }
 
                               // Non-mobile: Row-based grid with Expanded cards
-                              final int numRows = (filteredInquiriesList.length + crossAxisCount - 1) ~/ crossAxisCount;
+                              final int numRows =
+                                  (filteredInquiriesList.length +
+                                      crossAxisCount -
+                                      1) ~/
+                                  crossAxisCount;
 
                               return ListView.builder(
                                 padding: const EdgeInsets.all(16),
                                 itemCount: numRows,
                                 itemBuilder: (context, rowIndex) {
-                                  final int startIndex = rowIndex * crossAxisCount;
-                                  final int endIndex = (startIndex + crossAxisCount).clamp(0, filteredInquiriesList.length);
-                                  final List<Map<String, dynamic>> rowItems = filteredInquiriesList.sublist(startIndex, endIndex);
+                                  final int startIndex =
+                                      rowIndex * crossAxisCount;
+                                  final int endIndex =
+                                      (startIndex + crossAxisCount).clamp(
+                                        0,
+                                        filteredInquiriesList.length,
+                                      );
+                                  final List<Map<String, dynamic>> rowItems =
+                                      filteredInquiriesList.sublist(
+                                        startIndex,
+                                        endIndex,
+                                      );
 
                                   return Padding(
-                                    padding: const EdgeInsets.only(bottom: 16.0),
+                                    padding: const EdgeInsets.only(
+                                      bottom: 16.0,
+                                    ),
                                     child: Row(
-                                      crossAxisAlignment: CrossAxisAlignment.start, // Aligns tops; heights dynamic per card
-                                      children: rowItems.asMap().entries.map((entry) {
+                                      crossAxisAlignment: CrossAxisAlignment
+                                          .start, // Aligns tops; heights dynamic per card
+                                      children: rowItems.asMap().entries.map((
+                                        entry,
+                                      ) {
                                         final int colIndex = entry.key;
-                                        final Map<String, dynamic> data = entry.value;
-                                        return Flexible( // Changed to Flexible to allow shrinking
-                                          child: ConstrainedBox( // Added width cap to prevent stretching
-                                            constraints: const BoxConstraints(maxWidth: 450), // Increased to 450px for better "Created on" display
+                                        final Map<String, dynamic> data =
+                                            entry.value;
+                                        return Flexible(
+                                          // Changed to Flexible to allow shrinking
+                                          child: ConstrainedBox(
+                                            // Added width cap to prevent stretching
+                                            constraints: const BoxConstraints(
+                                              maxWidth: 450,
+                                            ), // Increased to 450px for better "Created on" display
                                             child: Padding(
                                               padding: EdgeInsets.only(
-                                                right: colIndex < crossAxisCount - 1 ? 16.0 : 0.0,
+                                                right:
+                                                    colIndex <
+                                                        crossAxisCount - 1
+                                                    ? 16.0
+                                                    : 0.0,
                                               ),
                                               child: _InquiryCard(data: data),
                                             ),
@@ -395,7 +445,9 @@ class _InquiryCard extends StatelessWidget {
                                 DeleteInquiry(inquiryId),
                               );
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Inquiry deleted')),
+                                const SnackBar(
+                                  content: Text('Inquiry deleted'),
+                                ),
                               );
                             },
                             child: const Text('Delete'),
@@ -419,9 +471,14 @@ class _InquiryCard extends StatelessWidget {
                     flex: 1,
                     child: Row(
                       children: [
-                        const Icon(Icons.person, size: 16, color: Colors.black54),
+                        const Icon(
+                          Icons.person,
+                          size: 16,
+                          color: Colors.black54,
+                        ),
                         const SizedBox(width: 6),
-                        Expanded( // Nested Expanded for text balance
+                        Expanded(
+                          // Nested Expanded for text balance
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -452,7 +509,11 @@ class _InquiryCard extends StatelessWidget {
                     flex: 1,
                     child: Row(
                       children: [
-                        const Icon(Icons.calendar_today, size: 16, color: Colors.black54),
+                        const Icon(
+                          Icons.calendar_today,
+                          size: 16,
+                          color: Colors.black54,
+                        ),
                         const SizedBox(width: 6),
                         Expanded(
                           child: Column(
@@ -491,7 +552,11 @@ class _InquiryCard extends StatelessWidget {
                     flex: 2, // More space for name
                     child: Row(
                       children: [
-                        const Icon(Icons.person, size: 18, color: Colors.black54),
+                        const Icon(
+                          Icons.person,
+                          size: 18,
+                          color: Colors.black54,
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Column(
@@ -525,7 +590,11 @@ class _InquiryCard extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        const Icon(Icons.calendar_today, size: 18, color: Colors.black54),
+                        const Icon(
+                          Icons.calendar_today,
+                          size: 18,
+                          color: Colors.black54,
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Column(
@@ -639,7 +708,9 @@ class _InquiryCard extends StatelessWidget {
                           }
                           if (!launched) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("Could not open file")),
+                              const SnackBar(
+                                content: Text("Could not open file"),
+                              ),
                             );
                           }
                         } catch (e) {
@@ -718,7 +789,9 @@ class _InquiryCard extends StatelessWidget {
                           }
                           if (!launched) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("Could not open file")),
+                              const SnackBar(
+                                content: Text("Could not open file"),
+                              ),
                             );
                           }
                         } catch (e) {

@@ -1,6 +1,7 @@
 import 'package:convert2dart/screens/create_project_screen.dart';
 import 'package:convert2dart/screens/edit_project_screen.dart';
 import 'package:convert2dart/screens/project_view_screen.dart';
+import 'package:convert2dart/screens/inquiry_screen.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -335,7 +336,7 @@ class _AppState extends State<App> {
           child: RegisterScreen(
             onNavigateToLogin: () => setState(() => _currentView = View.login),
             onRegistrationSuccess: (userData) {
-              // Redirect to login screen after successful registration
+             
               setState(() {
                 _currentView = View.login;
               });
@@ -361,6 +362,7 @@ class _AppState extends State<App> {
             onRefresh: () {
               // Projects are fetched automatically in DashboardScreen
             },
+            onInquiry: () => setState(() => _currentView = View.inquiry),
           ),
         );
       case View.staffDashboard:
@@ -397,6 +399,7 @@ class _AppState extends State<App> {
             onViewProject: _handleViewProject,
             onLogout: _handleLogout,
             userName: _user?.name,
+            onInquiry: () => setState(() => _currentView = View.inquiry),
           ),
         );
       case View.create:
@@ -442,6 +445,17 @@ class _AppState extends State<App> {
                 status,
               ),
         );
+      case View.inquiry:
+        return InquiryScreen(
+          onCancel: () => setState(() {
+            // Return to appropriate dashboard based on user role
+            if (_user?.role == 'manager') {
+              _currentView = View.managerDashboard;
+            } else {
+              _currentView = View.dashboard;
+            }
+          }),
+        );
     }
   }
 
@@ -481,4 +495,5 @@ enum View {
   create,
   edit,
   view,
+  inquiry,
 }
