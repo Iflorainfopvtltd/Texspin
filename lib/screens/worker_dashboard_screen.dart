@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_card.dart';
+import '../widgets/dashboard_layout.dart';
 
 class WorkerDashboardScreen extends StatelessWidget {
   final Function(Project project) onViewProject;
@@ -17,19 +18,55 @@ class WorkerDashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Worker Dashboard'),
-        backgroundColor: AppTheme.primary,
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: onLogout,
-          ),
-        ],
-      ),
-      body: Center(
+    return DashboardLayout(
+      title: 'Worker Dashboard',
+      subtitle: 'Worker',
+      userName: userName ?? 'Worker',
+      navigationItems: [
+        NavigationItem(
+          icon: Icons.dashboard,
+          label: 'Dashboard',
+          onTap: () {},
+        ),
+        NavigationItem(
+          icon: Icons.folder_outlined,
+          label: 'New Projects',
+          onTap: () {},
+        ),
+        NavigationItem(
+          icon: Icons.check_circle_outline,
+          label: 'Audit Tasks',
+          onTap: () {},
+        ),
+        NavigationItem(
+          icon: Icons.assignment_outlined,
+          label: 'Department Tasks',
+          onTap: () {},
+        ),
+        NavigationItem(
+          icon: Icons.help_outline,
+          label: 'Task Help',
+          onTap: () {},
+        ),
+        NavigationItem(
+          icon: Icons.person_outline,
+          label: 'Individual Tasks',
+          onTap: () {},
+        ),
+        NavigationItem(
+          icon: Icons.notifications_outlined,
+          label: 'Notifications',
+          onTap: () {},
+        ),
+        NavigationItem(
+          icon: Icons.account_circle_outlined,
+          label: 'Profile',
+          onTap: () {},
+        ),
+      ],
+      onLogout: onLogout,
+      onNotification: () {},
+      child: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: ConstrainedBox(
@@ -56,7 +93,7 @@ class WorkerDashboardScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Worker Dashboard',
+                    'current dashboard data',
                     style: TextStyle(
                       fontSize: 18,
                       color: AppTheme.gray600,

@@ -13,7 +13,6 @@ import '../screens/dashboard_screen.dart';
 import '../screens/manager_dashboard_screen.dart';
 import '../screens/staff_dashboard_screen.dart';
 import '../screens/worker_dashboard_screen.dart';
-import '../data/demo_data.dart';
 import '../bloc/registration/registration_bloc.dart';
 import '../bloc/login/login_bloc.dart';
 import '../bloc/forgot_password/forgot_password_bloc.dart';
@@ -24,8 +23,6 @@ import '../bloc/worker/worker_bloc.dart';
 import '../utils/shared_preferences_manager.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
-import '../widgets/custom_button.dart';
-import '../widgets/custom_card.dart';
 
 class App extends StatefulWidget {
   const App({super.key});

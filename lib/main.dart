@@ -21,22 +21,20 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  
+
   // Set up background message handler
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-  
+
   try {
     // Request notification permission
     NotificationSettings settings = await FirebaseMessaging.instance
-        .requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
+        .requestPermission(alert: true, badge: true, sound: true);
     print("Permission: ${settings.authorizationStatus}");
-    
-    // Handle notification when app is opened from terminated state
-    FirebaseMessaging.instance.getInitialMessage().then((RemoteMessage? message) {
+
+    // Handle notification when app is opened from terminated staten
+    FirebaseMessaging.instance.getInitialMessage().then((
+      RemoteMessage? message,
+    ) {
       if (message != null) {
         print("App opened from terminated state via notification");
         print("Notification data: ${message.data}");
@@ -46,14 +44,14 @@ void main() async {
         });
       }
     });
-    
+
     // Handle notification when app is in background and user taps on it
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       print("App opened from background via notification");
       print("Notification data: ${message.data}");
       _handleNotificationClick(message);
     });
-    
+
     // Handle foreground messages (optional - for showing in-app notifications)
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       print("Received foreground message: ${message.messageId}");
@@ -64,7 +62,7 @@ void main() async {
       }
       // You can show a snackbar or in-app notification here
     });
-    
+
     // Listen for token refresh
     FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
       print("FCM Token Refreshed: $newToken");
@@ -83,9 +81,11 @@ void _handleNotificationClick(RemoteMessage message) {
   final route = data['route'];
   final projectId = data['projectId'];
   final type = data['type'];
-  
-  print("Handling notification click - route: $route, projectId: $projectId, type: $type");
-  
+
+  print(
+    "Handling notification click - route: $route, projectId: $projectId, type: $type",
+  );
+
   // Navigate based on the notification data
   if (route != null && navigatorKey.currentState != null) {
     navigatorKey.currentState!.pushNamed(route);
@@ -99,16 +99,16 @@ void _handleNotificationClick(RemoteMessage message) {
 Future<void> _updateFcmTokenIfLoggedIn(String fcmToken) async {
   try {
     final token = await SharedPreferencesManager.getToken();
-    
+
     // Only update if user is authenticated
     if (token == null || token.isEmpty) {
       print("⏳ Skipping FCM token update - user not authenticated yet");
       return;
     }
-    
+
     final api = ApiService();
     final userRole = await SharedPreferencesManager.getUserRole();
-    
+
     // Send FCM token based on user role
     if (userRole == 'staff') {
       await api.updateStaffFcmToken(fcmToken);

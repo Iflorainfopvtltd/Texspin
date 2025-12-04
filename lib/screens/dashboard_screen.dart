@@ -6,6 +6,7 @@ import '../widgets/custom_button.dart';
 import '../widgets/custom_card.dart';
 import '../widgets/custom_badge.dart';
 import '../widgets/custom_progress.dart';
+import '../widgets/dashboard_layout.dart';
 import '../theme/app_theme.dart';
 import '../bloc/entity/entity_bloc.dart';
 import '../services/api_service.dart';
@@ -117,6 +118,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return filtered;
   }
 
+
+
   void _handleSearch(BuildContext context) {
     showDialog(
       context: context,
@@ -164,186 +167,83 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
     final isTablet = screenWidth >= 600 && screenWidth < 1024;
-    final isDesktop = screenWidth >= 1024;
     final filteredProjects = _filteredProjects;
 
-    return Scaffold(
-      backgroundColor: AppTheme.gray50,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(isMobile ? 16 : 24),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxWidth: isDesktop ? 1280 : (isTablet ? 900 : double.infinity),
+    return DashboardLayout(
+      title: 'Admin Dashboard',
+      subtitle: 'Administrator',
+      userName: widget.userName ?? 'Admin',
+      navigationItems: [
+        NavigationItem(
+          icon: Icons.dashboard,
+          label: 'Dashboard',
+          onTap: () {},
+        ),
+        NavigationItem(
+          icon: Icons.search,
+          label: 'Search',
+          onTap: () => _handleSearch(context),
+        ),
+        NavigationItem(
+          icon: Icons.add_circle_outline,
+          label: 'Create Project',
+          onTap: widget.onCreateProject,
+        ),
+        // NavigationItem(
+        //   icon: Icons.folder_outlined,
+        //   label: 'New Projects',
+        //   onTap: () {},
+        // ),
+        // NavigationItem(
+        //   icon: Icons.check_circle_outline,
+        //   label: 'Audit Tasks',
+        //   onTap: () {},
+        // ),
+        // NavigationItem(
+        //   icon: Icons.assignment_outlined,
+        //   label: 'Department Tasks',
+        //   onTap: () {},
+        // ),
+        // NavigationItem(
+        //   icon: Icons.help_outline,
+        //   label: 'Task Help',
+        //   onTap: () {},
+        // ),
+        // NavigationItem(
+        //   icon: Icons.person_outline,
+        //   label: 'Individual Tasks',
+        //   onTap: () {},
+        // ),
+        NavigationItem(
+          icon: Icons.notifications_outlined,
+          label: 'Notifications',
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const InquiryScreen(),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // Header
-                  isMobile
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'APQP Project Dashboard',
-                                  style: TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.w500,
-                                    color: AppTheme.gray900,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                const Text(
-                                  'Manage your Advanced Product Quality Planning projects',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: AppTheme.gray600,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                SizedBox(
-                                  // width: 56,
-                                  child: CustomButton(
-                                    text: '',
-                                    onPressed: () => _handleSearch(context),
-                                    variant: ButtonVariant.outline,
-                                    size: ButtonSize.lg,
-                                    icon: const Icon(Icons.search, size: 20),
-                                  ),
-                                ),
-                                // const SizedBox(width: 8),
-                                SizedBox(
-                                  // width: 56,
-                                  child: CustomButton(
-                                    text: '',
-                                    onPressed: widget.onCreateProject,
-                                    size: ButtonSize.lg,
-                                    icon: const Icon(
-                                      Icons.add,
-                                      size: 20,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                                // const SizedBox(width: 8),
-                                SizedBox(
-                                  // width: 56,
-                                  child: CustomButton(
-                                    text: '',
-                                    onPressed: () {
-                                      Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (_) => const InquiryScreen(),
-                                        ),
-                                      );
-                                    },
-                                    size: ButtonSize.lg,
-                                    variant: ButtonVariant.outline,
-                                    icon: const Icon(
-                                      Icons.notifications,
-                                      size: 20,
-                                    ),
-                                  ),
-                                ),
-                                if (widget.onLogout != null) ...[
-                                  // const SizedBox(width: 8),
-                                  SizedBox(
-                                    // width: 56,
-                                    child: CustomButton(
-                                      text: '',
-                                      onPressed: widget.onLogout,
-                                      variant: ButtonVariant.outline,
-                                      size: ButtonSize.lg,
-                                      icon: const Icon(Icons.logout, size: 20),
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ],
-                        )
-                      : Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'APQP Project Dashboard',
-                                    style: TextStyle(
-                                      fontSize: isTablet ? 26 : 28,
-                                      fontWeight: FontWeight.w500,
-                                      color: AppTheme.gray900,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  const Text(
-                                    'Manage your Advanced Product Quality Planning projects',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: AppTheme.gray600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            CustomButton(
-                              text: 'Search',
-                              onPressed: () => _handleSearch(context),
-                              variant: ButtonVariant.outline,
-                              size: ButtonSize.lg,
-                              icon: const Icon(Icons.search, size: 20),
-                            ),
-                            const SizedBox(width: 8),
-                            CustomButton(
-                              text: 'Create New Project',
-                              onPressed: widget.onCreateProject,
-                              size: ButtonSize.lg,
-                              icon: const Icon(
-                                Icons.add,
-                                size: 20,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            CustomButton(
-                              text: '',
-                              onPressed: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) => const InquiryScreen(),
-                                  ),
-                                );
-                              },
-                              size: ButtonSize.lg,
-                              variant: ButtonVariant.outline,
-                              icon: const Icon(Icons.notifications, size: 20),
-                            ),
-                            if (widget.onLogout != null) ...[
-                              const SizedBox(width: 8),
-                              CustomButton(
-                                text: 'Logout',
-                                onPressed: widget.onLogout,
-                                variant: ButtonVariant.outline,
-                                size: ButtonSize.lg,
-                                icon: const Icon(Icons.logout, size: 20),
-                              ),
-                            ],
-                          ],
-                        ),
-                  SizedBox(height: isMobile ? 24 : 32),
+            );
+          },
+        ),
+        // NavigationItem(
+        //   icon: Icons.account_circle_outlined,
+        //   label: 'Profile',
+        //   onTap: () {},
+        // ),
+      ],
+      onLogout: widget.onLogout,
+      onNotification: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => const InquiryScreen(),
+          ),
+        );
+      },
+      child: SingleChildScrollView(
+        padding: EdgeInsets.all(isMobile ? 16 : 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
 
                   // Stats Overview
                   isMobile
@@ -1415,11 +1315,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         },
                       ),
                     ),
-                ],
-              ),
+              ],
             ),
-          ),
-        ),
       ),
     );
   }

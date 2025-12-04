@@ -1119,14 +1119,15 @@ class ApiService {
       }
 
       String endpoint;
-      if (userRole == 'staff') {
+
+      if (userRole == 'staff' ||
+          userRole == 'manager' ||
+          userRole == 'worker') {
         endpoint = '/texspin/api/staff/fcm-token';
-      } else if (userRole == 'manager') {
-        endpoint = '/texspin/api/staff/fcm-token';
-      } else if (userRole == 'worker') {
-        endpoint = '/texspin/api/staff/fcm-token';
-      } else {
+      } else if (userRole == 'admin') {
         endpoint = '/texspin/api/fcm-token';
+      } else {
+        throw Exception('Invalid user role');
       }
 
       await _dio.post(
