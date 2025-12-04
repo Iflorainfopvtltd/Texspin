@@ -35,35 +35,39 @@ class _DashboardLayoutState extends State<DashboardLayout> {
 
     return Scaffold(
       backgroundColor: AppTheme.gray50,
-      body: Row(
-        children: [
-          // Side Navigation (Desktop)
-          if (!isMobile)
-            Container(
-              width: 250,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border(
-                  right: BorderSide(color: AppTheme.gray200, width: 1),
+      body: SafeArea(
+        child: Row(
+          children: [
+            // Side Navigation (Desktop)
+            if (!isMobile)
+              Container(
+                width: 250,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border(
+                    right: BorderSide(color: AppTheme.gray200, width: 1),
+                  ),
                 ),
+                child: _buildSideNav(),
               ),
-              child: _buildSideNav(),
+            // Main Content
+            Expanded(
+              child: Column(
+                children: [
+                  _buildAppBar(isMobile),
+                  Expanded(child: widget.child),
+                ],
+              ),
             ),
-          // Main Content
-          Expanded(
-            child: Column(
-              children: [
-                _buildAppBar(isMobile),
-                Expanded(child: widget.child),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
       // Mobile Drawer
       drawer: isMobile
           ? Drawer(
-              child: _buildSideNav(),
+              child: SafeArea(
+                child: _buildSideNav(),
+              ),
             )
           : null,
     );
@@ -78,50 +82,125 @@ class _DashboardLayoutState extends State<DashboardLayout> {
           bottom: BorderSide(color: AppTheme.gray200, width: 1),
         ),
       ),
-      child: Row(
-        children: [
-          if (isMobile)
-            IconButton(
-              icon: const Icon(Icons.menu),
-              onPressed: () {
-                Scaffold.of(context).openDrawer();
-              },
-            ),
-          const SizedBox(width: 8),
-          Text(
-            'Thursday, December 4, 2025',
-            style: TextStyle(
-              fontSize: 14,
-              color: AppTheme.gray600,
-            ),
-          ),
-          const Spacer(),
-          if (widget.onNotification != null)
-            Stack(
-              children: [
+      child: Builder(
+        builder: (BuildContext context) {
+          return Row(
+            children: [
+              if (isMobile)
                 IconButton(
-                  icon: const Icon(Icons.notifications_outlined),
-                  onPressed: widget.onNotification,
+                  icon: const Icon(Icons.menu),
+                  onPressed: () {
+                    Scaffold.of(context).openDrawer();
+                  },
                 ),
-                Positioned(
-                  right: 8,
-                  top: 8,
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: AppTheme.red500,
-                      shape: BoxShape.circle,
-                    ),
+              if (!isMobile) ...[
+                const SizedBox(width: 8),
+                Text(
+                  'Thursday, December 4, 2025',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppTheme.gray600,
                   ),
                 ),
               ],
-            ),
-          const SizedBox(width: 16),
-          Row(
+              const Spacer(),
+              if (widget.onNotification != null)
+                Stack(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.notifications_outlined),
+                      onPressed: widget.onNotification,
+                    ),
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: AppTheme.red500,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              const SizedBox(width: 16),
+              isMobile
+                  ? GestureDetector(
+                      onTap: () {
+                        _showUserNameDialog(context);
+                      },
+                      child: CircleAvatar(
+                        radius: 18,
+                        backgroundColor: AppTheme.blue100,
+                        child: Text(
+                          widget.userName.isNotEmpty
+                              ? widget.userName[0].toUpperCase()
+                              : 'U',
+                          style: const TextStyle(
+                            color: AppTheme.blue600,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    )
+                  : Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 18,
+                          backgroundColor: AppTheme.blue100,
+                          child: Text(
+                            widget.userName.isNotEmpty
+                                ? widget.userName[0].toUpperCase()
+                                : 'U',
+                            style: const TextStyle(
+                              color: AppTheme.blue600,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              widget.userName,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: AppTheme.gray900,
+                              ),
+                            ),
+                            Text(
+                              widget.subtitle,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppTheme.gray600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  void _showUserNameDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               CircleAvatar(
-                radius: 18,
+                radius: 40,
                 backgroundColor: AppTheme.blue100,
                 child: Text(
                   widget.userName.isNotEmpty
@@ -130,35 +209,37 @@ class _DashboardLayoutState extends State<DashboardLayout> {
                   style: const TextStyle(
                     color: AppTheme.blue600,
                     fontWeight: FontWeight.w600,
+                    fontSize: 32,
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    widget.userName,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: AppTheme.gray900,
-                    ),
-                  ),
-                  Text(
-                    widget.subtitle,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppTheme.gray600,
-                    ),
-                  ),
-                ],
+              const SizedBox(height: 16),
+              Text(
+                widget.userName,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                  color: AppTheme.gray900,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                widget.subtitle,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppTheme.gray600,
+                ),
               ),
             ],
           ),
-        ],
-      ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
     );
   }
 
