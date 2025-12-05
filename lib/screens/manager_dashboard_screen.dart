@@ -11,12 +11,12 @@ import '../widgets/dashboard_layout.dart';
 import '../theme/app_theme.dart';
 import '../bloc/manager/manager_bloc.dart';
 import '../utils/shared_preferences_manager.dart';
-
+import 'profile_screen.dart';
 
 class ManagerDashboardScreen extends StatefulWidget {
   final Function(Project project) onViewProject;
   final VoidCallback? onLogout;
-    final VoidCallback onInquiry;
+  final VoidCallback onInquiry;
   final String? userName;
 
   const ManagerDashboardScreen({
@@ -35,7 +35,8 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
   bool _isTableView = true;
   String _filterText = '';
   String? _staffId;
-  String? _statusFilter; // null = all, 'ongoing' = active, 'completed' = completed
+  String?
+  _statusFilter; // null = all, 'ongoing' = active, 'completed' = completed
 
   @override
   void initState() {
@@ -62,14 +63,16 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
 
   List<Project> _filterProjects(List<Project> projects) {
     var filtered = projects;
-    
+
     // Apply status filter
     if (_statusFilter == 'ongoing') {
-      filtered = filtered.where((p) => p.progress > 0 && p.progress < 100).toList();
+      filtered = filtered
+          .where((p) => p.progress > 0 && p.progress < 100)
+          .toList();
     } else if (_statusFilter == 'completed') {
       filtered = filtered.where((p) => p.progress == 100).toList();
     }
-    
+
     // Apply text filter
     if (_filterText.isNotEmpty) {
       filtered = filtered
@@ -84,11 +87,9 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
           )
           .toList();
     }
-    
+
     return filtered;
   }
-
-
 
   Color _getProgressColor(int progress) {
     if (progress == 0) return AppTheme.red500;
@@ -124,11 +125,7 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
       subtitle: 'Manager',
       userName: widget.userName ?? 'Manager',
       navigationItems: [
-        NavigationItem(
-          icon: Icons.dashboard,
-          label: 'Dashboard',
-          onTap: () {},
-        ),
+        NavigationItem(icon: Icons.dashboard, label: 'Dashboard', onTap: () {}),
         NavigationItem(
           icon: Icons.folder_outlined,
           label: 'New Projects',
@@ -157,21 +154,26 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
         NavigationItem(
           icon: Icons.notifications_outlined,
           label: 'Notifications',
-         onTap: widget.onInquiry,
+          onTap: widget.onInquiry,
         ),
         NavigationItem(
           icon: Icons.account_circle_outlined,
           label: 'Profile',
-          onTap: () {},
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => ProfileScreen(onLogout: widget.onLogout),
+              ),
+            );
+          },
         ),
       ],
       onLogout: widget.onLogout,
       onNotification: () {
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (_) => InquiryScreen(
-              onCancel: () => Navigator.of(context).pop(),
-            ),
+            builder: (_) =>
+                InquiryScreen(onCancel: () => Navigator.of(context).pop()),
           ),
         );
       },
@@ -189,62 +191,62 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                    // Header
-                    _buildHeader(isMobile, isTablet),
-                    SizedBox(height: isMobile ? 24 : 32),
+                // Header
+                // _buildHeader(isMobile, isTablet),
+                SizedBox(height: isMobile ? 24 : 32),
 
-                    // Stats Overview
-                    _buildStatsOverview(projects, isMobile, isTablet),
-                    SizedBox(height: isMobile ? 24 : 32),
+                // Stats Overview
+                _buildStatsOverview(projects, isMobile, isTablet),
+                SizedBox(height: isMobile ? 24 : 32),
 
-                    // Filter and View Toggle
-                    _buildFilterSection(isMobile),
-                    SizedBox(height: isMobile ? 24 : 32),
+                // Filter and View Toggle
+                _buildFilterSection(isMobile),
+                SizedBox(height: isMobile ? 24 : 32),
 
-                    // Projects List or Table
-                    if (isLoading)
-                      const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(48.0),
-                          child: CircularProgressIndicator(),
-                        ),
-                      )
-                    else if (error != null && projects.isEmpty)
-                      _buildErrorCard(error, isMobile)
-                    else if (filteredProjects.isEmpty)
-                      _buildEmptyCard(isMobile)
-                    else if (!_isTableView)
-                      ..._buildListView(filteredProjects, isMobile, isTablet)
-                    else
-                      _buildTableView(filteredProjects, isMobile, isTablet),
-                  ],
-                );
-              },
-            ),
+                // Projects List or Table
+                if (isLoading)
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(48.0),
+                      child: CircularProgressIndicator(),
+                    ),
+                  )
+                else if (error != null && projects.isEmpty)
+                  _buildErrorCard(error, isMobile)
+                else if (filteredProjects.isEmpty)
+                  _buildEmptyCard(isMobile)
+                else if (!_isTableView)
+                  ..._buildListView(filteredProjects, isMobile, isTablet)
+                else
+                  _buildTableView(filteredProjects, isMobile, isTablet),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
 
-  Widget _buildHeader(bool isMobile, bool isTablet) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Manager Dashboard',
-          style: TextStyle(
-            fontSize: isMobile ? 24 : (isTablet ? 26 : 28),
-            fontWeight: FontWeight.w500,
-            color: AppTheme.gray900,
-          ),
-        ),
-        const SizedBox(height: 4),
-        const Text(
-          'View and manage your team projects',
-          style: TextStyle(fontSize: 14, color: AppTheme.gray600),
-        ),
-      ],
-    );
-  }
+  // Widget _buildHeader(bool isMobile, bool isTablet) {
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       Text(
+  //         'Manager Dashboard',
+  //         style: TextStyle(
+  //           fontSize: isMobile ? 24 : (isTablet ? 26 : 28),
+  //           fontWeight: FontWeight.w500,
+  //           color: AppTheme.gray900,
+  //         ),
+  //       ),
+  //       const SizedBox(height: 4),
+  //       const Text(
+  //         'View and manage your team projects',
+  //         style: TextStyle(fontSize: 14, color: AppTheme.gray600),
+  //       ),
+  //     ],
+  //   );
+  // }
 
   Widget _buildStatsOverview(
     List<Project> projects,
@@ -367,7 +369,10 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
                 children: [
                   Text(
                     label,
-                    style: const TextStyle(fontSize: 14, color: AppTheme.gray600),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: AppTheme.gray600,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(

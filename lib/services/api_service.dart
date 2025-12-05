@@ -259,6 +259,23 @@ class ApiService {
     }
   }
 
+  // Get Staff by ID
+  Future<Map<String, dynamic>> getStaffById({
+    required String staffId,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      final response = await _dio.get(
+        '/texspin/api/staff/$staffId',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
   // Change Staff Password
   Future<Map<String, dynamic>> changeStaffPassword({
     required String staffId,
@@ -1203,6 +1220,91 @@ class ApiService {
       final response = await _dio.patch(
         '/texspin/api/apqpproject/$projectId/activity',
         data: data,
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // Reassign Task Staff (PUT for task reassignment)
+  Future<Map<String, dynamic>> reassignTaskStaff({
+    required String taskId,
+    required String assignedStaffId,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      final response = await _dio.put(
+        '/texspin/api/task/$taskId/reassign',
+        data: {'assignedStaffId': assignedStaffId},
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // Assign Activity Staff (PATCH for new assignment)
+  Future<Map<String, dynamic>> assignActivityStaff({
+    required String projectId,
+    required String phase,
+    required String activity,
+    required String staff,
+    required String startDate,
+    required String endDate,
+    required int startWeekNumber,
+    required int endWeekNumber,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      final response = await _dio.patch(
+        '/texspin/api/apqpproject/$projectId/activity',
+        data: {
+          'phase': phase,
+          'activity': activity,
+          'staff': staff,
+          'startDate': startDate,
+          'endDate': endDate,
+          'startWeekNumber': startWeekNumber,
+          'endWeekNumber': endWeekNumber,
+        },
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // Reassign Activity Staff (PUT for reassignment)
+  Future<Map<String, dynamic>> reassignActivityStaff({
+    required String projectId,
+    required String phaseId,
+    required String activityId,
+    required String staffId,
+    required String startDate,
+    required String endDate,
+    required int startWeekNumber,
+    required int endWeekNumber,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      final response = await _dio.put(
+        '/texspin/api/apqpproject/$projectId/reassign-activity',
+        data: {
+          'phaseId': phaseId,
+          'activityId': activityId,
+          'staffId': staffId,
+          'startDate': startDate,
+          'endDate': endDate,
+          'startWeekNumber': startWeekNumber,
+          'endWeekNumber': endWeekNumber,
+        },
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       return response.data;

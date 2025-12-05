@@ -410,3 +410,71 @@ class WorkCategory {
     };
   }
 }
+
+class Staff {
+  final String id;
+  final String staffId;
+  final String fullName;
+  final String email;
+  final String? mobile;
+  final String? designation;
+  final String? department;
+  final String? zone;
+  final String? workCategory;
+  final String role;
+  final String status;
+  final String? createdAt;
+  final String? updatedAt;
+
+  Staff({
+    required this.id,
+    required this.staffId,
+    required this.fullName,
+    required this.email,
+    this.mobile,
+    this.designation,
+    this.department,
+    this.zone,
+    this.workCategory,
+    required this.role,
+    required this.status,
+    this.createdAt,
+    this.updatedAt,
+  });
+
+  factory Staff.fromJson(Map<String, dynamic> json) {
+    return Staff(
+      id: json['_id'] ?? json['id'] ?? '',
+      staffId: json['staffId'] ?? '',
+      fullName: json['fullName'] ?? '',
+      email: json['email'] ?? '',
+      mobile: json['mobile'],
+      designation: json['designation'],
+      department: json['department'],
+      zone: json['zone'],
+      workCategory: json['workCategory'],
+      role: json['role'] ?? 'staff',
+      status: json['status'] ?? 'active',
+      createdAt: json['createdAt'],
+      updatedAt: json['updatedAt'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'staffId': staffId,
+      'fullName': fullName,
+      'email': email,
+      'mobile': mobile,
+      'designation': designation,
+      'department': department,
+      'zone': zone,
+      'workCategory': workCategory,
+      'role': role,
+      'status': status,
+      'createdAt': createdAt,
+      'updatedAt': updatedAt,
+    };
+  }
+}
