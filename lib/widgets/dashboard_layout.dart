@@ -128,10 +128,11 @@ class _DashboardLayoutState extends State<DashboardLayout> {
                 ),
               const SizedBox(width: 16),
               isMobile
-                  ? GestureDetector(
-                      onTap: () {
-                        _showUserNameDialog(context);
-                      },
+                  ? PopupMenuButton(
+                      offset: const Offset(0, 50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       child: CircleAvatar(
                         radius: 18,
                         backgroundColor: AppTheme.blue100,
@@ -145,6 +146,82 @@ class _DashboardLayoutState extends State<DashboardLayout> {
                           ),
                         ),
                       ),
+                      itemBuilder: (BuildContext context) => [
+                        PopupMenuItem(
+                          enabled: false,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 24,
+                                    backgroundColor: AppTheme.blue100,
+                                    child: Text(
+                                      widget.userName.isNotEmpty
+                                          ? widget.userName[0].toUpperCase()
+                                          : 'U',
+                                      style: const TextStyle(
+                                        color: AppTheme.blue600,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 20,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          widget.userName,
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w500,
+                                            color: AppTheme.gray900,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          widget.subtitle,
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            color: AppTheme.gray600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              const Divider(height: 1),
+                            ],
+                          ),
+                        ),
+                        if (widget.onLogout != null)
+                          PopupMenuItem(
+                            onTap: widget.onLogout,
+                            child: const Row(
+                              children: [
+                                Icon(
+                                  Icons.logout,
+                                  size: 20,
+                                  color: AppTheme.gray600,
+                                ),
+                                SizedBox(width: 12),
+                                Text(
+                                  'Logout',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: AppTheme.gray900,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
                     )
                   : Row(
                       children: [
@@ -189,58 +266,6 @@ class _DashboardLayoutState extends State<DashboardLayout> {
           );
         },
       ),
-    );
-  }
-
-  void _showUserNameDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircleAvatar(
-                radius: 40,
-                backgroundColor: AppTheme.blue100,
-                child: Text(
-                  widget.userName.isNotEmpty
-                      ? widget.userName[0].toUpperCase()
-                      : 'U',
-                  style: const TextStyle(
-                    color: AppTheme.blue600,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 32,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                widget.userName,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                  color: AppTheme.gray900,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                widget.subtitle,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: AppTheme.gray600,
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Close'),
-            ),
-          ],
-        );
-      },
     );
   }
 
