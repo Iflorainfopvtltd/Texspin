@@ -3,7 +3,7 @@ import '../models/models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_card.dart';
 import '../widgets/dashboard_layout.dart';
-import 'profile_screen.dart';
+import '../widgets/profile_dialog.dart';
 
 class WorkerDashboardScreen extends StatelessWidget {
   final Function(Project project) onViewProject;
@@ -63,10 +63,9 @@ class WorkerDashboardScreen extends StatelessWidget {
           icon: Icons.account_circle_outlined,
           label: 'Profile',
           onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => ProfileScreen(onLogout: onLogout),
-              ),
+            showDialog(
+              context: context,
+              builder: (_) => ProfileDialog(onLogout: onLogout),
             );
           },
         ),

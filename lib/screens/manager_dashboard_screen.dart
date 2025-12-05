@@ -11,7 +11,7 @@ import '../widgets/dashboard_layout.dart';
 import '../theme/app_theme.dart';
 import '../bloc/manager/manager_bloc.dart';
 import '../utils/shared_preferences_manager.dart';
-import 'profile_screen.dart';
+import '../widgets/profile_dialog.dart';
 
 class ManagerDashboardScreen extends StatefulWidget {
   final Function(Project project) onViewProject;
@@ -160,10 +160,9 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
           icon: Icons.account_circle_outlined,
           label: 'Profile',
           onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => ProfileScreen(onLogout: widget.onLogout),
-              ),
+            showDialog(
+              context: context,
+              builder: (_) => ProfileDialog(onLogout: widget.onLogout),
             );
           },
         ),
