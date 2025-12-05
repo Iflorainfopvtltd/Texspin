@@ -278,6 +278,7 @@ class _GanttChartWidgetState extends State<GanttChartWidget> {
         builder: (dialogContext) => Dialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: Container(
+            constraints: const BoxConstraints(maxWidth: 500),
             padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,

@@ -478,3 +478,56 @@ class Staff {
     };
   }
 }
+
+
+class Task {
+  final String id;
+  final String name;
+  final String description;
+  final String deadline;
+  final Map<String, dynamic> assignedStaff;
+  final Map<String, dynamic> createdBy;
+  final String status;
+  final String createdAt;
+  final String updatedAt;
+
+  Task({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.deadline,
+    required this.assignedStaff,
+    required this.createdBy,
+    required this.status,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory Task.fromJson(Map<String, dynamic> json) {
+    return Task(
+      id: json['_id'] ?? json['id'] ?? '',
+      name: json['name'] ?? '',
+      description: json['description'] ?? '',
+      deadline: json['deadline'] ?? '',
+      assignedStaff: json['assignedStaff'] ?? {},
+      createdBy: json['createdBy'] ?? {},
+      status: json['status'] ?? 'pending',
+      createdAt: json['createdAt'] ?? '',
+      updatedAt: json['updatedAt'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'description': description,
+      'deadline': deadline,
+      'assignedStaff': assignedStaff,
+      'createdBy': createdBy,
+      'status': status,
+      'createdAt': createdAt,
+      'updatedAt': updatedAt,
+    };
+  }
+}

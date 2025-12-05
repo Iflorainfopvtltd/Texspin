@@ -12,6 +12,8 @@ import '../theme/app_theme.dart';
 import '../bloc/manager/manager_bloc.dart';
 import '../utils/shared_preferences_manager.dart';
 import '../widgets/profile_dialog.dart';
+import '../widgets/task_management_dialog.dart';
+import '../screens/task_management_screen.dart';
 
 class ManagerDashboardScreen extends StatefulWidget {
   final Function(Project project) onViewProject;
@@ -149,7 +151,23 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
         NavigationItem(
           icon: Icons.person_outline,
           label: 'Individual Tasks',
-          onTap: () {},
+          onTap: () {
+            final screenWidth = MediaQuery.of(context).size.width;
+            if (screenWidth < 600) {
+              // Mobile: Open full screen
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const TaskManagementScreen(),
+                ),
+              );
+            } else {
+              // Web/Tablet: Open dialog
+              showDialog(
+                context: context,
+                builder: (_) => const TaskManagementDialog(),
+              );
+            }
+          },
         ),
         NavigationItem(
           icon: Icons.notifications_outlined,

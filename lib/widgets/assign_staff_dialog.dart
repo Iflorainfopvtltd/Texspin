@@ -3,7 +3,6 @@ import '../theme/app_theme.dart';
 import '../widgets/custom_button.dart';
 import '../services/api_service.dart';
 import 'dart:developer' as developer;
-import 'package:flutter/foundation.dart';
 
 class AssignStaffDialog extends StatefulWidget {
   final String projectId;
@@ -865,7 +864,6 @@ class _AssignStaffDialogState extends State<AssignStaffDialog> {
         vertical: 24,
       ),
       child: Container(
-        width: dialogWidth,
         constraints: BoxConstraints(  
           maxHeight: MediaQuery.of(context).size.height * 0.85,
           maxWidth: dialogWidth,

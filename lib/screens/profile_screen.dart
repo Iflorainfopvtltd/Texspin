@@ -256,7 +256,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   _buildInfoRow(
                                     Icons.info,
                                     'Status',
-                                    _staff!.status.toUpperCase(),
+                                    _staff!.status,
                                   ),
                                 ],
                               ),

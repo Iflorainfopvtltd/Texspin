@@ -1312,4 +1312,85 @@ class ApiService {
       throw _handleError(e);
     }
   }
+
+  // Task APIs
+  Future<Map<String, dynamic>> getTasks({String? bearerToken}) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      final response = await _dio.get(
+        '/texspin/api/task',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> createTask({
+    required String name,
+    required String description,
+    required String deadline,
+    required String assignedStaffId,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      final response = await _dio.post(
+        '/texspin/api/task',
+        data: {
+          'name': name,
+          'description': description,
+          'deadline': deadline,
+          'assignedStaffId': assignedStaffId,
+        },
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> updateTask({
+    required String taskId,
+    required String name,
+    required String description,
+    required String deadline,
+    required String assignedStaffId,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      final response = await _dio.put(
+        '/texspin/api/task/$taskId',
+        data: {
+          'name': name,
+          'description': description,
+          'deadline': deadline,
+          'assignedStaffId': assignedStaffId,
+        },
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> deleteTask({
+    required String taskId,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      final response = await _dio.delete(
+        '/texspin/api/task/$taskId',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
 }
