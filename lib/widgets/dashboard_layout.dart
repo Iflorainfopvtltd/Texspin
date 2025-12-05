@@ -312,51 +312,63 @@ class _DashboardLayoutState extends State<DashboardLayout> {
   }
 
   Widget _buildNavItem(NavigationItem item, bool isSelected, int index) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-      decoration: BoxDecoration(
-        color: isSelected ? AppTheme.blue50 : Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: ListTile(
-        leading: Icon(
-          item.icon,
-          color: isSelected ? AppTheme.blue600 : AppTheme.gray600,
-          size: 20,
-        ),
-        title: Text(
-          item.label,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: isSelected ? FontWeight.w500 : FontWeight.normal,
-            color: isSelected ? AppTheme.blue600 : AppTheme.gray700,
+    return Builder(
+      builder: (BuildContext context) {
+        final screenWidth = MediaQuery.of(context).size.width;
+        final isMobile = screenWidth < 900;
+        
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+          decoration: BoxDecoration(
+            color: isSelected ? AppTheme.blue50 : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
           ),
-        ),
-        onTap: () async {
-          if (index >= 0) {
-            setState(() {
-              _selectedIndex = index;
-            });
-          }
-          
-          // Execute the callback
-          final result = item.onTap();
-          
-          // If it's a Future, wait for it to complete
-          if (result is Future) {
-            await result;
-          }
-          
-          // Reset to Dashboard (index 0) after action completes, but only for non-Dashboard items
-          if (index > 0 && mounted) {
-            setState(() {
-              _selectedIndex = 0;
-            });
-          }
-        },
-        dense: true,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-      ),
+          child: ListTile(
+            leading: Icon(
+              item.icon,
+              color: isSelected ? AppTheme.blue600 : AppTheme.gray600,
+              size: 20,
+            ),
+            title: Text(
+              item.label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: isSelected ? FontWeight.w500 : FontWeight.normal,
+                color: isSelected ? AppTheme.blue600 : AppTheme.gray700,
+              ),
+            ),
+            onTap: () async {
+              if (index >= 0) {
+                setState(() {
+                  _selectedIndex = index;
+                });
+              }
+              
+              // Close drawer on mobile if it's open
+              if (isMobile && Scaffold.of(context).isDrawerOpen) {
+                Navigator.of(context).pop();
+              }
+              
+              // Execute the callback
+              final result = item.onTap();
+              
+              // If it's a Future, wait for it to complete
+              if (result is Future) {
+                await result;
+              }
+              
+              // Reset to Dashboard (index 0) after action completes, but only for non-Dashboard items
+              if (index > 0 && mounted) {
+                setState(() {
+                  _selectedIndex = 0;
+                });
+              }
+            },
+            dense: true,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+          ),
+        );
+      },
     );
   }
 }
