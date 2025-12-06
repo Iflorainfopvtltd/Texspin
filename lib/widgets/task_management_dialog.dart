@@ -163,66 +163,69 @@ class _TaskManagementDialogState extends State<TaskManagementDialog> {
             ),
           ],
         ),
-        child: Column(
+        child: Stack(
           children: [
-            // Header
-            Container(
-              padding: EdgeInsets.all(isMobile ? 16 : 24),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [AppTheme.primary, AppTheme.primary.withOpacity(0.8)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(isMobile ? 16 : 20),
-                  topRight: Radius.circular(isMobile ? 16 : 20),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.task_alt,
-                    color: Colors.white,
-                    size: isMobile ? 24 : 28,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Individual Tasks',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: isMobile ? 20 : 24,
-                        fontWeight: FontWeight.bold,
-                      ),
+            Column(
+              children: [
+                // Header
+                Container(
+                  padding: EdgeInsets.all(isMobile ? 16 : 24),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppTheme.primary,
+                        AppTheme.primary.withOpacity(0.8),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(isMobile ? 16 : 20),
+                      topRight: Radius.circular(isMobile ? 16 : 20),
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.add, color: Colors.white),
-                    onPressed: () => _showAddEditTaskDialog(),
-                    tooltip: 'Add Task',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.task_alt,
+                        color: Colors.white,
+                        size: isMobile ? 24 : 28,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Individual Tasks',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: isMobile ? 20 : 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ],
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              ),
-            ),
+                ),
 
-            // Content
-            Expanded(
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _error != null
+                // Content
+                Expanded(
+                  child: _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : _error != null
                       ? Center(
                           child: Padding(
                             padding: const EdgeInsets.all(24),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.error_outline,
-                                    size: 64, color: AppTheme.red500),
+                                Icon(
+                                  Icons.error_outline,
+                                  size: 64,
+                                  color: AppTheme.red500,
+                                ),
                                 const SizedBox(height: 16),
                                 Text(
                                   'Error loading tasks',
@@ -298,8 +301,10 @@ class _TaskManagementDialogState extends State<TaskManagementDialog> {
                                               text: 'Add First Task',
                                               onPressed: () =>
                                                   _showAddEditTaskDialog(),
-                                              icon: const Icon(Icons.add,
-                                                  size: 20),
+                                              icon: const Icon(
+                                                Icons.add,
+                                                size: 20,
+                                              ),
                                             ),
                                           ],
                                         ],
@@ -317,8 +322,9 @@ class _TaskManagementDialogState extends State<TaskManagementDialog> {
                                         return _TaskCard(
                                           task: task,
                                           isMobile: isMobile,
-                                          onEdit: () =>
-                                              _showAddEditTaskDialog(task: task),
+                                          onEdit: () => _showAddEditTaskDialog(
+                                            task: task,
+                                          ),
                                           onDelete: () => _deleteTask(task.id),
                                         );
                                       },
@@ -326,6 +332,18 @@ class _TaskManagementDialogState extends State<TaskManagementDialog> {
                             ),
                           ],
                         ),
+                ),
+              ],
+            ),
+            // Floating Action Button
+            Positioned(
+              right: isMobile ? 16 : 24,
+              bottom: isMobile ? 16 : 24,
+              child: FloatingActionButton(
+                onPressed: () => _showAddEditTaskDialog(),
+                backgroundColor: AppTheme.primary,
+                child: const Icon(Icons.add, color: Colors.white),
+              ),
             ),
           ],
         ),
@@ -498,11 +516,7 @@ class AddEditTaskDialog extends StatefulWidget {
   final Task? task;
   final VoidCallback onSaved;
 
-  const AddEditTaskDialog({
-    super.key,
-    this.task,
-    required this.onSaved,
-  });
+  const AddEditTaskDialog({super.key, this.task, required this.onSaved});
 
   @override
   State<AddEditTaskDialog> createState() => _AddEditTaskDialogState();
@@ -513,7 +527,7 @@ class _AddEditTaskDialogState extends State<AddEditTaskDialog> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
-  
+
   DateTime? _deadline;
   String? _selectedStaffId;
   List<Staff> _staff = [];
@@ -597,7 +611,7 @@ class _AddEditTaskDialogState extends State<AddEditTaskDialog> {
 
     try {
       final deadlineStr = _deadline!.toIso8601String();
-      
+
       if (widget.task == null) {
         await _apiService.createTask(
           name: _nameController.text.trim(),
@@ -660,147 +674,147 @@ class _AddEditTaskDialogState extends State<AddEditTaskDialog> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      widget.task == null ? 'Add Task' : 'Edit Task',
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        widget.task == null ? 'Add Task' : 'Edit Task',
+                        style: TextStyle(
+                          fontSize: isMobile ? 20 : 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                CustomTextInput(
+                  label: 'Task Name',
+                  hint: 'Enter task name',
+                  controller: _nameController,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Please enter task name';
+                    }
+                    return null;
+                  },
+                  enabled: !_isLoading,
+                ),
+                const SizedBox(height: 16),
+                CustomTextInput(
+                  label: 'Description',
+                  hint: 'Enter task description',
+                  controller: _descriptionController,
+                  maxLines: 3,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Please enter description';
+                    }
+                    return null;
+                  },
+                  enabled: !_isLoading,
+                ),
+                const SizedBox(height: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Deadline',
                       style: TextStyle(
-                        fontSize: isMobile ? 20 : 24,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.foreground,
                       ),
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              CustomTextInput(
-                label: 'Task Name',
-                hint: 'Enter task name',
-                controller: _nameController,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter task name';
-                  }
-                  return null;
-                },
-                enabled: !_isLoading,
-              ),
-              const SizedBox(height: 16),
-              CustomTextInput(
-                label: 'Description',
-                hint: 'Enter task description',
-                controller: _descriptionController,
-                maxLines: 3,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter description';
-                  }
-                  return null;
-                },
-                enabled: !_isLoading,
-              ),
-              const SizedBox(height: 16),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Deadline',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: AppTheme.foreground,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  InkWell(
-                    onTap: _isLoading ? null : _selectDate,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppTheme.inputBackground,
-                        border: Border.all(color: AppTheme.border),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              _deadline != null
-                                  ? '${_deadline!.day}/${_deadline!.month}/${_deadline!.year}'
-                                  : 'Select deadline',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: _deadline != null
-                                    ? AppTheme.foreground
-                                    : AppTheme.mutedForeground,
+                    const SizedBox(height: 8),
+                    InkWell(
+                      onTap: _isLoading ? null : _selectDate,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.inputBackground,
+                          border: Border.all(color: AppTheme.border),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                _deadline != null
+                                    ? '${_deadline!.day}/${_deadline!.month}/${_deadline!.year}'
+                                    : 'Select deadline',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: _deadline != null
+                                      ? AppTheme.foreground
+                                      : AppTheme.mutedForeground,
+                                ),
                               ),
                             ),
-                          ),
-                          const Icon(
-                            Icons.calendar_today,
-                            color: AppTheme.mutedForeground,
-                            size: 20,
-                          ),
-                        ],
+                            const Icon(
+                              Icons.calendar_today,
+                              color: AppTheme.mutedForeground,
+                              size: 20,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              _isLoadingStaff
-                  ? const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(20),
-                        child: CircularProgressIndicator(),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                _isLoadingStaff
+                    ? const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(20),
+                          child: CircularProgressIndicator(),
+                        ),
+                      )
+                    : SingleSelectDropdown<Staff>(
+                        label: 'Assign to Staff',
+                        isRequired: true,
+                        options: _staff,
+                        selectedId: _selectedStaffId,
+                        onSelectionChanged: (value) {
+                          setState(() => _selectedStaffId = value);
+                        },
+                        getDisplayText: (staff) => staff.fullName,
+                        getSubText: (staff) => staff.designation ?? staff.role,
+                        getId: (staff) => staff.id,
+                        hintText: 'Select staff member',
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please select a staff member';
+                          }
+                          return null;
+                        },
+                        enabled: !_isLoading,
                       ),
-                    )
-                  : SingleSelectDropdown<Staff>(
-                      label: 'Assign to Staff',
-                      isRequired: true,
-                      options: _staff,
-                      selectedId: _selectedStaffId,
-                      onSelectionChanged: (value) {
-                        setState(() => _selectedStaffId = value);
-                      },
-                      getDisplayText: (staff) => staff.fullName,
-                      getSubText: (staff) => staff.designation ?? staff.role,
-                      getId: (staff) => staff.id,
-                      hintText: 'Select staff member',
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please select a staff member';
-                        }
-                        return null;
-                      },
-                      enabled: !_isLoading,
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Cancel'),
                     ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Cancel'),
-                  ),
-                  const SizedBox(width: 12),
-                  CustomButton(
-                    text: _isLoading
-                        ? 'Saving...'
-                        : (widget.task == null ? 'Create' : 'Update'),
-                    onPressed: _isLoading ? null : _saveTask,
-                  ),
-                ],
-              ),
-            ],
+                    const SizedBox(width: 12),
+                    CustomButton(
+                      text: _isLoading
+                          ? 'Saving...'
+                          : (widget.task == null ? 'Create' : 'Update'),
+                      onPressed: _isLoading ? null : _saveTask,
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),

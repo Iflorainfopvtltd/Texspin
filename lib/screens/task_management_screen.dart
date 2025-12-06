@@ -165,253 +165,269 @@ class _TaskManagementScreenState extends State<TaskManagementScreen> {
         title: const Text('Individual Tasks'),
         backgroundColor: AppTheme.primary,
         foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () => _showAddEditTaskScreen(),
-            tooltip: 'Add Task',
-          ),
-        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showAddEditTaskScreen(),
+        backgroundColor: AppTheme.primary,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.error_outline,
-                            size: 64, color: AppTheme.red500),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Error loading tasks',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.gray900,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          _error!,
-                          style: TextStyle(color: AppTheme.gray600),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 24),
-                        CustomButton(
-                          text: 'Retry',
-                          onPressed: _loadTasks,
-                          variant: ButtonVariant.default_,
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              : Column(
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Search Bar
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: CustomTextInput(
-                        controller: _searchController,
-                        hint: 'Search by task name or staff name...',
-                        onChanged: _filterTasks,
-                        suffixIcon: _searchController.text.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear, size: 20),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  _filterTasks('');
-                                },
-                              )
-                            : const Icon(Icons.search),
+                    Icon(Icons.error_outline, size: 64, color: AppTheme.red500),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Error loading tasks',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.gray900,
                       ),
                     ),
-                    // Task List
-                    Expanded(
-                      child: _filteredTasks.isEmpty
-                          ? Center(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    _tasks.isEmpty
-                                        ? Icons.task
-                                        : Icons.search_off,
-                                    size: 64,
-                                    color: AppTheme.gray300,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    _tasks.isEmpty
-                                        ? 'No tasks yet'
-                                        : 'No tasks found',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      color: AppTheme.gray600,
-                                    ),
-                                  ),
-                                  if (_tasks.isEmpty) ...[
-                                    const SizedBox(height: 24),
-                                    CustomButton(
-                                      text: 'Add First Task',
-                                      onPressed: () => _showAddEditTaskScreen(),
-                                      icon: const Icon(Icons.add, size: 20),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            )
-                          : RefreshIndicator(
-                              onRefresh: _loadTasks,
-                              child: ListView.builder(
-                                padding: const EdgeInsets.only(
-                                  left: 16,
-                                  right: 16,
-                                  bottom: 16,
-                                ),
-                                itemCount: _filteredTasks.length,
-                                itemBuilder: (context, index) {
-                                  final task = _filteredTasks[index];
-                          final assignedStaffName =
-                              '${task.assignedStaff['firstName'] ?? ''} ${task.assignedStaff['lastName'] ?? ''}'
-                                  .trim();
-
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppTheme.gray200),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        task.name,
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppTheme.gray900,
-                                        ),
-                                      ),
-                                    ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 8, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: _getStatusColor(task.status)
-                                            .withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Text(
-                                        task.status.toUpperCase(),
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                          color: _getStatusColor(task.status),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    PopupMenuButton(
-                                      icon: const Icon(Icons.more_vert,
-                                          size: 20),
-                                      itemBuilder: (context) => [
-                                        const PopupMenuItem(
-                                          value: 'edit',
-                                          child: Row(
-                                            children: [
-                                              Icon(Icons.edit,
-                                                  size: 18,
-                                                  color: AppTheme.blue600),
-                                              SizedBox(width: 8),
-                                              Text('Edit'),
-                                            ],
-                                          ),
-                                        ),
-                                        const PopupMenuItem(
-                                          value: 'delete',
-                                          child: Row(
-                                            children: [
-                                              Icon(Icons.delete,
-                                                  size: 18,
-                                                  color: AppTheme.red500),
-                                              SizedBox(width: 8),
-                                              Text('Delete'),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                      onSelected: (value) {
-                                        if (value == 'edit') {
-                                          _showAddEditTaskScreen(task: task);
-                                        } else if (value == 'delete') {
-                                          _deleteTask(task.id);
-                                        }
-                                      },
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  task.description,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    color: AppTheme.gray600,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 12),
-                                Row(
-                                  children: [
-                                    const Icon(Icons.person_outline,
-                                        size: 16, color: AppTheme.gray500),
-                                    const SizedBox(width: 6),
-                                    Expanded(
-                                      child: Text(
-                                        assignedStaffName,
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          color: AppTheme.gray700,
-                                        ),
-                                      ),
-                                    ),
-                                    const Icon(Icons.calendar_today,
-                                        size: 16, color: AppTheme.gray500),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      _formatDate(task.deadline),
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        color: AppTheme.gray700,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          );
-                                },
-                              ),
-                            ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _error!,
+                      style: TextStyle(color: AppTheme.gray600),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    CustomButton(
+                      text: 'Retry',
+                      onPressed: _loadTasks,
+                      variant: ButtonVariant.default_,
                     ),
                   ],
                 ),
+              ),
+            )
+          : Column(
+              children: [
+                // Search Bar
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: CustomTextInput(
+                    controller: _searchController,
+                    hint: 'Search by task name or staff name...',
+                    onChanged: _filterTasks,
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 20),
+                            onPressed: () {
+                              _searchController.clear();
+                              _filterTasks('');
+                            },
+                          )
+                        : const Icon(Icons.search),
+                  ),
+                ),
+                // Task List
+                Expanded(
+                  child: _filteredTasks.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                _tasks.isEmpty ? Icons.task : Icons.search_off,
+                                size: 64,
+                                color: AppTheme.gray300,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                _tasks.isEmpty
+                                    ? 'No tasks yet'
+                                    : 'No tasks found',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: AppTheme.gray600,
+                                ),
+                              ),
+                              if (_tasks.isEmpty) ...[
+                                const SizedBox(height: 24),
+                                CustomButton(
+                                  text: 'Add First Task',
+                                  onPressed: () => _showAddEditTaskScreen(),
+                                  icon: const Icon(Icons.add, size: 20),
+                                ),
+                              ],
+                            ],
+                          ),
+                        )
+                      : RefreshIndicator(
+                          onRefresh: _loadTasks,
+                          child: ListView.builder(
+                            padding: const EdgeInsets.only(
+                              left: 16,
+                              right: 16,
+                              bottom: 16,
+                            ),
+                            itemCount: _filteredTasks.length,
+                            itemBuilder: (context, index) {
+                              final task = _filteredTasks[index];
+                              final assignedStaffName =
+                                  '${task.assignedStaff['firstName'] ?? ''} ${task.assignedStaff['lastName'] ?? ''}'
+                                      .trim();
+
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: AppTheme.gray200),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.05),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            task.name,
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: AppTheme.gray900,
+                                            ),
+                                          ),
+                                        ),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 4,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: _getStatusColor(
+                                              task.status,
+                                            ).withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            task.status.toUpperCase(),
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                              color: _getStatusColor(
+                                                task.status,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        PopupMenuButton(
+                                          icon: const Icon(
+                                            Icons.more_vert,
+                                            size: 20,
+                                          ),
+                                          itemBuilder: (context) => [
+                                            const PopupMenuItem(
+                                              value: 'edit',
+                                              child: Row(
+                                                children: [
+                                                  Icon(
+                                                    Icons.edit,
+                                                    size: 18,
+                                                    color: AppTheme.blue600,
+                                                  ),
+                                                  SizedBox(width: 8),
+                                                  Text('Edit'),
+                                                ],
+                                              ),
+                                            ),
+                                            const PopupMenuItem(
+                                              value: 'delete',
+                                              child: Row(
+                                                children: [
+                                                  Icon(
+                                                    Icons.delete,
+                                                    size: 18,
+                                                    color: AppTheme.red500,
+                                                  ),
+                                                  SizedBox(width: 8),
+                                                  Text('Delete'),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                          onSelected: (value) {
+                                            if (value == 'edit') {
+                                              _showAddEditTaskScreen(
+                                                task: task,
+                                              );
+                                            } else if (value == 'delete') {
+                                              _deleteTask(task.id);
+                                            }
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      task.description,
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: AppTheme.gray600,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.person_outline,
+                                          size: 16,
+                                          color: AppTheme.gray500,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Expanded(
+                                          child: Text(
+                                            assignedStaffName,
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                              color: AppTheme.gray700,
+                                            ),
+                                          ),
+                                        ),
+                                        const Icon(
+                                          Icons.calendar_today,
+                                          size: 16,
+                                          color: AppTheme.gray500,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          _formatDate(task.deadline),
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            color: AppTheme.gray700,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                ),
+              ],
+            ),
     );
   }
 }
@@ -420,11 +436,7 @@ class AddEditTaskScreen extends StatefulWidget {
   final Task? task;
   final VoidCallback onSaved;
 
-  const AddEditTaskScreen({
-    super.key,
-    this.task,
-    required this.onSaved,
-  });
+  const AddEditTaskScreen({super.key, this.task, required this.onSaved});
 
   @override
   State<AddEditTaskScreen> createState() => _AddEditTaskScreenState();
