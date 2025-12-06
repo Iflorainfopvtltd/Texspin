@@ -297,7 +297,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     const Text(
-                                      'Active Projects',
+                                      'Active Projects',  
                                       style: TextStyle(
                                         fontSize: 14,
                                         color: AppTheme.gray600,

@@ -1393,4 +1393,20 @@ class ApiService {
       throw _handleError(e);
     }
   }
+
+  Future<Map<String, dynamic>> sendTaskReminder({
+    required String projectId,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      final response = await _dio.post(
+        '/texspin/api/apqpproject/$projectId/reminder',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
 }

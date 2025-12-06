@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../models/models.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_card.dart';
@@ -8,6 +7,8 @@ import '../widgets/gantt_chart.dart';
 import '../theme/app_theme.dart';
 import 'package:intl/intl.dart';
 import '../utils/pdf_export.dart';
+import '../services/api_service.dart';
+import 'dart:developer' as developer;
 
 class ProjectViewScreen extends StatelessWidget {
   final Project project;
@@ -199,6 +200,67 @@ class ProjectViewScreen extends StatelessWidget {
     );
   }
 
+  Future<void> _sendTaskReminders(BuildContext context) async {
+    final apiService = ApiService();
+    
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+
+    try {
+      // Send reminder for the entire project using project ID
+      final response = await apiService.sendTaskReminder(
+        projectId: project.id,
+      );
+
+      if (context.mounted) {
+        Navigator.pop(context); // Close loading
+
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    response['message'] ?? 'Reminder sent successfully',
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: AppTheme.green500,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      developer.log('Error sending task reminders: $e');
+      if (context.mounted) {
+        Navigator.pop(context); // Close loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(child: Text('Error: $e')),
+              ],
+            ),
+            backgroundColor: AppTheme.red500,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final totalActivities = project.phases.fold<int>(
@@ -305,7 +367,7 @@ class ProjectViewScreen extends StatelessWidget {
                       LayoutBuilder(
                         builder: (context, constraints) {
                           final isMobile = constraints.maxWidth < 600;
-                          
+
                           if (isMobile) {
                             return Column(
                               children: [
@@ -346,7 +408,11 @@ class ProjectViewScreen extends StatelessWidget {
                                         icon: Icons.calendar_today,
                                         label: 'Date of Issue',
                                         value: DateFormat('MMM dd, yyyy')
-                                            .format(DateTime.parse(project.dateOfIssue)),
+                                            .format(
+                                              DateTime.parse(
+                                                project.dateOfIssue,
+                                              ),
+                                            ),
                                       ),
                                     ),
                                   ],
@@ -392,7 +458,8 @@ class ProjectViewScreen extends StatelessWidget {
                                       child: _InfoItem(
                                         icon: Icons.layers,
                                         label: 'Total Phases',
-                                        value: '${project.phases.length} phases',
+                                        value:
+                                            '${project.phases.length} phases',
                                       ),
                                     ),
                                   ],
@@ -400,7 +467,7 @@ class ProjectViewScreen extends StatelessWidget {
                               ],
                             );
                           }
-                          
+
                           return Column(
                             children: [
                               Row(
@@ -430,8 +497,9 @@ class ProjectViewScreen extends StatelessWidget {
                                     child: _InfoItem(
                                       icon: Icons.calendar_today,
                                       label: 'Date of Issue',
-                                      value: DateFormat('MMM dd, yyyy')
-                                          .format(DateTime.parse(project.dateOfIssue)),
+                                      value: DateFormat('MMM dd, yyyy').format(
+                                        DateTime.parse(project.dateOfIssue),
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -503,20 +571,17 @@ class ProjectViewScreen extends StatelessWidget {
                       const SizedBox(height: 16),
                       const Text(
                         'Authorized by',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppTheme.gray600,
-                        ),
+                        style: TextStyle(fontSize: 14, color: AppTheme.gray600),
                       ),
                       const SizedBox(height: 16),
-                   Text(
-                          project.teamLeader,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: AppTheme.gray900,
-                          ),
+                      Text(
+                        project.teamLeader,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: AppTheme.gray900,
                         ),
+                      ),
                     ],
                   ),
                 ),
@@ -528,20 +593,46 @@ class ProjectViewScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'APQP Gantt Chart',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w500,
-                          color: AppTheme.gray900,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'APQP Gantt Chart',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppTheme.gray900,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                'Project timeline and activity tracking',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: AppTheme.gray600,
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                            ],
+                          ),
+                        
+                       CustomButton(
+                            text: 'Task Reminder',
+                            onPressed: () => _sendTaskReminders(context),
+                            variant: ButtonVariant.default_,
+                            size: ButtonSize.lg,
+                            icon: const Icon(
+                              Icons.notifications,
+                              size: 16,
+                              color: AppTheme.background,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Project timeline and activity tracking',
-                        style: TextStyle(fontSize: 14, color: AppTheme.gray600),
-                      ),
-                      const SizedBox(height: 24),
+
                       GanttChartWidget(
                         project: project,
                         onUpdateActivityStatus: onUpdateActivityStatus,
@@ -560,7 +651,7 @@ class ProjectViewScreen extends StatelessWidget {
                       LayoutBuilder(
                         builder: (context, constraints) {
                           final isMobile = constraints.maxWidth < 600;
-                          
+
                           if (isMobile) {
                             return Column(
                               children: [
@@ -597,7 +688,7 @@ class ProjectViewScreen extends StatelessWidget {
                               ],
                             );
                           }
-                          
+
                           return Row(
                             children: [
                               _LegendItem(
@@ -627,7 +718,7 @@ class ProjectViewScreen extends StatelessWidget {
                 LayoutBuilder(
                   builder: (context, constraints) {
                     final isMobile = constraints.maxWidth < 600;
-                    
+
                     if (isMobile) {
                       return Column(
                         children: [
@@ -704,7 +795,7 @@ class ProjectViewScreen extends StatelessWidget {
                         ],
                       );
                     }
-                    
+
                     return Row(
                       children: [
                         Expanded(
