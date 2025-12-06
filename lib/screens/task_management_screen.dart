@@ -4,7 +4,7 @@ import '../services/api_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_input.dart';
-import '../widgets/custom_dropdown.dart';
+import '../widgets/single_select_dropdown.dart';
 import 'dart:developer' as developer;
 
 class TaskManagementScreen extends StatefulWidget {
@@ -664,21 +664,20 @@ class _AddEditTaskScreenState extends State<AddEditTaskScreen> {
                         child: CircularProgressIndicator(),
                       ),
                     )
-                  : CustomDropdownButtonFormField<String>(
+                  : SingleSelectDropdown<Staff>(
                       label: 'Assign to Staff',
-                      hint: 'Select staff member',
-                      value: _selectedStaffId,
-                      items: _staff.map((staff) {
-                        return DropdownMenuItem(
-                          value: staff.id,
-                          child: Text(staff.fullName),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
+                      isRequired: true,
+                      options: _staff,
+                      selectedId: _selectedStaffId,
+                      onSelectionChanged: (value) {
                         setState(() => _selectedStaffId = value);
                       },
+                      getDisplayText: (staff) => staff.fullName,
+                      getSubText: (staff) => staff.designation ?? staff.role,
+                      getId: (staff) => staff.id,
+                      hintText: 'Select staff member',
                       validator: (value) {
-                        if (value == null) {
+                        if (value == null || value.isEmpty) {
                           return 'Please select a staff member';
                         }
                         return null;
