@@ -52,26 +52,6 @@ class ProjectViewScreen extends StatelessWidget {
                 _exportToPDF(context);
               },
             ),
-            // const SizedBox(height: 12),
-            // _ExportOption(
-            //   icon: Icons.table_chart,
-            //   title: 'Export as Excel',
-            //   description: 'Export project data to Excel spreadsheet',
-            //   onTap: () {
-            //     Navigator.pop(context);
-            //     _exportToExcel(context);
-            //   },
-            // ),
-            // const SizedBox(height: 12),
-            // _ExportOption(
-            //   icon: Icons.description,
-            //   title: 'Export as CSV',
-            //   description: 'Export project data as CSV file',
-            //   onTap: () {
-            //     Navigator.pop(context);
-            //     _exportToCSV(context);
-            //   },
-            // ),
           ],
         ),
         actions: [
@@ -86,45 +66,11 @@ class ProjectViewScreen extends StatelessWidget {
 
   void _exportToPDF(BuildContext context) async {
     try {
-      // Show loading indicator
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(child: CircularProgressIndicator()),
-      );
-
       // Generate and export PDF
       await PdfExportService.exportProjectToPdf(project);
-
-      // Close loading indicator
-      if (context.mounted) {
-        Navigator.pop(context);
-
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Row(
-              children: [
-                Icon(Icons.check_circle, color: Colors.white),
-                SizedBox(width: 8),
-                Text('PDF exported successfully!'),
-              ],
-            ),
-            backgroundColor: AppTheme.green500,
-            action: SnackBarAction(
-              label: 'OK',
-              textColor: Colors.white,
-              onPressed: () {},
-            ),
-          ),
-        );
-      }
     } catch (e) {
-      // Close loading indicator if still open
+      // Show error message
       if (context.mounted) {
-        Navigator.pop(context);
-
-        // Show error message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(
