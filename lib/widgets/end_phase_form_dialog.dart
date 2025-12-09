@@ -59,19 +59,20 @@ class _EndPhaseFormDialogState extends State<EndPhaseFormDialog> {
           .map((json) => Staff.fromJson(json))
           .toList();
       
-      // Filter to only include staff assigned to this project
-      // Match by name since project.teamMembers contains names
-      final projectStaffList = allStaff.where((staff) {
-        final fullName = staff.fullName;
-        return widget.project.teamMembers.contains(fullName) ||
-               widget.project.teamLeader == fullName;
-      }).toList();
-      
       // Find team leader ID
       final teamLeader = allStaff.firstWhere(
         (staff) => staff.fullName == widget.project.teamLeader,
         orElse: () => allStaff.first,
       );
+      
+      // Filter to only include team members (exclude team leader)
+      // Match by name since project.teamMembers contains names
+      final projectStaffList = allStaff.where((staff) {
+        final fullName = staff.fullName;
+        // Include only team members, exclude team leader
+        return widget.project.teamMembers.contains(fullName) &&
+               widget.project.teamLeader != fullName;
+      }).toList();
       
       setState(() {
         _projectStaff = projectStaffList;
