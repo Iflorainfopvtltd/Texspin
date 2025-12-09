@@ -4,6 +4,7 @@ import '../models/models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_badge.dart';
 import '../widgets/assign_staff_dialog.dart';
+import '../widgets/end_phase_form_dialog.dart';
 
 class GanttChartWidget extends StatefulWidget {
   final Project project;
@@ -28,6 +29,7 @@ class GanttChartWidget extends StatefulWidget {
 
 class _GanttChartWidgetState extends State<GanttChartWidget> {
   final ScrollController _horizontalController = ScrollController();
+  final Set<String> _unlockedPhases = {}; // Track phases that have been unlocked
 
   @override
   void dispose() {
@@ -255,6 +257,167 @@ class _GanttChartWidgetState extends State<GanttChartWidget> {
     } catch (e) {
       return dateStr;
     }
+  }
+
+  bool _isPreviousPhaseCompleted(int currentPhaseIndex) {
+    if (currentPhaseIndex == 0) {
+      return true; // Phase 1 is always unlocked
+    }
+
+    final previousPhase = widget.project.phases[currentPhaseIndex - 1];
+    
+    // Check if all activities in previous phase are completed and accepted
+    for (final activity in previousPhase.activities) {
+      final isCompleted = activity.status == ActivityStatus.completed;
+      final isAccepted = activity.approvalStatus?.toLowerCase() == 'accepted';
+      
+      if (!isCompleted || !isAccepted) {
+        return false;
+      }
+    }
+    
+    return true;
+  }
+
+  void _handlePhaseLockClick(BuildContext context, int phaseIndex, String phaseName, String phaseId) {
+    final isPreviousCompleted = _isPreviousPhaseCompleted(phaseIndex);
+    
+    if (!isPreviousCompleted) {
+      // Show dialog that previous phase must be completed first
+      showDialog(
+        context: context,
+        builder: (dialogContext) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 450),
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Icon
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: AppTheme.red50,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.lock_outline,
+                    color: AppTheme.red600,
+                    size: 32,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                
+                // Title
+                const Text(
+                  'Phase Locked',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.gray900,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                
+                // Message
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.red50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppTheme.red200),
+                  ),
+                  child: Column(
+                    children: [
+                      const Icon(
+                        Icons.info_outline,
+                        color: AppTheme.red600,
+                        size: 24,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Please complete all activities in Phase ${phaseIndex} first.',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: AppTheme.gray700,
+                          height: 1.5,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'All activities must have:',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.gray900,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      _RequirementItem(text: 'Status: Completed'),
+                      const SizedBox(height: 4),
+                      _RequirementItem(text: 'Acceptance Status: Accepted'),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                
+                // Close button
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      backgroundColor: AppTheme.blue600,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      'Understood',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    } else {
+      // Show end phase form
+      _showEndPhaseForm(context, phaseId, phaseName);
+    }
+  }
+
+  void _showEndPhaseForm(BuildContext context, String phaseId, String phaseName) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => EndPhaseFormDialog(
+        projectId: widget.project.id,
+        phaseId: phaseId,
+        phaseName: phaseName,
+        project: widget.project,
+        onSuccess: () {
+          // Mark this phase as unlocked
+          setState(() {
+            _unlockedPhases.add(phaseId);
+          });
+          
+          if (widget.onRefresh != null) {
+            widget.onRefresh!();
+          }
+        },
+      ),
+    );
   }
 
   void _showAssignStaffDialog(
@@ -597,7 +760,13 @@ class _GanttChartWidgetState extends State<GanttChartWidget> {
                     ),
 
                     // ---- Activities ----
-                    ...phase.activities.map((activity) {
+                    ...phase.activities.asMap().entries.map((activityEntry) {
+                      final activityIndex = activityEntry.key;
+                      final activity = activityEntry.value;
+                      final isFirstActivity = activityIndex == 0;
+                      final isPhaseLocked = !_isPreviousPhaseCompleted(phaseIndex) && !_unlockedPhases.contains(phase.id);
+                      final showLockIcon = phaseIndex > 0 && !_unlockedPhases.contains(phase.id);
+                      
                       return Container(
                         decoration: BoxDecoration(
                           border: Border(
@@ -667,18 +836,44 @@ class _GanttChartWidgetState extends State<GanttChartWidget> {
                             // Approval Staff
                             _Cell(activity.approvingStaff ?? '-', width: 180),
 
-                            // Status
+                            // Status (with lock icon for first activity)
                             Container(
                               width: 120,
                               padding: const EdgeInsets.all(8),
                               alignment: Alignment.centerLeft,
-                              child: CustomBadge(
-                                text: _capitalizeFirst(
-                                  _getStatusString(activity.status),
-                                ),
-                                variant: _getStatusBadgeVariant(
-                                  activity.status,
-                                ),
+                              child: Row(
+                                children: [
+                                  if (isFirstActivity && showLockIcon)
+                                    InkWell(
+                                      onTap: () => _handlePhaseLockClick(
+                                        context,
+                                        phaseIndex,
+                                        phase.name,
+                                        phase.id,
+                                      ),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: BoxDecoration(
+                                          color: isPhaseLocked ? AppTheme.red50 : AppTheme.green50,
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        child: Icon(
+                                          Icons.lock,
+                                          size: 16,
+                                          color: isPhaseLocked ? AppTheme.red600 : AppTheme.green600,
+                                        ),
+                                      ),
+                                    )
+                                  else
+                                    CustomBadge(
+                                      text: _capitalizeFirst(
+                                        _getStatusString(activity.status),
+                                      ),
+                                      variant: _getStatusBadgeVariant(
+                                        activity.status,
+                                      ),
+                                    ),
+                                ],
                               ),
                             ),
 
@@ -876,6 +1071,33 @@ class _DateInfoRow extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _RequirementItem extends StatelessWidget {
+  final String text;
+
+  const _RequirementItem({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const Icon(
+          Icons.check_circle,
+          size: 16,
+          color: AppTheme.green600,
+        ),
+        const SizedBox(width: 8),
+        Text(
+          text,
+          style: const TextStyle(
+            fontSize: 13,
+            color: AppTheme.gray700,
           ),
         ),
       ],

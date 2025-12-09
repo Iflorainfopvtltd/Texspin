@@ -1409,4 +1409,73 @@ class ApiService {
       throw _handleError(e);
     }
   }
+
+  // End Phase Form API
+  Future<Map<String, dynamic>> createEndPhaseForm({
+    required Map<String, dynamic> data,
+    dynamic file,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      
+      // Create FormData with proper field mapping
+      Map<String, dynamic> formFields = {
+        'apqpProject': data['apqpProject'],
+        'phase': data['phase'],
+        'date': data['date'],
+        'teamLeader': data['teamLeader'],
+      };
+      
+      // Add team members as JSON array string
+      if (data['teamMembers'] != null && data['teamMembers'] is List) {
+        // Convert list to JSON array string format that backend expects
+        // e.g., ["id1", "id2"]
+        final teamMembersList = data['teamMembers'] as List;
+        formFields['teamMembers'] = '[${teamMembersList.map((id) => '"$id"').join(',')}]';
+      }
+      
+      FormData formData = FormData.fromMap(formFields);
+      
+      // Add file if provided
+      if (file != null) {
+        // Use bytes for web platform, path for mobile
+        if (file.bytes != null) {
+          formData.files.add(
+            MapEntry(
+              'attachments',
+              MultipartFile.fromBytes(
+                file.bytes!,
+                filename: file.name,
+              ),
+            ),
+          );
+        } else if (file.path != null) {
+          formData.files.add(
+            MapEntry(
+              'attachments',
+              await MultipartFile.fromFile(
+                file.path!,
+                filename: file.name,
+              ),
+            ),
+          );
+        }
+      }
+
+      final response = await _dio.post(
+        '/texspin/api/endphaseform',
+        data: formData,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'multipart/form-data',
+          },
+        ),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
 }
