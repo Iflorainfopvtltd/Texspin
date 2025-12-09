@@ -263,8 +263,8 @@ class _AssignStaffDialogState extends State<AssignStaffDialog> {
           staff: _selectedStaffId!,
           startDate: startDateStr,
           endDate: endDateStr,
-          startWeekNumber: _startWeek!,
-          endWeekNumber: _endWeek!,
+          startWeek: _startWeek!,
+          endWeek: _endWeek!,
         );
       } else {
         // Use PUT for reassignment
@@ -275,8 +275,8 @@ class _AssignStaffDialogState extends State<AssignStaffDialog> {
           staffId: _selectedStaffId!,
           startDate: startDateStr,
           endDate: endDateStr,
-          startWeekNumber: _startWeek!,
-          endWeekNumber: _endWeek!,
+          startWeek: _startWeek!,
+          endWeek: _endWeek!,
         );
       }
 

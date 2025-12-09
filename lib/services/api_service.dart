@@ -1255,8 +1255,8 @@ class ApiService {
     required String staff,
     required String startDate,
     required String endDate,
-    required int startWeekNumber,
-    required int endWeekNumber,
+    required int startWeek,
+    required int endWeek,
     String? bearerToken,
   }) async {
     try {
@@ -1269,8 +1269,8 @@ class ApiService {
           'staff': staff,
           'startDate': startDate,
           'endDate': endDate,
-          'startWeekNumber': startWeekNumber,
-          'endWeekNumber': endWeekNumber,
+          'startWeek': startWeek,
+          'endWeek': endWeek,
         },
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
@@ -1288,8 +1288,8 @@ class ApiService {
     required String staffId,
     required String startDate,
     required String endDate,
-    required int startWeekNumber,
-    required int endWeekNumber,
+    required int startWeek,
+    required int endWeek,
     String? bearerToken,
   }) async {
     try {
@@ -1302,8 +1302,8 @@ class ApiService {
           'staffId': staffId,
           'startDate': startDate,
           'endDate': endDate,
-          'startWeek': startWeekNumber,
-          'endWeek': endWeekNumber,
+          'startWeek': startWeek,
+          'endWeek': endWeek,
         },
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );

@@ -22,8 +22,8 @@ Used when an activity has no staff assigned (responsible person is "Unassigned")
   "staff": "STAFF_ID_TO_ASSIGN",
   "startDate": "2023-11-01",
   "endDate": "2023-11-07",
-  "startWeekNumber": 1,
-  "endWeekNumber": 2
+  "startWeek": 1,
+  "endWeek": 2
 }
 ```
 
@@ -40,8 +40,8 @@ Used when an activity already has a staff member assigned.
   "staffId": "NEW_STAFF_OBJECT_ID",
   "startDate": "2023-11-01",
   "endDate": "2023-11-07",
-  "startWeekNumber": 1,
-  "endWeekNumber": 2
+  "startWeek": 1,
+  "endWeek": 2
 }
 ```
 
