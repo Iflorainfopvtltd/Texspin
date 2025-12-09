@@ -1478,4 +1478,69 @@ class ApiService {
       throw _handleError(e);
     }
   }
+
+  // Get End Phase Forms
+  Future<Map<String, dynamic>> getEndPhaseForms({String? bearerToken}) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      final response = await _dio.get(
+        '/texspin/api/endphaseform',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // Delete End Phase Form
+  Future<Map<String, dynamic>> deleteEndPhaseForm({
+    required String id,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      final response = await _dio.delete(
+        '/texspin/api/endphaseform/$id',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // Accept End Phase Form (if there's an endpoint for this)
+  Future<Map<String, dynamic>> acceptEndPhaseForm({
+    required String id,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      final response = await _dio.patch(
+        '/texspin/api/endphaseform/$id/accept',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // Reject End Phase Form (if there's an endpoint for this)
+  Future<Map<String, dynamic>> rejectEndPhaseForm({
+    required String id,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      final response = await _dio.patch(
+        '/texspin/api/endphaseform/$id/reject',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
 }
