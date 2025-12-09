@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_badge.dart';
@@ -29,12 +30,35 @@ class GanttChartWidget extends StatefulWidget {
 
 class _GanttChartWidgetState extends State<GanttChartWidget> {
   final ScrollController _horizontalController = ScrollController();
-  final Set<String> _unlockedPhases = {}; // Track phases that have been unlocked
+  Set<String> _unlockedPhases = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUnlockedPhases();
+  }
 
   @override
   void dispose() {
     _horizontalController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadUnlockedPhases() async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = 'unlocked_phases_${widget.project.id}';
+    final unlockedList = prefs.getStringList(key) ?? [];
+    setState(() {
+      _unlockedPhases = unlockedList.toSet();
+    });
+  }
+
+  Future<void> _markPhaseAsUnlocked(String phaseId) async {
+    _unlockedPhases.add(phaseId);
+    final prefs = await SharedPreferences.getInstance();
+    final key = 'unlocked_phases_${widget.project.id}';
+    await prefs.setStringList(key, _unlockedPhases.toList());
+    setState(() {});
   }
 
   Color _getStatusColor(ActivityStatus status) {
@@ -87,6 +111,16 @@ class _GanttChartWidgetState extends State<GanttChartWidget> {
   }
 
   String _formatDate(String dateStr) {
+    try {
+      final date = DateTime.parse(dateStr);
+      return '${date.day}/${date.month}/${date.year}';
+    } catch (e) {
+      return dateStr;
+    }
+  }
+
+  String _formatReviewDate(String? dateStr) {
+    if (dateStr == null || dateStr.isEmpty) return '-';
     try {
       final date = DateTime.parse(dateStr);
       return '${date.day}/${date.month}/${date.year}';
@@ -259,15 +293,22 @@ class _GanttChartWidgetState extends State<GanttChartWidget> {
     }
   }
 
-  bool _isPreviousPhaseCompleted(int currentPhaseIndex) {
+  bool _isPreviousPhaseUnlocked(int currentPhaseIndex) {
     if (currentPhaseIndex == 0) {
       return true; // Phase 1 is always unlocked
     }
 
     final previousPhase = widget.project.phases[currentPhaseIndex - 1];
     
-    // Check if all activities in previous phase are completed and accepted
-    for (final activity in previousPhase.activities) {
+    // Check if previous phase was unlocked via end phase form
+    return _unlockedPhases.contains(previousPhase.id);
+  }
+
+  bool _areAllActivitiesCompletedAndAccepted(int phaseIndex) {
+    final phase = widget.project.phases[phaseIndex];
+    
+    // Check if all activities in phase are completed and accepted
+    for (final activity in phase.activities) {
       final isCompleted = activity.status == ActivityStatus.completed;
       final isAccepted = activity.approvalStatus?.toLowerCase() == 'accepted';
       
@@ -280,10 +321,11 @@ class _GanttChartWidgetState extends State<GanttChartWidget> {
   }
 
   void _handlePhaseLockClick(BuildContext context, int phaseIndex, String phaseName, String phaseId) {
-    final isPreviousCompleted = _isPreviousPhaseCompleted(phaseIndex);
+    final previousPhaseIndex = phaseIndex - 1;
+    final areActivitiesComplete = _areAllActivitiesCompletedAndAccepted(previousPhaseIndex);
     
-    if (!isPreviousCompleted) {
-      // Show dialog that previous phase must be completed first
+    if (!areActivitiesComplete) {
+      // Show dialog that previous phase activities must be completed first
       showDialog(
         context: context,
         builder: (dialogContext) => Dialog(
@@ -393,8 +435,9 @@ class _GanttChartWidgetState extends State<GanttChartWidget> {
         ),
       );
     } else {
-      // Show end phase form
-      _showEndPhaseForm(context, phaseId, phaseName);
+      // All activities are complete - show end phase form for previous phase
+      final previousPhase = widget.project.phases[previousPhaseIndex];
+      _showEndPhaseForm(context, previousPhase.id, previousPhase.name);
     }
   }
 
@@ -406,12 +449,11 @@ class _GanttChartWidgetState extends State<GanttChartWidget> {
         phaseId: phaseId,
         phaseName: phaseName,
         project: widget.project,
-        onSuccess: () {
-          // Mark this phase as unlocked
-          setState(() {
-            _unlockedPhases.add(phaseId);
-          });
+        onSuccess: () async {
+          // Mark this phase as unlocked so next phase can be accessed
+          await _markPhaseAsUnlocked(phaseId);
           
+          // Refresh the project data to get updated phase status
           if (widget.onRefresh != null) {
             widget.onRefresh!();
           }
@@ -764,8 +806,18 @@ class _GanttChartWidgetState extends State<GanttChartWidget> {
                       final activityIndex = activityEntry.key;
                       final activity = activityEntry.value;
                       final isFirstActivity = activityIndex == 0;
-                      final isPhaseLocked = !_isPreviousPhaseCompleted(phaseIndex) && !_unlockedPhases.contains(phase.id);
-                      final showLockIcon = phaseIndex > 0 && !_unlockedPhases.contains(phase.id);
+                      
+                      // Determine lock state for phases after Phase 1
+                      final isPreviousUnlocked = _isPreviousPhaseUnlocked(phaseIndex);
+                      final previousPhaseIndex = phaseIndex - 1;
+                      final arePreviousActivitiesComplete = phaseIndex > 0 
+                          ? _areAllActivitiesCompletedAndAccepted(previousPhaseIndex)
+                          : true;
+                      
+                      // Show lock icon only on first activity of locked phases
+                      final showLockIcon = phaseIndex > 0 && isFirstActivity && !isPreviousUnlocked;
+                      // Red lock if activities not complete, green lock if complete but form not submitted
+                      final isRedLock = !arePreviousActivitiesComplete;
                       
                       return Container(
                         decoration: BoxDecoration(
@@ -831,19 +883,19 @@ class _GanttChartWidgetState extends State<GanttChartWidget> {
                             ),
 
                             // Review Date
-                            _Cell(activity.reviewDate ?? '-', width: 150),
+                            _Cell(_formatReviewDate(activity.reviewDate), width: 150),
 
                             // Approval Staff
                             _Cell(activity.approvingStaff ?? '-', width: 180),
 
-                            // Status (with lock icon for first activity)
+                            // Status (with lock icon for first activity of locked phases)
                             Container(
                               width: 120,
                               padding: const EdgeInsets.all(8),
                               alignment: Alignment.centerLeft,
                               child: Row(
                                 children: [
-                                  if (isFirstActivity && showLockIcon)
+                                  if (showLockIcon)
                                     InkWell(
                                       onTap: () => _handlePhaseLockClick(
                                         context,
@@ -854,13 +906,13 @@ class _GanttChartWidgetState extends State<GanttChartWidget> {
                                       child: Container(
                                         padding: const EdgeInsets.all(4),
                                         decoration: BoxDecoration(
-                                          color: isPhaseLocked ? AppTheme.red50 : AppTheme.green50,
+                                          color: isRedLock ? AppTheme.red50 : AppTheme.green50,
                                           borderRadius: BorderRadius.circular(4),
                                         ),
                                         child: Icon(
                                           Icons.lock,
                                           size: 16,
-                                          color: isPhaseLocked ? AppTheme.red600 : AppTheme.green600,
+                                          color: isRedLock ? AppTheme.red600 : AppTheme.green600,
                                         ),
                                       ),
                                     )
@@ -885,7 +937,9 @@ class _GanttChartWidgetState extends State<GanttChartWidget> {
 
                             // Acceptance Status
                             _Cell(
-                              activity.approvalStatus ?? '-',
+                              activity.approvalStatus != null 
+                                ? _capitalizeFirst(activity.approvalStatus!)
+                                : '-',
                               width: 150,
                             ),
 
