@@ -1302,8 +1302,8 @@ class ApiService {
           'staffId': staffId,
           'startDate': startDate,
           'endDate': endDate,
-          'startWeekNumber': startWeekNumber,
-          'endWeekNumber': endWeekNumber,
+          'startWeek': startWeekNumber,
+          'endWeek': endWeekNumber,
         },
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
