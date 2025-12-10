@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_card.dart';
@@ -108,181 +109,137 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
   }
 
   void _showTeamMembers(List<dynamic> teamMembers, bool isMobile) {
-    if (isMobile) {
-      // Show dialog for mobile
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Team Members'),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: teamMembers.length,
-              itemBuilder: (context, index) {
-                final member = teamMembers[index] as Map<String, dynamic>;
-                final name = '${member['firstName']} ${member['lastName']}';
-                final email = member['email'] ?? '';
-                final staffId = member['staffId'] ?? '';
-                
-                return ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: AppTheme.blue100,
-                    child: Text(
-                      name[0].toUpperCase(),
-                      style: const TextStyle(color: AppTheme.blue600),
-                    ),
+    // Always show dialog for better UX and consistent positioning
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Team Members'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: teamMembers.length,
+            itemBuilder: (context, index) {
+              final member = teamMembers[index] as Map<String, dynamic>;
+              final name = '${member['firstName']} ${member['lastName']}';
+              final email = member['email'] ?? '';
+              final staffId = member['staffId'] ?? '';
+              
+              return ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: AppTheme.blue100,
+                  child: Text(
+                    name[0].toUpperCase(),
+                    style: const TextStyle(color: AppTheme.blue600),
                   ),
-                  title: Text(name),
-                  subtitle: Text('$email\n$staffId'),
-                  isThreeLine: true,
-                );
-              },
-            ),
+                ),
+                title: Text(name),
+                subtitle: Text('$email\n$staffId'),
+                isThreeLine: true,
+              );
+            },
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Close'),
-            ),
-          ],
         ),
-      );
-    } else {
-      // Show popup menu for desktop/tablet
-      final RenderBox button = context.findRenderObject() as RenderBox;
-      final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
-      final RelativeRect position = RelativeRect.fromRect(
-        Rect.fromPoints(
-          button.localToGlobal(Offset.zero, ancestor: overlay),
-          button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay),
-        ),
-        Offset.zero & overlay.size,
-      );
-
-      showMenu(
-        context: context,
-        position: position,
-        items: teamMembers.map((member) {
-          final memberMap = member as Map<String, dynamic>;
-          final name = '${memberMap['firstName']} ${memberMap['lastName']}';
-          final email = memberMap['email'] ?? '';
-          
-          return PopupMenuItem(
-            enabled: false,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.gray900,
-                  ),
-                ),
-                Text(
-                  email,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppTheme.gray600,
-                  ),
-                ),
-              ],
-            ),
-          );
-        }).toList(),
-      );
-    }
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showAttachments(List<dynamic> attachments, bool isMobile) {
-    if (isMobile) {
-      // Show dialog for mobile
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Attachments'),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: attachments.length,
-              itemBuilder: (context, index) {
-                final attachment = attachments[index] as Map<String, dynamic>;
-                final fileName = attachment['fileName'] ?? 'Unknown';
-                final fileUrl = attachment['fileUrl'] ?? '';
-                
-                return ListTile(
-                  leading: const Icon(Icons.attach_file, color: AppTheme.blue600),
-                  title: Text(fileName),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.download, color: AppTheme.blue600),
-                    onPressed: () => _downloadFile(fileUrl, fileName),
-                  ),
-                );
-              },
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Close'),
-            ),
-          ],
-        ),
-      );
-    } else {
-      // Show popup menu for desktop/tablet
-      final RenderBox button = context.findRenderObject() as RenderBox;
-      final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
-      final RelativeRect position = RelativeRect.fromRect(
-        Rect.fromPoints(
-          button.localToGlobal(Offset.zero, ancestor: overlay),
-          button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay),
-        ),
-        Offset.zero & overlay.size,
-      );
-
-      showMenu(
-        context: context,
-        position: position,
-        items: attachments.map((attachment) {
-          final attachmentMap = attachment as Map<String, dynamic>;
-          final fileName = attachmentMap['fileName'] ?? 'Unknown';
-          final fileUrl = attachmentMap['fileUrl'] ?? '';
-          
-          return PopupMenuItem(
-            onTap: () => _downloadFile(fileUrl, fileName),
-            child: Row(
-              children: [
-                const Icon(Icons.attach_file, size: 16, color: AppTheme.gray600),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    fileName,
-                    style: const TextStyle(fontSize: 14),
-                  ),
+    // Always show dialog for better UX and consistent positioning
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Attachments'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: attachments.length,
+            itemBuilder: (context, index) {
+              final attachment = attachments[index] as Map<String, dynamic>;
+              final fileName = attachment['fileName'] ?? 'Unknown';
+              final fileUrl = attachment['fileUrl'] ?? '';
+              
+              return ListTile(
+                leading: const Icon(Icons.attach_file, color: AppTheme.blue600),
+                title: Text(fileName),
+                trailing: IconButton(
+                  icon: const Icon(Icons.download, color: AppTheme.blue600),
+                  onPressed: () => _downloadFile(fileUrl, fileName),
                 ),
-                const SizedBox(width: 8),
-                const Icon(Icons.download, size: 16, color: AppTheme.blue600),
-              ],
-            ),
-          );
-        }).toList(),
-      );
-    }
-  }
-
-  void _downloadFile(String fileUrl, String fileName) {
-    // TODO: Implement file download
-    // For web: use html.AnchorElement
-    // For mobile: use path_provider and dio
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Downloading $fileName...'),
-        backgroundColor: AppTheme.blue600,
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
       ),
     );
+  }
+
+  Future<void> _downloadFile(String fileUrl, String fileName) async {
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Downloading $fileName...'),
+          backgroundColor: AppTheme.blue600,
+        ),
+      );
+
+      // Use url_launcher to open the file URL
+      // This will trigger the browser's download or open the file
+      final Uri url = Uri.parse(fileUrl);
+      
+      if (await canLaunchUrl(url)) {
+        await launchUrl(
+          url,
+          mode: LaunchMode.externalApplication,
+        );
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.white),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text('$fileName download started')),
+                ],
+              ),
+              backgroundColor: AppTheme.green500,
+            ),
+          );
+        }
+      } else {
+        throw 'Could not launch $fileUrl';
+      }
+    } catch (e) {
+      developer.log('Error downloading file: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(child: Text('Error downloading $fileName: $e')),
+              ],
+            ),
+            backgroundColor: AppTheme.red500,
+          ),
+        );
+      }
+    }
   }
 
   void _editForm(Map<String, dynamic> form, bool isMobile) {
@@ -642,7 +599,7 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'End Phase Forms',
+            'End Phase Filled Forms',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w500,
@@ -693,27 +650,13 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
         DataCell(
           InkWell(
             onTap: () => _showTeamMembers(teamMembers, false),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('${teamMembers.length} members'),
-                const SizedBox(width: 4),
-                const Icon(Icons.arrow_drop_down, size: 16, color: AppTheme.blue600),
-              ],
-            ),
+            child: Text('${teamMembers.length} members'),
           ),
         ),
         DataCell(
           InkWell(
             onTap: () => _showAttachments(attachments, false),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('${attachments.length} files'),
-                const SizedBox(width: 4),
-                const Icon(Icons.arrow_drop_down, size: 16, color: AppTheme.blue600),
-              ],
-            ),
+            child:  Text('${attachments.length} files'),
           ),
         ),
         DataCell(
