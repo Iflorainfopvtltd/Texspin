@@ -332,23 +332,17 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
       // Show dialog for desktop/tablet
       showDialog(
         context: context,
-        builder: (context) => Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 600, maxHeight: 700),
-            child: EndPhaseFormDialog(
-              projectId: widget.projectId,
-              phaseId: phaseId,
-              phaseName: phaseName,
-              project: widget.project!,
-              isEditMode: true,
-              existingFormData: form,
-              formId: formId,
-              onSuccess: () {
-                _fetchEndPhaseForms();
-              },
-            ),
-          ),
+        builder: (context) => EndPhaseFormDialog(
+          projectId: widget.projectId,
+          phaseId: phaseId,
+          phaseName: phaseName,
+          project: widget.project!,
+          isEditMode: true,
+          existingFormData: form,
+          formId: formId,
+          onSuccess: () {
+            _fetchEndPhaseForms();
+          },
         ),
       );
     }
