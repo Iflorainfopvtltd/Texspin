@@ -1398,7 +1398,7 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
               Icons.people,
               'Team Members',
               '${teamMembers.length} members',
-              isClickable: true,
+              isClickable: false, // Remove blue styling for mobile
             ),
           ),
           const SizedBox(height: 8),
@@ -1408,7 +1408,7 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
               Icons.attach_file,
               'Attachments',
               '${attachments.length} files',
-              isClickable: true,
+              isClickable: false, // Remove blue styling for mobile
             ),
           ),
           const SizedBox(height: 16),
