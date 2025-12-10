@@ -131,7 +131,7 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
               itemBuilder: (context, index) {
                 final member = teamMembers[index] as Map<String, dynamic>;
                 final name = '${member['firstName']} ${member['lastName']}';
-                final email = member['email'] ?? '';
+                // final email = member['email'] ?? '';
                 final staffId = member['staffId'] ?? '';
                 
                 return ListTile(
@@ -143,7 +143,7 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
                     ),
                   ),
                   title: Text(name),
-                  subtitle: Text('$email\n$staffId'),
+                  subtitle: Text('$staffId'),
                   isThreeLine: true,
                 );
               },
@@ -914,8 +914,6 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
           const SizedBox(height: 12),
           _buildInfoRow(Icons.calendar_today, 'Date', date),
           const SizedBox(height: 8),
-          _buildInfoRow(Icons.person, 'Team Leader', teamLeaderName),
-          const SizedBox(height: 8),
           InkWell(
             onTap: () => _showTeamMembers(teamMembers, true),
             child: _buildInfoRow(
@@ -1009,22 +1007,18 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
               color: AppTheme.gray900,
             ),
           ),
-          const SizedBox(height: 24),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: DataTable(
-              headingRowColor: MaterialStateProperty.all(AppTheme.blue50),
-              columns: const [
-                DataColumn(label: Text('Phase', style: TextStyle(fontWeight: FontWeight.w600))),
-                DataColumn(label: Text('Review No', style: TextStyle(fontWeight: FontWeight.w600))),
-                DataColumn(label: Text('Date', style: TextStyle(fontWeight: FontWeight.w600))),
-                DataColumn(label: Text('Team Leader', style: TextStyle(fontWeight: FontWeight.w600))),
-                DataColumn(label: Text('Team Members', style: TextStyle(fontWeight: FontWeight.w600))),
-                DataColumn(label: Text('Attachments', style: TextStyle(fontWeight: FontWeight.w600))),
-                DataColumn(label: Text('Actions', style: TextStyle(fontWeight: FontWeight.w600))),
-              ],
-              rows: _endPhaseForms.map((form) => _buildDataRow(form)).toList(),
-            ),
+          const SizedBox(height: 16),
+          DataTable(
+            headingRowColor: MaterialStateProperty.all(AppTheme.blue50),
+            columns: const [
+              DataColumn(label: Text('Phase', style: TextStyle(fontWeight: FontWeight.w600))),
+              DataColumn(label: Text('Review No', style: TextStyle(fontWeight: FontWeight.w600))),
+              DataColumn(label: Text('Date', style: TextStyle(fontWeight: FontWeight.w600))),
+              DataColumn(label: Text('Team Members', style: TextStyle(fontWeight: FontWeight.w600))),
+              DataColumn(label: Text('Attachments', style: TextStyle(fontWeight: FontWeight.w600))),
+              DataColumn(label: Text('Actions', style: TextStyle(fontWeight: FontWeight.w600))),
+            ],
+            rows: _endPhaseForms.map((form) => _buildDataRow(form)).toList(),
           ),
         ],
       ),
@@ -1049,7 +1043,6 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
         DataCell(Text(phaseName)),
         DataCell(CustomBadge(text: reviewNo, variant: BadgeVariant.secondary)),
         DataCell(Text(date)),
-        DataCell(Text(teamLeaderName)),
         DataCell(
           InkWell(
             onTap: () => _showTeamMembers(teamMembers, false),

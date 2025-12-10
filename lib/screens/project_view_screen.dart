@@ -821,19 +821,7 @@ class _ProjectViewScreenState extends State<ProjectViewScreen> {
                             onTap: _navigateToEndPhaseForms,
                             child: CustomCard(
                               padding: const EdgeInsets.all(20),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  const Text(
-                                    'End Phase Forms',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: AppTheme.gray600,
-                                    ),
-                                  ),
-                                  Row(
-                                    children: [
-                                      Text(
+                              child: Text(
                                         '$_endPhaseFormsCount',
                                         style: const TextStyle(
                                           fontSize: 24,
@@ -841,16 +829,6 @@ class _ProjectViewScreenState extends State<ProjectViewScreen> {
                                           color: AppTheme.blue600,
                                         ),
                                       ),
-                                      const SizedBox(width: 8),
-                                      const Icon(
-                                        Icons.arrow_forward_ios,
-                                        size: 16,
-                                        color: AppTheme.gray600,
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
                             ),
                           ),
                         ],
@@ -955,9 +933,7 @@ class _ProjectViewScreenState extends State<ProjectViewScreen> {
                                     ),
                                   ),
                                   const SizedBox(height: 8),
-                                  Row(
-                                    children: [
-                                      Text(
+                                   Text(
                                         '$_endPhaseFormsCount',
                                         style: const TextStyle(
                                           fontSize: 24,
@@ -965,13 +941,6 @@ class _ProjectViewScreenState extends State<ProjectViewScreen> {
                                           color: AppTheme.blue600,
                                         ),
                                       ),
-                                      const Spacer(),
-                                      const Icon(
-                                        Icons.arrow_forward,
-                                        color: AppTheme.blue600,
-                                      ),
-                                    ],
-                                  ),
                                 ],
                               ),
                             ),
