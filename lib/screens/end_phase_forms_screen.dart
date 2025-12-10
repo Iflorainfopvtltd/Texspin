@@ -299,53 +299,22 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
     final phaseName = phase?['name'] ?? 'Unknown Phase';
     final formId = form['_id'] as String?;
 
-    if (isMobile) {
-      // Show full screen dialog for mobile
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          fullscreenDialog: true,
-          builder: (context) => Scaffold(
-            appBar: AppBar(
-              title: const Text('Edit End Phase Form'),
-              leading: IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: () => Navigator.pop(context),
-              ),
-            ),
-            body: EndPhaseFormDialog(
-              projectId: widget.projectId,
-              phaseId: phaseId,
-              phaseName: phaseName,
-              project: widget.project!,
-              isEditMode: true,
-              existingFormData: form,
-              formId: formId,
-              onSuccess: () {
-                Navigator.pop(context);
-                _fetchEndPhaseForms();
-              },
-            ),
-          ),
-        ),
-      );
-    } else {
-      // Show dialog for desktop/tablet
-      showDialog(
-        context: context,
-        builder: (context) => EndPhaseFormDialog(
-          projectId: widget.projectId,
-          phaseId: phaseId,
-          phaseName: phaseName,
-          project: widget.project!,
-          isEditMode: true,
-          existingFormData: form,
-          formId: formId,
-          onSuccess: () {
-            _fetchEndPhaseForms();
-          },
-        ),
-      );
-    }
+    // Show dialog for both mobile and desktop/tablet
+    showDialog(
+      context: context,
+      builder: (context) => EndPhaseFormDialog(
+        projectId: widget.projectId,
+        phaseId: phaseId,
+        phaseName: phaseName,
+        project: widget.project!,
+        isEditMode: true,
+        existingFormData: form,
+        formId: formId,
+        onSuccess: () {
+          _fetchEndPhaseForms();
+        },
+      ),
+    );
   }
 
   void _showDeleteConfirmation(String formId, String phaseName) {
