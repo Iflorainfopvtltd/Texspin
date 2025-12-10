@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:dio/dio.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_card.dart';
@@ -109,35 +114,40 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
   }
 
   void _showTeamMembers(List<dynamic> teamMembers, bool isMobile) {
-    // Always show dialog for better UX and consistent positioning
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Team Members'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: teamMembers.length,
-            itemBuilder: (context, index) {
-              final member = teamMembers[index] as Map<String, dynamic>;
-              final name = '${member['firstName']} ${member['lastName']}';
-              final email = member['email'] ?? '';
-              final staffId = member['staffId'] ?? '';
-              
-              return ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: AppTheme.blue100,
-                  child: Text(
-                    name[0].toUpperCase(),
-                    style: const TextStyle(color: AppTheme.blue600),
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: 400,
+            maxHeight: 400,
+          ),
+          child: SizedBox(
+            width: 400,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: teamMembers.length,
+              itemBuilder: (context, index) {
+                final member = teamMembers[index] as Map<String, dynamic>;
+                final name = '${member['firstName']} ${member['lastName']}';
+                final email = member['email'] ?? '';
+                final staffId = member['staffId'] ?? '';
+                
+                return ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: AppTheme.blue100,
+                    child: Text(
+                      name[0].toUpperCase(),
+                      style: const TextStyle(color: AppTheme.blue600),
+                    ),
                   ),
-                ),
-                title: Text(name),
-                subtitle: Text('$email\n$staffId'),
-                isThreeLine: true,
-              );
-            },
+                  title: Text(name),
+                  subtitle: Text('$email\n$staffId'),
+                  isThreeLine: true,
+                );
+              },
+            ),
           ),
         ),
         actions: [
@@ -151,30 +161,49 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
   }
 
   void _showAttachments(List<dynamic> attachments, bool isMobile) {
-    // Always show dialog for better UX and consistent positioning
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Attachments'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: attachments.length,
-            itemBuilder: (context, index) {
-              final attachment = attachments[index] as Map<String, dynamic>;
-              final fileName = attachment['fileName'] ?? 'Unknown';
-              final fileUrl = attachment['fileUrl'] ?? '';
-              
-              return ListTile(
-                leading: const Icon(Icons.attach_file, color: AppTheme.blue600),
-                title: Text(fileName),
-                trailing: IconButton(
-                  icon: const Icon(Icons.download, color: AppTheme.blue600),
-                  onPressed: () => _downloadFile(fileUrl, fileName),
-                ),
-              );
-            },
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: 450,
+            maxHeight: 400,
+          ),
+          child: SizedBox(
+            width: 450,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: attachments.length,
+              itemBuilder: (context, index) {
+                final attachment = attachments[index] as Map<String, dynamic>;
+                final fileName = attachment['fileName'] ?? 'Unknown';
+                final fileUrl = attachment['fileUrl'] ?? '';
+                
+                return ListTile(
+                  leading: const Icon(Icons.attach_file, color: AppTheme.blue600),
+                  title: Text(
+                    fileName,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.download, color: AppTheme.blue600),
+                    onPressed: () async {
+                      try {
+                        await _downloadFile(fileUrl, fileName);
+                        // Close the attachments dialog after successful download
+                        if (mounted) {
+                          Navigator.pop(context);
+                        }
+                      } catch (e) {
+                        // Don't close dialog if download failed
+                        developer.log('Download failed, keeping dialog open: $e');
+                      }
+                    },
+                  ),
+                );
+              },
+            ),
           ),
         ),
         actions: [
@@ -196,9 +225,165 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
         ),
       );
 
-      // Use url_launcher to open the file URL
-      // This will trigger the browser's download or open the file
-      final Uri url = Uri.parse(fileUrl);
+      // Construct full URL using ApiService baseUrl
+      final String fullUrl = ApiService.baseUrl + fileUrl;
+      
+      developer.log('Downloading file from: $fullUrl');
+      
+      // Check if running on mobile platform
+      if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+        // Mobile download using dio and path_provider
+        await _downloadFileOnMobile(fullUrl, fileName);
+      } else {
+        // Web/Desktop download using url_launcher
+        await _downloadFileOnWeb(fullUrl, fileName);
+      }
+    } catch (e) {
+      developer.log('Error downloading file: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(child: Text('Error downloading $fileName: $e')),
+              ],
+            ),
+            backgroundColor: AppTheme.red500,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _downloadFileOnMobile(String fullUrl, String fileName) async {
+    try {
+      // Request storage permission first
+      if (Platform.isAndroid) {
+        await _requestAndroidPermissions();
+      } else if (Platform.isIOS) {
+        await _requestIOSPermissions();
+      }
+      
+      Directory? downloadsDirectory;
+      String downloadPath = '';
+      
+      if (Platform.isAndroid) {
+        // For Android, use the public Downloads directory
+        downloadsDirectory = Directory('/storage/emulated/0/Download');
+        
+        // Create directory if it doesn't exist
+        if (!await downloadsDirectory.exists()) {
+          await downloadsDirectory.create(recursive: true);
+        }
+        
+        downloadPath = '/storage/emulated/0/Download';
+      } else if (Platform.isIOS) {
+        downloadsDirectory = await getApplicationDocumentsDirectory();
+        downloadPath = downloadsDirectory.path;
+      }
+      
+      if (downloadsDirectory == null) {
+        throw 'Could not access downloads directory';
+      }
+      
+      final String filePath = '${downloadsDirectory.path}/$fileName';
+      
+      developer.log('Attempting to download to: $filePath');
+      
+      // Download file using Dio
+      final dio = Dio();
+      await dio.download(
+        fullUrl,
+        filePath,
+        onReceiveProgress: (received, total) {
+          if (total != -1) {
+            final progress = (received / total * 100).toStringAsFixed(0);
+            developer.log('Download progress: $progress%');
+          }
+        },
+      );
+      
+      // Verify file was created
+      final file = File(filePath);
+      final fileExists = await file.exists();
+      final fileSize = fileExists ? await file.length() : 0;
+      
+      developer.log('File exists: $fileExists, Size: $fileSize bytes, Path: $filePath');
+      
+      if (!fileExists) {
+        throw 'File was not created successfully';
+      }
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.check_circle, color: Colors.white),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text('$fileName downloaded successfully')),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Saved to: Downloads folder',
+                  style: const TextStyle(fontSize: 12, color: Colors.white70),
+                ),
+                Text(
+                  'Size: ${(fileSize / 1024).toStringAsFixed(1)} KB',
+                  style: const TextStyle(fontSize: 12, color: Colors.white70),
+                ),
+              ],
+            ),
+            backgroundColor: AppTheme.green500,
+            duration: const Duration(seconds: 5),
+            action: SnackBarAction(
+              label: 'Open Downloads',
+              textColor: Colors.white,
+              onPressed: () async {
+                // Try to open the Downloads folder
+                try {
+                  if (Platform.isAndroid) {
+                    // Open Downloads folder using intent
+                    final Uri downloadsUri = Uri.parse('content://com.android.externalstorage.documents/document/primary%3ADownload');
+                    if (await canLaunchUrl(downloadsUri)) {
+                      await launchUrl(downloadsUri, mode: LaunchMode.externalApplication);
+                    } else {
+                      // Fallback: open file manager
+                      final Uri fileManagerUri = Uri.parse('content://com.android.documentsui.DocumentsActivity');
+                      await launchUrl(fileManagerUri, mode: LaunchMode.externalApplication);
+                    }
+                  }
+                } catch (e) {
+                  developer.log('Could not open Downloads folder: $e');
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please check your Downloads folder in the file manager'),
+                        backgroundColor: AppTheme.blue600,
+                      ),
+                    );
+                  }
+                }
+              },
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      throw 'Mobile download failed: $e';
+    }
+  }
+
+  Future<void> _downloadFileOnWeb(String fullUrl, String fileName) async {
+    try {
+      final Uri url = Uri.parse(fullUrl);
       
       if (await canLaunchUrl(url)) {
         await launchUrl(
@@ -221,24 +406,242 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
           );
         }
       } else {
-        throw 'Could not launch $fileUrl';
+        throw 'Could not launch $fullUrl';
       }
     } catch (e) {
-      developer.log('Error downloading file: $e');
+      throw 'Web download failed: $e';
+    }
+  }
+
+  Future<void> _requestAndroidPermissions() async {
+    // Check if storage permission is already granted
+    final storageStatus = await Permission.storage.status;
+    final manageStorageStatus = await Permission.manageExternalStorage.status;
+    
+    // If either permission is granted, we're good to go
+    if (storageStatus == PermissionStatus.granted || 
+        manageStorageStatus == PermissionStatus.granted) {
+      developer.log('Storage permission already granted');
+      return;
+    }
+    
+    // Only show dialog if permission is not granted
+    if (storageStatus == PermissionStatus.denied || 
+        storageStatus == PermissionStatus.restricted) {
+      
+      // Show permission rationale dialog only if needed
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.error, color: Colors.white),
-                const SizedBox(width: 8),
-                Expanded(child: Text('Error downloading $fileName: $e')),
-              ],
+        final shouldRequest = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Storage Permission Required'),
+            content: const Text(
+              'This app needs storage permission to download files to your device. '
+              'The files will be saved to your Downloads folder.',
             ),
-            backgroundColor: AppTheme.red500,
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              CustomButton(
+                text: 'Grant Permission',
+                onPressed: () => Navigator.pop(context, true),
+                variant: ButtonVariant.default_,
+                size: ButtonSize.sm,
+              ),
+            ],
           ),
         );
+        
+        if (shouldRequest != true) {
+          throw 'Storage permission is required to download files';
+        }
       }
+      
+      // Request storage permission
+      final storagePermission = await Permission.storage.request();
+      
+      if (storagePermission != PermissionStatus.granted) {
+        // For Android 11+ (API 30+), try manage external storage
+        final managePermission = await Permission.manageExternalStorage.request();
+        
+        if (managePermission != PermissionStatus.granted) {
+          // Show settings dialog only if both permissions failed
+          if (mounted) {
+            final openSettings = await showDialog<bool>(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Permission Denied'),
+                content: const Text(
+                  'Storage permission was denied. Please grant storage permission in app settings to download files.',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: const Text('Cancel'),
+                  ),
+                  CustomButton(
+                    text: 'Open Settings',
+                    onPressed: () => Navigator.pop(context, true),
+                    variant: ButtonVariant.default_,
+                    size: ButtonSize.sm,
+                  ),
+                ],
+              ),
+            );
+            
+            if (openSettings == true) {
+              await openAppSettings();
+            }
+          }
+          
+          throw 'Storage permission denied. Please grant permission in app settings.';
+        }
+      }
+    } else if (storageStatus == PermissionStatus.permanentlyDenied) {
+      // Handle permanently denied case
+      if (mounted) {
+        final openSettings = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Permission Required'),
+            content: const Text(
+              'Storage permission is required to download files. Please enable it in app settings.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              CustomButton(
+                text: 'Open Settings',
+                onPressed: () => Navigator.pop(context, true),
+                variant: ButtonVariant.default_,
+                size: ButtonSize.sm,
+              ),
+            ],
+          ),
+        );
+        
+        if (openSettings == true) {
+          await openAppSettings();
+        }
+      }
+      
+      throw 'Storage permission denied. Please grant permission in app settings.';
+    }
+  }
+
+  Future<void> _requestIOSPermissions() async {
+    // For iOS, check if we already have the necessary permissions
+    final photosPermission = await Permission.photos.status;
+    
+    // If permission is already granted, no need to ask again
+    if (photosPermission == PermissionStatus.granted || 
+        photosPermission == PermissionStatus.limited) {
+      developer.log('iOS file access permission already granted');
+      return;
+    }
+    
+    // Only show dialog if permission is denied or not determined
+    if (photosPermission == PermissionStatus.denied || 
+        photosPermission == PermissionStatus.restricted) {
+      
+      if (mounted) {
+        final shouldRequest = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('File Access Permission'),
+            content: const Text(
+              'This app needs permission to save files to your device. '
+              'Files will be saved to the app\'s Documents folder.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              CustomButton(
+                text: 'Grant Permission',
+                onPressed: () => Navigator.pop(context, true),
+                variant: ButtonVariant.default_,
+                size: ButtonSize.sm,
+              ),
+            ],
+          ),
+        );
+        
+        if (shouldRequest != true) {
+          throw 'File access permission is required to download files';
+        }
+      }
+      
+      final permission = await Permission.photos.request();
+      
+      if (permission == PermissionStatus.denied || 
+          permission == PermissionStatus.permanentlyDenied) {
+        if (mounted) {
+          final openSettings = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Permission Required'),
+              content: const Text(
+                'Please grant file access permission in Settings to download files.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('Cancel'),
+                ),
+                CustomButton(
+                  text: 'Open Settings',
+                  onPressed: () => Navigator.pop(context, true),
+                  variant: ButtonVariant.default_,
+                  size: ButtonSize.sm,
+                ),
+              ],
+            ),
+          );
+          
+          if (openSettings == true) {
+            await openAppSettings();
+          }
+        }
+        
+        throw 'File access permission denied. Please grant permission in Settings.';
+      }
+    } else if (photosPermission == PermissionStatus.permanentlyDenied) {
+      // Handle permanently denied case
+      if (mounted) {
+        final openSettings = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Permission Required'),
+            content: const Text(
+              'File access permission is required. Please enable it in Settings.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              CustomButton(
+                text: 'Open Settings',
+                onPressed: () => Navigator.pop(context, true),
+                variant: ButtonVariant.default_,
+                size: ButtonSize.sm,
+              ),
+            ],
+          ),
+        );
+        
+        if (openSettings == true) {
+          await openAppSettings();
+        }
+      }
+      
+      throw 'File access permission denied. Please grant permission in Settings.';
     }
   }
 
