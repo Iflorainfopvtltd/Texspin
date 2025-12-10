@@ -13,12 +13,14 @@ class EndPhaseFormsScreen extends StatefulWidget {
   final String projectId;
   final String projectName;
   final Project? project;
+  final String? userRole;
 
   const EndPhaseFormsScreen({
     super.key,
     required this.projectId,
     required this.projectName,
     this.project,
+    this.userRole,
   });
 
   @override
@@ -540,29 +542,55 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: CustomButton(
-                  text: 'Edit',
-                  onPressed: () => _editForm(form, true),
-                  variant: ButtonVariant.default_,
-                  size: ButtonSize.sm,
-                  icon: const Icon(Icons.edit, size: 16, color: Colors.white),
+          // Show action buttons only for non-admin users
+          if (widget.userRole != 'admin')
+            Row(
+              children: [
+                Expanded(
+                  child: CustomButton(
+                    text: 'Edit',
+                    onPressed: () => _editForm(form, true),
+                    variant: ButtonVariant.default_,
+                    size: ButtonSize.sm,
+                    icon: const Icon(Icons.edit, size: 16, color: Colors.white),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: CustomButton(
-                  text: 'Delete',
-                  onPressed: () => _showDeleteConfirmation(formId, phaseName),
-                  variant: ButtonVariant.destructive,
-                  size: ButtonSize.sm,
-                  icon: const Icon(Icons.delete, size: 16, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: CustomButton(
+                    text: 'Delete',
+                    onPressed: () => _showDeleteConfirmation(formId, phaseName),
+                    variant: ButtonVariant.destructive,
+                    size: ButtonSize.sm,
+                    icon: const Icon(Icons.delete, size: 16, color: Colors.white),
+                  ),
                 ),
+              ],
+            )
+          else
+            // Show read-only message for admin users
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.blue50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppTheme.blue200),
               ),
-            ],
-          ),
+              child: const Row(
+                children: [
+                  Icon(Icons.visibility, size: 16, color: AppTheme.blue600),
+                  SizedBox(width: 8),
+                  Text(
+                    'View Only',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppTheme.blue600,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
         ),
@@ -655,21 +683,50 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
           ),
         ),
         DataCell(
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.edit_outlined, color: AppTheme.blue600),
-                onPressed: () => _editForm(form, false),
-                tooltip: 'Edit',
+          widget.userRole != 'admin'
+            ? Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.edit_outlined, color: AppTheme.blue600),
+                    onPressed: () => _editForm(form, false),
+                    tooltip: 'Edit',
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, color: AppTheme.red500),
+                    onPressed: () => _showDeleteConfirmation(formId, phaseName),
+                    tooltip: 'Delete',
+                  ),
+                ],
+              )
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppTheme.blue50,
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: AppTheme.blue200),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.visibility, size: 14, color: AppTheme.blue600),
+                        SizedBox(width: 4),
+                        Text(
+                          'View Only',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppTheme.blue600,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              IconButton(
-                icon: const Icon(Icons.delete_outline, color: AppTheme.red500),
-                onPressed: () => _showDeleteConfirmation(formId, phaseName),
-                tooltip: 'Delete',
-              ),
-            ],
-          ),
         ),
       ],
     );

@@ -73,6 +73,7 @@ class _ProjectViewScreenState extends State<ProjectViewScreen> {
           projectId: widget.project.id,
           projectName: widget.project.partName,
           project: widget.project,
+          userRole: widget.userRole,
         ),
       ),
     ).then((_) {
