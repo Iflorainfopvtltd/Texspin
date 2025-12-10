@@ -868,7 +868,17 @@ class _ProjectViewScreenState extends State<ProjectViewScreen> {
                             onTap: _navigateToEndPhaseForms,
                             child: CustomCard(
                               padding: const EdgeInsets.all(20),
-                              child: Text(
+                              child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'End Phase  Form',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: AppTheme.gray600,
+                                  ),
+                                ),
+                               Text(
                                         '$_endPhaseFormsCount',
                                         style: const TextStyle(
                                           fontSize: 24,
@@ -876,6 +886,10 @@ class _ProjectViewScreenState extends State<ProjectViewScreen> {
                                           color: AppTheme.blue600,
                                         ),
                                       ),
+                              ],
+                            )
+                              
+                             
                             ),
                           ),
                         ],

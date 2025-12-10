@@ -257,6 +257,8 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
                                     fontWeight: FontWeight.w600,
                                     color: AppTheme.gray900,
                                   ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                 ),
                                 const SizedBox(height: 4),
                                 if (email.isNotEmpty)
@@ -276,6 +278,7 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
                                             color: AppTheme.gray600,
                                           ),
                                           overflow: TextOverflow.ellipsis,
+                                          maxLines: 1,
                                         ),
                                       ),
                                     ],
@@ -290,11 +293,15 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
                                         color: AppTheme.gray600,
                                       ),
                                       const SizedBox(width: 4),
-                                      Text(
-                                        'ID: $staffId',
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          color: AppTheme.gray600,
+                                      Expanded(
+                                        child: Text(
+                                          'ID: $staffId',
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            color: AppTheme.gray600,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                          maxLines: 1,
                                         ),
                                       ),
                                     ],
@@ -323,11 +330,17 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
       builder: (context) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         elevation: 8,
-        child: Container(
-          constraints: const BoxConstraints(
-            maxWidth: 500,
-            maxHeight: 550,
-          ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final screenWidth = MediaQuery.of(context).size.width;
+            final screenHeight = MediaQuery.of(context).size.height;
+            final isMobileDialog = screenWidth < 600;
+            
+            return Container(
+              constraints: BoxConstraints(
+                maxWidth: isMobileDialog ? screenWidth * 0.9 : 500,
+                maxHeight: isMobileDialog ? screenHeight * 0.8 : 550,
+              ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             gradient: LinearGradient(
@@ -412,7 +425,7 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
                     final fileExtension = fileName.split('.').last.toLowerCase();
                     
                     return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
+                      margin: EdgeInsets.only(bottom: isMobileDialog ? 8 : 12),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
@@ -425,114 +438,18 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
                           ),
                         ],
                       ),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.all(16),
-                        leading: Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: _getFileColor(fileExtension),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            _getFileIcon(fileExtension),
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
-                        title: Text(
-                          fileName,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.gray900,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        subtitle: Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: _getFileColor(fileExtension).withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  fileExtension.toUpperCase(),
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: _getFileColor(fileExtension),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              const Icon(
-                                Icons.cloud_download_outlined,
-                                size: 14,
-                                color: AppTheme.gray500,
-                              ),
-                              const SizedBox(width: 4),
-                              const Text(
-                                'Click to download',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: AppTheme.gray500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        trailing: Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [AppTheme.green500, AppTheme.green600],
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: IconButton(
-                            icon: const Icon(Icons.download, color: Colors.white),
-                            onPressed: () async {
-                              try {
-                                await _downloadFile(fileUrl, fileName);
-                                // Close the attachments dialog after successful download
-                                if (mounted) {
-                                  Navigator.pop(context);
-                                }
-                              } catch (e) {
-                                // Don't close dialog if download failed
-                                developer.log('Download failed, keeping dialog open: $e');
-                              }
-                            },
-                          ),
-                        ),
-                        onTap: () async {
-                          try {
-                            await _downloadFile(fileUrl, fileName);
-                            // Close the attachments dialog after successful download
-                            if (mounted) {
-                              Navigator.pop(context);
-                            }
-                          } catch (e) {
-                            // Don't close dialog if download failed
-                            developer.log('Download failed, keeping dialog open: $e');
-                          }
-                        },
-                      ),
+                      child: isMobileDialog 
+                        ? _buildMobileAttachmentItem(fileName, fileUrl, fileExtension)
+                        : _buildDesktopAttachmentItem(fileName, fileUrl, fileExtension),
                     );
                   },
                 ),
               ),
             ],
           ),
-        ),
-      ),
-    );
+        );
+  }),
+    ));
   }
 
   IconData _getFileIcon(String extension) {
@@ -585,6 +502,196 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
       default:
         return AppTheme.gray600;
     }
+  }
+
+  Widget _buildMobileAttachmentItem(String fileName, String fileUrl, String fileExtension) {
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        children: [
+          // File icon and name
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: _getFileColor(fileExtension),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  _getFileIcon(fileExtension),
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      fileName,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.gray900,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 2,
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _getFileColor(fileExtension).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        fileExtension.toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: _getFileColor(fileExtension),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Download button (full width on mobile)
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () async {
+                try {
+                  await _downloadFile(fileUrl, fileName);
+                  if (mounted) {
+                    Navigator.pop(context);
+                  }
+                } catch (e) {
+                  developer.log('Download failed, keeping dialog open: $e');
+                }
+              },
+              icon: const Icon(Icons.download, size: 16),
+              label: const Text('Download'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.green600,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDesktopAttachmentItem(String fileName, String fileUrl, String fileExtension) {
+    return ListTile(
+      contentPadding: const EdgeInsets.all(16),
+      leading: Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          color: _getFileColor(fileExtension),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(
+          _getFileIcon(fileExtension),
+          color: Colors.white,
+          size: 24,
+        ),
+      ),
+      title: Text(
+        fileName,
+        style: const TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+          color: AppTheme.gray900,
+        ),
+        overflow: TextOverflow.ellipsis,
+      ),
+      subtitle: Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 8,
+                vertical: 2,
+              ),
+              decoration: BoxDecoration(
+                color: _getFileColor(fileExtension).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                fileExtension.toUpperCase(),
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: _getFileColor(fileExtension),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(
+              Icons.cloud_download_outlined,
+              size: 14,
+              color: AppTheme.gray500,
+            ),
+            const SizedBox(width: 4),
+            const Text(
+              'Click to download',
+              style: TextStyle(
+                fontSize: 12,
+                color: AppTheme.gray500,
+              ),
+            ),
+          ],
+        ),
+      ),
+      trailing: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [AppTheme.green500, AppTheme.green600],
+          ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: IconButton(
+          icon: const Icon(Icons.download, color: Colors.white),
+          onPressed: () async {
+            try {
+              await _downloadFile(fileUrl, fileName);
+              if (mounted) {
+                Navigator.pop(context);
+              }
+            } catch (e) {
+              developer.log('Download failed, keeping dialog open: $e');
+            }
+          },
+        ),
+      ),
+      onTap: () async {
+        try {
+          await _downloadFile(fileUrl, fileName);
+          if (mounted) {
+            Navigator.pop(context);
+          }
+        } catch (e) {
+          developer.log('Download failed, keeping dialog open: $e');
+        }
+      },
+    );
   }
 
   Future<void> _downloadFile(String fileUrl, String fileName) async {
