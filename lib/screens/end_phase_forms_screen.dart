@@ -116,46 +116,202 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
   void _showTeamMembers(List<dynamic> teamMembers, bool isMobile) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Team Members'),
-        content: ConstrainedBox(
+      barrierDismissible: true,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: 8,
+        child: Container(
           constraints: const BoxConstraints(
-            maxWidth: 400,
-            maxHeight: 400,
+            maxWidth: 450,
+            maxHeight: 500,
           ),
-          child: SizedBox(
-            width: 400,
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: teamMembers.length,
-              itemBuilder: (context, index) {
-                final member = teamMembers[index] as Map<String, dynamic>;
-                final name = '${member['firstName']} ${member['lastName']}';
-                // final email = member['email'] ?? '';
-                final staffId = member['staffId'] ?? '';
-                
-                return ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: AppTheme.blue100,
-                    child: Text(
-                      name[0].toUpperCase(),
-                      style: const TextStyle(color: AppTheme.blue600),
-                    ),
-                  ),
-                  title: Text(name),
-                  subtitle: Text('$staffId'),
-                  isThreeLine: true,
-                );
-              },
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white,
+                AppTheme.blue50.withOpacity(0.3),
+              ],
             ),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppTheme.blue600,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.people,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Team Members',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            '${teamMembers.length} members',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.8),
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close, color: Colors.white),
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.white.withOpacity(0.2),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Content
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.all(16),
+                  itemCount: teamMembers.length,
+                  itemBuilder: (context, index) {
+                    final member = teamMembers[index] as Map<String, dynamic>;
+                    final name = '${member['firstName']} ${member['lastName']}';
+                    final email = member['email'] ?? '';
+                    final staffId = member['staffId'] ?? '';
+                    
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppTheme.gray200),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.gray300.withOpacity(0.3),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [AppTheme.blue500, AppTheme.blue600],
+                              ),
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            child: Center(
+                              child: Text(
+                                name[0].toUpperCase(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  name,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.gray900,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                if (email.isNotEmpty)
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.email_outlined,
+                                        size: 14,
+                                        color: AppTheme.gray600,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Expanded(
+                                        child: Text(
+                                          email,
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            color: AppTheme.gray600,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                if (staffId.isNotEmpty) ...[
+                                  const SizedBox(height: 2),
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.badge_outlined,
+                                        size: 14,
+                                        color: AppTheme.gray600,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        'ID: $staffId',
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          color: AppTheme.gray600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -163,57 +319,272 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
   void _showAttachments(List<dynamic> attachments, bool isMobile) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Attachments'),
-        content: ConstrainedBox(
+      barrierDismissible: true,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: 8,
+        child: Container(
           constraints: const BoxConstraints(
-            maxWidth: 450,
-            maxHeight: 400,
+            maxWidth: 500,
+            maxHeight: 550,
           ),
-          child: SizedBox(
-            width: 450,
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: attachments.length,
-              itemBuilder: (context, index) {
-                final attachment = attachments[index] as Map<String, dynamic>;
-                final fileName = attachment['fileName'] ?? 'Unknown';
-                final fileUrl = attachment['fileUrl'] ?? '';
-                
-                return ListTile(
-                  leading: const Icon(Icons.attach_file, color: AppTheme.blue600),
-                  title: Text(
-                    fileName,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.download, color: AppTheme.blue600),
-                    onPressed: () async {
-                      try {
-                        await _downloadFile(fileUrl, fileName);
-                        // Close the attachments dialog after successful download
-                        if (mounted) {
-                          Navigator.pop(context);
-                        }
-                      } catch (e) {
-                        // Don't close dialog if download failed
-                        developer.log('Download failed, keeping dialog open: $e');
-                      }
-                    },
-                  ),
-                );
-              },
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white,
+                AppTheme.green50.withOpacity(0.3),
+              ],
             ),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppTheme.green600,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.attach_file,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Attachments',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            '${attachments.length} files',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.8),
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close, color: Colors.white),
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.white.withOpacity(0.2),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Content
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.all(16),
+                  itemCount: attachments.length,
+                  itemBuilder: (context, index) {
+                    final attachment = attachments[index] as Map<String, dynamic>;
+                    final fileName = attachment['fileName'] ?? 'Unknown';
+                    final fileUrl = attachment['fileUrl'] ?? '';
+                    final fileExtension = fileName.split('.').last.toLowerCase();
+                    
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppTheme.gray200),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.gray300.withOpacity(0.3),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.all(16),
+                        leading: Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: _getFileColor(fileExtension),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            _getFileIcon(fileExtension),
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                        title: Text(
+                          fileName,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.gray900,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        subtitle: Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: _getFileColor(fileExtension).withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  fileExtension.toUpperCase(),
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: _getFileColor(fileExtension),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Icon(
+                                Icons.cloud_download_outlined,
+                                size: 14,
+                                color: AppTheme.gray500,
+                              ),
+                              const SizedBox(width: 4),
+                              const Text(
+                                'Click to download',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppTheme.gray500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        trailing: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [AppTheme.green500, AppTheme.green600],
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.download, color: Colors.white),
+                            onPressed: () async {
+                              try {
+                                await _downloadFile(fileUrl, fileName);
+                                // Close the attachments dialog after successful download
+                                if (mounted) {
+                                  Navigator.pop(context);
+                                }
+                              } catch (e) {
+                                // Don't close dialog if download failed
+                                developer.log('Download failed, keeping dialog open: $e');
+                              }
+                            },
+                          ),
+                        ),
+                        onTap: () async {
+                          try {
+                            await _downloadFile(fileUrl, fileName);
+                            // Close the attachments dialog after successful download
+                            if (mounted) {
+                              Navigator.pop(context);
+                            }
+                          } catch (e) {
+                            // Don't close dialog if download failed
+                            developer.log('Download failed, keeping dialog open: $e');
+                          }
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
+  }
+
+  IconData _getFileIcon(String extension) {
+    switch (extension.toLowerCase()) {
+      case 'pdf':
+        return Icons.picture_as_pdf;
+      case 'doc':
+      case 'docx':
+        return Icons.description;
+      case 'xls':
+      case 'xlsx':
+        return Icons.table_chart;
+      case 'ppt':
+      case 'pptx':
+        return Icons.slideshow;
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+      case 'gif':
+        return Icons.image;
+      case 'zip':
+      case 'rar':
+        return Icons.archive;
+      default:
+        return Icons.insert_drive_file;
+    }
+  }
+
+  Color _getFileColor(String extension) {
+    switch (extension.toLowerCase()) {
+      case 'pdf':
+        return AppTheme.red500;
+      case 'doc':
+      case 'docx':
+        return AppTheme.blue600;
+      case 'xls':
+      case 'xlsx':
+        return AppTheme.green600;
+      case 'ppt':
+      case 'pptx':
+        return Colors.orange;
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+      case 'gif':
+        return Colors.purple;
+      case 'zip':
+      case 'rar':
+        return Colors.brown;
+      default:
+        return AppTheme.gray600;
+    }
   }
 
   Future<void> _downloadFile(String fileUrl, String fileName) async {
