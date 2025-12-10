@@ -617,44 +617,91 @@ class _ProjectViewScreenState extends State<ProjectViewScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'APQP Gantt Chart',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppTheme.gray900,
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isMobile = constraints.maxWidth < 600;
+                          
+                          if (isMobile) {
+                            // Mobile layout: Stack header and button vertically
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'APQP Gantt Chart',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w500,
+                                    color: AppTheme.gray900,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 8),
-                              const Text(
-                                'Project timeline and activity tracking',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: AppTheme.gray600,
+                                const SizedBox(height: 8),
+                                const Text(
+                                  'Project timeline and activity tracking',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: AppTheme.gray600,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 24),
-                            ],
-                          ),
-                        
-                       CustomButton(
-                            text: 'Task Reminder',
-                            onPressed: () => _sendTaskReminders(context),
-                            variant: ButtonVariant.default_,
-                            size: ButtonSize.lg,
-                            icon: const Icon(
-                              Icons.notifications,
-                              size: 16,
-                              color: AppTheme.background,
-                            ),
-                          ),
-                        ],
+                                const SizedBox(height: 16),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: CustomButton(
+                                    text: 'Task Reminder',
+                                    onPressed: () => _sendTaskReminders(context),
+                                    variant: ButtonVariant.default_,
+                                    size: ButtonSize.default_,
+                                    icon: const Icon(
+                                      Icons.notifications,
+                                      size: 16,
+                                      color: AppTheme.background,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 24),
+                              ],
+                            );
+                          } else {
+                            // Desktop/Tablet layout: Keep original row layout
+                            return Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'APQP Gantt Chart',
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w500,
+                                        color: AppTheme.gray900,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    const Text(
+                                      'Project timeline and activity tracking',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: AppTheme.gray600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 24),
+                                  ],
+                                ),
+                                CustomButton(
+                                  text: 'Task Reminder',
+                                  onPressed: () => _sendTaskReminders(context),
+                                  variant: ButtonVariant.default_,
+                                  size: ButtonSize.lg,
+                                  icon: const Icon(
+                                    Icons.notifications,
+                                    size: 16,
+                                    color: AppTheme.background,
+                                  ),
+                                ),
+                              ],
+                            );
+                          }
+                        },
                       ),
 
                       GanttChartWidget(
