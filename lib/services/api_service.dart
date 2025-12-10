@@ -1414,6 +1414,7 @@ class ApiService {
   Future<Map<String, dynamic>> createEndPhaseForm({
     required Map<String, dynamic> data,
     dynamic file,
+    List<dynamic>? files,
     String? bearerToken,
   }) async {
     try {
@@ -1437,34 +1438,121 @@ class ApiService {
       
       FormData formData = FormData.fromMap(formFields);
       
-      // Add file if provided
-      if (file != null) {
-        // Use bytes for web platform, path for mobile
-        if (file.bytes != null) {
-          formData.files.add(
-            MapEntry(
-              'attachments',
-              MultipartFile.fromBytes(
-                file.bytes!,
-                filename: file.name,
+      // Add files if provided
+      final filesToUpload = files ?? (file != null ? [file] : <dynamic>[]);
+      print('API: Files to upload: ${filesToUpload.length}');
+      
+      for (final fileItem in filesToUpload) {
+        if (fileItem != null) {
+          print('API: Processing file: ${fileItem.name}');
+          // Use bytes for web platform, path for mobile
+          if (fileItem.bytes != null) {
+            print('API: Using bytes for ${fileItem.name}');
+            formData.files.add(
+              MapEntry(
+                'attachments',
+                MultipartFile.fromBytes(
+                  fileItem.bytes!,
+                  filename: fileItem.name,
+                ),
               ),
-            ),
-          );
-        } else if (file.path != null) {
-          formData.files.add(
-            MapEntry(
-              'attachments',
-              await MultipartFile.fromFile(
-                file.path!,
-                filename: file.name,
+            );
+          } else if (fileItem.path != null) {
+            print('API: Using path for ${fileItem.name}');
+            formData.files.add(
+              MapEntry(
+                'attachments',
+                await MultipartFile.fromFile(
+                  fileItem.path!,
+                  filename: fileItem.name,
+                ),
               ),
-            ),
-          );
+            );
+          }
         }
       }
 
       final response = await _dio.post(
         '/texspin/api/endphaseform',
+        data: formData,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'multipart/form-data',
+          },
+        ),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // Update End Phase Form (PUT)
+  Future<Map<String, dynamic>> updateEndPhaseForm({
+    required String formId,
+    required Map<String, dynamic> data,
+    dynamic file,
+    List<dynamic>? files,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      
+      // Create FormData with proper field mapping
+      Map<String, dynamic> formFields = {
+        'apqpProject': data['apqpProject'],
+        'phase': data['phase'],
+        'date': data['date'],
+        'teamLeader': data['teamLeader'],
+      };
+      
+      // Add team members as JSON array string
+      if (data['teamMembers'] != null && data['teamMembers'] is List) {
+        // Convert list to JSON array string format that backend expects
+        // e.g., ["id1", "id2"]
+        final teamMembersList = data['teamMembers'] as List;
+        formFields['teamMembers'] = '[${teamMembersList.map((id) => '"$id"').join(',')}]';
+      }
+      
+      FormData formData = FormData.fromMap(formFields);
+      
+      // Add files if provided
+      final filesToUpload = files ?? (file != null ? [file] : <dynamic>[]);
+      print('API UPDATE: Files to upload: ${filesToUpload.length}');
+      
+      for (final fileItem in filesToUpload) {
+        if (fileItem != null) {
+          print('API UPDATE: Processing file: ${fileItem.name}');
+          // Use bytes for web platform, path for mobile
+          if (fileItem.bytes != null) {
+            print('API UPDATE: Using bytes for ${fileItem.name}');
+            formData.files.add(
+              MapEntry(
+                'attachments',
+                MultipartFile.fromBytes(
+                  fileItem.bytes!,
+                  filename: fileItem.name,
+                ),
+              ),
+            );
+          } else if (fileItem.path != null) {
+            print('API UPDATE: Using path for ${fileItem.name}');
+            formData.files.add(
+              MapEntry(
+                'attachments',
+                await MultipartFile.fromFile(
+                  fileItem.path!,
+                  filename: fileItem.name,
+                ),
+              ),
+            );
+          }
+        }
+      }
+
+      final response = await _dio.put(
+        '/texspin/api/endphaseform/$formId',
         data: formData,
         options: Options(
           headers: {
@@ -1493,73 +1581,7 @@ class ApiService {
     }
   }
 
-  // Update End Phase Form
-  Future<Map<String, dynamic>> updateEndPhaseForm({
-    required String id,
-    required Map<String, dynamic> data,
-    dynamic file,
-    String? bearerToken,
-  }) async {
-    try {
-      final token = bearerToken ?? await _getToken();
-      
-      // Create FormData with proper field mapping
-      Map<String, dynamic> formFields = {
-        'apqpProject': data['apqpProject'],
-        'phase': data['phase'],
-        'date': data['date'],
-        'teamLeader': data['teamLeader'],
-      };
-      
-      // Add team members as JSON array string
-      if (data['teamMembers'] != null && data['teamMembers'] is List) {
-        final teamMembersList = data['teamMembers'] as List;
-        formFields['teamMembers'] = '[${teamMembersList.map((id) => '"$id"').join(',')}]';
-      }
-      
-      FormData formData = FormData.fromMap(formFields);
-      
-      // Add file if provided
-      if (file != null) {
-        // Use bytes for web platform, path for mobile
-        if (file.bytes != null) {
-          formData.files.add(
-            MapEntry(
-              'attachments',
-              MultipartFile.fromBytes(
-                file.bytes!,
-                filename: file.name,
-              ),
-            ),
-          );
-        } else if (file.path != null) {
-          formData.files.add(
-            MapEntry(
-              'attachments',
-              await MultipartFile.fromFile(
-                file.path!,
-                filename: file.name,
-              ),
-            ),
-          );
-        }
-      }
 
-      final response = await _dio.put(
-        '/texspin/api/endphaseform/$id',
-        data: formData,
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $token',
-            'Content-Type': 'multipart/form-data',
-          },
-        ),
-      );
-      return response.data;
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
 
   // Delete End Phase Form
   Future<Map<String, dynamic>> deleteEndPhaseForm({

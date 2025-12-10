@@ -17,6 +17,7 @@ class EndPhaseFormDialog extends StatefulWidget {
   final VoidCallback? onSuccess;
   final bool isEditMode;
   final Map<String, dynamic>? existingFormData;
+  final String? formId; // Add formId for editing
 
   const EndPhaseFormDialog({
     super.key,
@@ -27,6 +28,7 @@ class EndPhaseFormDialog extends StatefulWidget {
     this.onSuccess,
     this.isEditMode = false,
     this.existingFormData,
+    this.formId,
   });
 
   @override
@@ -41,7 +43,7 @@ class _EndPhaseFormDialogState extends State<EndPhaseFormDialog> {
   String? _teamLeaderId;
   String? _teamLeaderName;
   List<String> _selectedTeamMemberIds = [];
-  PlatformFile? _selectedFile;
+  List<PlatformFile> _selectedFiles = [];
   
   List<Staff> _projectStaff = [];
   bool _isLoadingStaff = true;
@@ -118,29 +120,57 @@ class _EndPhaseFormDialogState extends State<EndPhaseFormDialog> {
     }
   }
 
-  Future<void> _pickFile() async {
+  Future<void> _pickFiles() async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['xlsx', 'xls'],
+        allowedExtensions: ['xlsx', 'xls', 'pdf', 'doc', 'docx'],
+        allowMultiple: true,
       );
 
       if (result != null) {
         setState(() {
-          _selectedFile = result.files.first;
+          _selectedFiles.addAll(result.files);
         });
       }
     } catch (e) {
-      developer.log('Error picking file: $e');
+      developer.log('Error picking files: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error picking file: $e'),
+            content: Text('Error picking files: $e'),
             backgroundColor: AppTheme.red500,
           ),
         );
       }
     }
+  }
+
+  void _removeFile(int index) {
+    setState(() {
+      _selectedFiles.removeAt(index);
+    });
+  }
+
+  IconData _getFileIcon(String extension) {
+    switch (extension.toLowerCase()) {
+      case 'xlsx':
+      case 'xls':
+        return Icons.table_chart;
+      case 'pdf':
+        return Icons.picture_as_pdf;
+      case 'doc':
+      case 'docx':
+        return Icons.description;
+      default:
+        return Icons.attach_file;
+    }
+  }
+
+  String _formatFileSize(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 
   Future<void> _submitForm() async {
@@ -181,10 +211,27 @@ class _EndPhaseFormDialogState extends State<EndPhaseFormDialog> {
         'teamMembers': _selectedTeamMemberIds,
       };
       
-      await _apiService.createEndPhaseForm(
-        data: formData,
-        file: _selectedFile,
-      );
+      developer.log('Submitting form with ${_selectedFiles.length} files');
+      for (int i = 0; i < _selectedFiles.length; i++) {
+        developer.log('File $i: ${_selectedFiles[i].name} (${_selectedFiles[i].size} bytes)');
+      }
+      
+      if (widget.isEditMode && widget.formId != null) {
+        // Update existing form (PUT request)
+        developer.log('Updating existing form with ID: ${widget.formId}');
+        await _apiService.updateEndPhaseForm(
+          formId: widget.formId!,
+          data: formData,
+          files: _selectedFiles,
+        );
+      } else {
+        // Create new form (POST request)
+        developer.log('Creating new end phase form');
+        await _apiService.createEndPhaseForm(
+          data: formData,
+          files: _selectedFiles,
+        );
+      }
 
       if (mounted) {
         Navigator.of(context).pop();
@@ -195,7 +242,9 @@ class _EndPhaseFormDialogState extends State<EndPhaseFormDialog> {
                 const Icon(Icons.check_circle, color: Colors.white),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text('${widget.phaseName} is now unlocked'),
+                  child: Text(widget.isEditMode 
+                    ? 'End phase form updated successfully'
+                    : '${widget.phaseName} is now unlocked'),
                 ),
               ],
             ),
@@ -391,67 +440,118 @@ class _EndPhaseFormDialogState extends State<EndPhaseFormDialog> {
                       const SizedBox(height: 20),
 
                       // File Upload
-                      const Text(
-                        'Attachment (Excel File)',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: AppTheme.gray900,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Attachments',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: AppTheme.gray900,
+                            ),
+                          ),
+                          TextButton.icon(
+                            onPressed: _pickFiles,
+                            icon: const Icon(Icons.add, size: 16),
+                            label: const Text('Add Files'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: AppTheme.blue600,
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 8),
-                      InkWell(
-                        onTap: _pickFile,
-                        child: Container(
+                      
+                      // Selected Files List
+                      if (_selectedFiles.isEmpty)
+                        Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 12,
-                            vertical: 14,
+                            vertical: 20,
                           ),
                           decoration: BoxDecoration(
                             border: Border.all(color: AppTheme.gray300),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.attach_file,
-                                size: 18,
-                                color: AppTheme.gray600,
+                          child: const Center(
+                            child: Text(
+                              'No files selected\nSupported formats: .xlsx, .xls, .pdf, .doc, .docx',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: AppTheme.gray500,
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  _selectedFile != null
-                                      ? _selectedFile!.name
-                                      : 'Choose file (.xlsx, .xls)',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: _selectedFile != null
-                                        ? AppTheme.gray900
-                                        : AppTheme.gray500,
+                            ),
+                          ),
+                        )
+                      else
+                        Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: AppTheme.gray300),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            children: _selectedFiles.asMap().entries.map((entry) {
+                              final index = entry.key;
+                              final file = entry.value;
+                              final isLast = index == _selectedFiles.length - 1;
+                              
+                              return Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  border: isLast ? null : const Border(
+                                    bottom: BorderSide(color: AppTheme.gray200),
                                   ),
-                                  overflow: TextOverflow.ellipsis,
                                 ),
-                              ),
-                              if (_selectedFile != null)
-                                IconButton(
-                                  icon: const Icon(
-                                    Icons.close,
-                                    size: 18,
-                                    color: AppTheme.gray600,
-                                  ),
-                                  onPressed: () {
-                                    setState(() {
-                                      _selectedFile = null;
-                                    });
-                                  },
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      _getFileIcon(file.extension ?? ''),
+                                      size: 20,
+                                      color: AppTheme.blue600,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            file.name,
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                              color: AppTheme.gray900,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            _formatFileSize(file.size),
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              color: AppTheme.gray600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.close,
+                                        size: 18,
+                                        color: AppTheme.red500,
+                                      ),
+                                      onPressed: () => _removeFile(index),
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(),
+                                    ),
+                                  ],
                                 ),
-                            ],
+                              );
+                            }).toList(),
                           ),
                         ),
-                      ),
                       const SizedBox(height: 24),
 
                       // Action Buttons
@@ -471,7 +571,7 @@ class _EndPhaseFormDialogState extends State<EndPhaseFormDialog> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: CustomButton(
-                              text: 'Submit',
+                              text: widget.isEditMode ? 'Update' : 'Submit',
                               onPressed: _isSubmitting ? null : _submitForm,
                               variant: ButtonVariant.default_,
                               size: ButtonSize.default_,

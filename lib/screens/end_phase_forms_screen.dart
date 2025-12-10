@@ -295,6 +295,7 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
     final phase = form['phase'] as Map<String, dynamic>?;
     final phaseId = phase?['_id'] ?? '';
     final phaseName = phase?['name'] ?? 'Unknown Phase';
+    final formId = form['_id'] as String?;
 
     if (isMobile) {
       // Show full screen dialog for mobile
@@ -316,6 +317,7 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
               project: widget.project!,
               isEditMode: true,
               existingFormData: form,
+              formId: formId,
               onSuccess: () {
                 Navigator.pop(context);
                 _fetchEndPhaseForms();
@@ -339,6 +341,7 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
               project: widget.project!,
               isEditMode: true,
               existingFormData: form,
+              formId: formId,
               onSuccess: () {
                 _fetchEndPhaseForms();
               },
