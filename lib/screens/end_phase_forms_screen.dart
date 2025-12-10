@@ -731,7 +731,7 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
           children: [
             // Custom header for dialog
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(16),
               decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.only(
@@ -751,16 +751,16 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
                         const Text(
                           'End Phase Forms',
                           style: TextStyle(
-                            fontSize: 18,
+                            fontSize: 16,
                             fontWeight: FontWeight.w500,
                             color: AppTheme.gray900,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 2),
                         Text(
                           widget.projectName,
                           style: const TextStyle(
-                            fontSize: 14,
+                            fontSize: 12,
                             color: AppTheme.gray600,
                           ),
                         ),
@@ -855,7 +855,7 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
                     ),
                   )
                 : SingleChildScrollView(
-                    padding: EdgeInsets.all(isMobile ? 16 : 24),
+                    padding: EdgeInsets.all(isMobile ? 16 : 16),
                     child: Center(
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 1400),
@@ -997,7 +997,7 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
 
   Widget _buildDesktopView() {
     return CustomCard(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

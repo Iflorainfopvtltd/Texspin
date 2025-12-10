@@ -92,7 +92,7 @@ class _ProjectViewScreenState extends State<ProjectViewScreen> {
         builder: (context) => Dialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: Container(
-            constraints: const BoxConstraints(maxWidth: 1200, maxHeight: 800),
+            constraints: const BoxConstraints(maxWidth: 900, maxHeight: 600),
             child: EndPhaseFormsScreen(
               projectId: widget.project.id,
               projectName: widget.project.partName,
