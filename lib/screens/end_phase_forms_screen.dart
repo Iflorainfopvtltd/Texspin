@@ -5,16 +5,20 @@ import '../theme/app_theme.dart';
 import '../widgets/custom_card.dart';
 import '../widgets/custom_badge.dart';
 import '../widgets/custom_button.dart';
+import '../widgets/end_phase_form_dialog.dart';
+import '../models/models.dart';
 import 'dart:developer' as developer;
 
 class EndPhaseFormsScreen extends StatefulWidget {
   final String projectId;
   final String projectName;
+  final Project? project;
 
   const EndPhaseFormsScreen({
     super.key,
     required this.projectId,
     required this.projectName,
+    this.project,
   });
 
   @override
@@ -99,77 +103,249 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
     }
   }
 
-  Future<void> _acceptForm(String formId) async {
-    try {
-      await _apiService.acceptEndPhaseForm(id: formId);
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Row(
+  void _showTeamMembers(List<dynamic> teamMembers, bool isMobile) {
+    if (isMobile) {
+      // Show dialog for mobile
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Team Members'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: teamMembers.length,
+              itemBuilder: (context, index) {
+                final member = teamMembers[index] as Map<String, dynamic>;
+                final name = '${member['firstName']} ${member['lastName']}';
+                final email = member['email'] ?? '';
+                final staffId = member['staffId'] ?? '';
+                
+                return ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: AppTheme.blue100,
+                    child: Text(
+                      name[0].toUpperCase(),
+                      style: const TextStyle(color: AppTheme.blue600),
+                    ),
+                  ),
+                  title: Text(name),
+                  subtitle: Text('$email\n$staffId'),
+                  isThreeLine: true,
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
+      );
+    } else {
+      // Show popup menu for desktop/tablet
+      final RenderBox button = context.findRenderObject() as RenderBox;
+      final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+      final RelativeRect position = RelativeRect.fromRect(
+        Rect.fromPoints(
+          button.localToGlobal(Offset.zero, ancestor: overlay),
+          button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay),
+        ),
+        Offset.zero & overlay.size,
+      );
+
+      showMenu(
+        context: context,
+        position: position,
+        items: teamMembers.map((member) {
+          final memberMap = member as Map<String, dynamic>;
+          final name = '${memberMap['firstName']} ${memberMap['lastName']}';
+          final email = memberMap['email'] ?? '';
+          
+          return PopupMenuItem(
+            enabled: false,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.check_circle, color: Colors.white),
-                SizedBox(width: 8),
-                Text('End phase form accepted'),
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.gray900,
+                  ),
+                ),
+                Text(
+                  email,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppTheme.gray600,
+                  ),
+                ),
               ],
             ),
-            backgroundColor: AppTheme.green500,
-          ),
-        );
-        _fetchEndPhaseForms();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.error, color: Colors.white),
-                const SizedBox(width: 8),
-                Expanded(child: Text('Error: $e')),
-              ],
-            ),
-            backgroundColor: AppTheme.red500,
-          ),
-        );
-      }
+          );
+        }).toList(),
+      );
     }
   }
 
-  Future<void> _rejectForm(String formId) async {
-    try {
-      await _apiService.rejectEndPhaseForm(id: formId);
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Row(
-              children: [
-                Icon(Icons.check_circle, color: Colors.white),
-                SizedBox(width: 8),
-                Text('End phase form rejected'),
-              ],
+  void _showAttachments(List<dynamic> attachments, bool isMobile) {
+    if (isMobile) {
+      // Show dialog for mobile
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Attachments'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: attachments.length,
+              itemBuilder: (context, index) {
+                final attachment = attachments[index] as Map<String, dynamic>;
+                final fileName = attachment['fileName'] ?? 'Unknown';
+                final fileUrl = attachment['fileUrl'] ?? '';
+                
+                return ListTile(
+                  leading: const Icon(Icons.attach_file, color: AppTheme.blue600),
+                  title: Text(fileName),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.download, color: AppTheme.blue600),
+                    onPressed: () => _downloadFile(fileUrl, fileName),
+                  ),
+                );
+              },
             ),
-            backgroundColor: AppTheme.yellow500,
           ),
-        );
-        _fetchEndPhaseForms();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
+      );
+    } else {
+      // Show popup menu for desktop/tablet
+      final RenderBox button = context.findRenderObject() as RenderBox;
+      final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+      final RelativeRect position = RelativeRect.fromRect(
+        Rect.fromPoints(
+          button.localToGlobal(Offset.zero, ancestor: overlay),
+          button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay),
+        ),
+        Offset.zero & overlay.size,
+      );
+
+      showMenu(
+        context: context,
+        position: position,
+        items: attachments.map((attachment) {
+          final attachmentMap = attachment as Map<String, dynamic>;
+          final fileName = attachmentMap['fileName'] ?? 'Unknown';
+          final fileUrl = attachmentMap['fileUrl'] ?? '';
+          
+          return PopupMenuItem(
+            onTap: () => _downloadFile(fileUrl, fileName),
+            child: Row(
               children: [
-                const Icon(Icons.error, color: Colors.white),
+                const Icon(Icons.attach_file, size: 16, color: AppTheme.gray600),
                 const SizedBox(width: 8),
-                Expanded(child: Text('Error: $e')),
+                Expanded(
+                  child: Text(
+                    fileName,
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Icon(Icons.download, size: 16, color: AppTheme.blue600),
               ],
             ),
-            backgroundColor: AppTheme.red500,
+          );
+        }).toList(),
+      );
+    }
+  }
+
+  void _downloadFile(String fileUrl, String fileName) {
+    // TODO: Implement file download
+    // For web: use html.AnchorElement
+    // For mobile: use path_provider and dio
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Downloading $fileName...'),
+        backgroundColor: AppTheme.blue600,
+      ),
+    );
+  }
+
+  void _editForm(Map<String, dynamic> form, bool isMobile) {
+    if (widget.project == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Project data not available'),
+          backgroundColor: AppTheme.red500,
+        ),
+      );
+      return;
+    }
+
+    final phase = form['phase'] as Map<String, dynamic>?;
+    final phaseId = phase?['_id'] ?? '';
+    final phaseName = phase?['name'] ?? 'Unknown Phase';
+
+    if (isMobile) {
+      // Show full screen dialog for mobile
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          fullscreenDialog: true,
+          builder: (context) => Scaffold(
+            appBar: AppBar(
+              title: const Text('Edit End Phase Form'),
+              leading: IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+            body: EndPhaseFormDialog(
+              projectId: widget.projectId,
+              phaseId: phaseId,
+              phaseName: phaseName,
+              project: widget.project!,
+              isEditMode: true,
+              existingFormData: form,
+              onSuccess: () {
+                Navigator.pop(context);
+                _fetchEndPhaseForms();
+              },
+            ),
           ),
-        );
-      }
+        ),
+      );
+    } else {
+      // Show dialog for desktop/tablet
+      showDialog(
+        context: context,
+        builder: (context) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 600, maxHeight: 700),
+            child: EndPhaseFormDialog(
+              projectId: widget.projectId,
+              phaseId: phaseId,
+              phaseName: phaseName,
+              project: widget.project!,
+              isEditMode: true,
+              existingFormData: form,
+              onSuccess: () {
+                _fetchEndPhaseForms();
+              },
+            ),
+          ),
+        ),
+      );
     }
   }
 
@@ -341,35 +517,46 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
           const SizedBox(height: 8),
           _buildInfoRow(Icons.person, 'Team Leader', teamLeaderName),
           const SizedBox(height: 8),
-          _buildInfoRow(Icons.people, 'Team Members', '${teamMembers.length}'),
+          InkWell(
+            onTap: () => _showTeamMembers(teamMembers, true),
+            child: _buildInfoRow(
+              Icons.people,
+              'Team Members',
+              '${teamMembers.length} members',
+              isClickable: true,
+            ),
+          ),
           const SizedBox(height: 8),
-          _buildInfoRow(Icons.attach_file, 'Attachments', '${attachments.length}'),
+          InkWell(
+            onTap: () => _showAttachments(attachments, true),
+            child: _buildInfoRow(
+              Icons.attach_file,
+              'Attachments',
+              '${attachments.length} files',
+              isClickable: true,
+            ),
+          ),
           const SizedBox(height: 16),
           Row(
             children: [
               Expanded(
                 child: CustomButton(
-                  text: 'Accept',
-                  onPressed: () => _acceptForm(formId),
+                  text: 'Edit',
+                  onPressed: () => _editForm(form, true),
                   variant: ButtonVariant.default_,
                   size: ButtonSize.sm,
-                  icon: const Icon(Icons.check, size: 16, color: Colors.white),
+                  icon: const Icon(Icons.edit, size: 16, color: Colors.white),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: CustomButton(
-                  text: 'Reject',
-                  onPressed: () => _rejectForm(formId),
-                  variant: ButtonVariant.outline,
+                  text: 'Delete',
+                  onPressed: () => _showDeleteConfirmation(formId, phaseName),
+                  variant: ButtonVariant.destructive,
                   size: ButtonSize.sm,
-                  icon: const Icon(Icons.close, size: 16),
+                  icon: const Icon(Icons.delete, size: 16, color: Colors.white),
                 ),
-              ),
-              const SizedBox(width: 8),
-              IconButton(
-                icon: const Icon(Icons.delete_outline, color: AppTheme.red500),
-                onPressed: () => _showDeleteConfirmation(formId, phaseName),
               ),
             ],
           ),
@@ -438,21 +625,40 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
         DataCell(CustomBadge(text: reviewNo, variant: BadgeVariant.secondary)),
         DataCell(Text(date)),
         DataCell(Text(teamLeaderName)),
-        DataCell(Text('${teamMembers.length} members')),
-        DataCell(Text('${attachments.length} files')),
+        DataCell(
+          InkWell(
+            onTap: () => _showTeamMembers(teamMembers, false),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('${teamMembers.length} members'),
+                const SizedBox(width: 4),
+                const Icon(Icons.arrow_drop_down, size: 16, color: AppTheme.blue600),
+              ],
+            ),
+          ),
+        ),
+        DataCell(
+          InkWell(
+            onTap: () => _showAttachments(attachments, false),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('${attachments.length} files'),
+                const SizedBox(width: 4),
+                const Icon(Icons.arrow_drop_down, size: 16, color: AppTheme.blue600),
+              ],
+            ),
+          ),
+        ),
         DataCell(
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
-                icon: const Icon(Icons.check_circle_outline, color: AppTheme.green600),
-                onPressed: () => _acceptForm(formId),
-                tooltip: 'Accept',
-              ),
-              IconButton(
-                icon: const Icon(Icons.cancel_outlined, color: AppTheme.yellow600),
-                onPressed: () => _rejectForm(formId),
-                tooltip: 'Reject',
+                icon: const Icon(Icons.edit_outlined, color: AppTheme.blue600),
+                onPressed: () => _editForm(form, false),
+                tooltip: 'Edit',
               ),
               IconButton(
                 icon: const Icon(Icons.delete_outline, color: AppTheme.red500),
@@ -466,10 +672,10 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value) {
+  Widget _buildInfoRow(IconData icon, String label, String value, {bool isClickable = false}) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: AppTheme.gray600),
+        Icon(icon, size: 16, color: isClickable ? AppTheme.blue600 : AppTheme.gray600),
         const SizedBox(width: 8),
         Text(
           '$label: ',
@@ -479,13 +685,22 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
           ),
         ),
         Expanded(
-          child: Text(
-            value,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: AppTheme.gray900,
-            ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: isClickable ? AppTheme.blue600 : AppTheme.gray900,
+                    decoration: isClickable ? TextDecoration.underline : null,
+                  ),
+                ),
+              ),
+              if (isClickable)
+                const Icon(Icons.arrow_drop_down, size: 16, color: AppTheme.blue600),
+            ],
           ),
         ),
       ],

@@ -72,6 +72,7 @@ class _ProjectViewScreenState extends State<ProjectViewScreen> {
         builder: (context) => EndPhaseFormsScreen(
           projectId: widget.project.id,
           projectName: widget.project.partName,
+          project: widget.project,
         ),
       ),
     ).then((_) {

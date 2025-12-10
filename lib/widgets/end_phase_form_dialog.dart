@@ -15,6 +15,8 @@ class EndPhaseFormDialog extends StatefulWidget {
   final String phaseName;
   final Project project;
   final VoidCallback? onSuccess;
+  final bool isEditMode;
+  final Map<String, dynamic>? existingFormData;
 
   const EndPhaseFormDialog({
     super.key,
@@ -23,6 +25,8 @@ class EndPhaseFormDialog extends StatefulWidget {
     required this.phaseName,
     required this.project,
     this.onSuccess,
+    this.isEditMode = false,
+    this.existingFormData,
   });
 
   @override
@@ -46,8 +50,27 @@ class _EndPhaseFormDialogState extends State<EndPhaseFormDialog> {
   @override
   void initState() {
     super.initState();
-    _selectedDate = DateTime.now();
-    _teamLeaderName = widget.project.teamLeader;
+    
+    if (widget.isEditMode && widget.existingFormData != null) {
+      // Load existing data
+      final dateStr = widget.existingFormData!['date'] as String?;
+      _selectedDate = dateStr != null ? DateTime.parse(dateStr) : DateTime.now();
+      
+      final teamLeader = widget.existingFormData!['teamLeader'] as Map<String, dynamic>?;
+      if (teamLeader != null) {
+        _teamLeaderId = teamLeader['_id'];
+        _teamLeaderName = '${teamLeader['firstName']} ${teamLeader['lastName']}';
+      } else {
+        _teamLeaderName = widget.project.teamLeader;
+      }
+      
+      final teamMembers = widget.existingFormData!['teamMembers'] as List<dynamic>? ?? [];
+      _selectedTeamMemberIds = teamMembers.map((m) => m['_id'] as String).toList();
+    } else {
+      _selectedDate = DateTime.now();
+      _teamLeaderName = widget.project.teamLeader;
+    }
+    
     _loadProjectStaff();
   }
 
@@ -250,9 +273,9 @@ class _EndPhaseFormDialogState extends State<EndPhaseFormDialog> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
-                                  'End Phase Form',
-                                  style: TextStyle(
+                                Text(
+                                  widget.isEditMode ? 'Edit End Phase Form' : 'End Phase Form',
+                                  style: const TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w600,
                                     color: AppTheme.gray900,
