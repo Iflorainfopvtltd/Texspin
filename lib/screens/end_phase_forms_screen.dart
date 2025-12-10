@@ -14,6 +14,7 @@ class EndPhaseFormsScreen extends StatefulWidget {
   final String projectName;
   final Project? project;
   final String? userRole;
+  final bool isDialog;
 
   const EndPhaseFormsScreen({
     super.key,
@@ -21,6 +22,7 @@ class EndPhaseFormsScreen extends StatefulWidget {
     required this.projectName,
     this.project,
     this.userRole,
+    this.isDialog = false,
   });
 
   @override
@@ -358,6 +360,71 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
     final isMobile = screenWidth < 600;
     final isTablet = screenWidth >= 600 && screenWidth < 1024;
 
+    if (widget.isDialog) {
+      // Dialog version without Scaffold and AppBar
+      return Container(
+        decoration: BoxDecoration(
+          color: AppTheme.gray50,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          children: [
+            // Custom header for dialog
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                  topRight: Radius.circular(12),
+                ),
+                border: Border(
+                  bottom: BorderSide(color: AppTheme.gray200),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'End Phase Forms',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                            color: AppTheme.gray900,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          widget.projectName,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: AppTheme.gray600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 20),
+                    onPressed: () => Navigator.pop(context),
+                    color: AppTheme.gray900,
+                  ),
+                ],
+              ),
+            ),
+            // Content
+            Expanded(
+              child: _buildContent(isMobile, isTablet),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Regular screen version with Scaffold and AppBar
     return Scaffold(
       backgroundColor: AppTheme.gray50,
       appBar: AppBar(
@@ -389,53 +456,57 @@ class _EndPhaseFormsScreenState extends State<EndPhaseFormsScreen> {
           ],
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.error_outline, size: 48, color: AppTheme.red500),
-                      const SizedBox(height: 16),
-                      Text('Error: $_error'),
-                      const SizedBox(height: 16),
-                      CustomButton(
-                        text: 'Retry',
-                        onPressed: _fetchEndPhaseForms,
-                        variant: ButtonVariant.outline,
-                      ),
-                    ],
-                  ),
-                )
-              : _endPhaseForms.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.description_outlined, size: 64, color: AppTheme.gray500),
-                          const SizedBox(height: 16),
-                          const Text(
-                            'No end phase forms found',
-                            style: TextStyle(fontSize: 16, color: AppTheme.gray600),
-                          ),
-                        ],
-                      ),
-                    )
-                  : SingleChildScrollView(
-                      padding: EdgeInsets.all(isMobile ? 16 : 24),
-                      child: Center(
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 1400),
-                          child: isMobile
-                              ? _buildMobileView()
-                              : isTablet
-                                  ? _buildTabletView()
-                                  : _buildDesktopView(),
+      body: _buildContent(isMobile, isTablet),
+    );
+  }
+
+  Widget _buildContent(bool isMobile, bool isTablet) {
+    return _isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : _error != null
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline, size: 48, color: AppTheme.red500),
+                    const SizedBox(height: 16),
+                    Text('Error: $_error'),
+                    const SizedBox(height: 16),
+                    CustomButton(
+                      text: 'Retry',
+                      onPressed: _fetchEndPhaseForms,
+                      variant: ButtonVariant.outline,
+                    ),
+                  ],
+                ),
+              )
+            : _endPhaseForms.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.description_outlined, size: 64, color: AppTheme.gray500),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'No end phase forms found',
+                          style: TextStyle(fontSize: 16, color: AppTheme.gray600),
                         ),
+                      ],
+                    ),
+                  )
+                : SingleChildScrollView(
+                    padding: EdgeInsets.all(isMobile ? 16 : 24),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 1400),
+                        child: isMobile
+                            ? _buildMobileView()
+                            : isTablet
+                                ? _buildTabletView()
+                                : _buildDesktopView(),
                       ),
                     ),
-    );
+                  );
   }
 
   Widget _buildMobileView() {

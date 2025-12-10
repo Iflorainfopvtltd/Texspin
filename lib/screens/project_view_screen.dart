@@ -66,20 +66,47 @@ class _ProjectViewScreenState extends State<ProjectViewScreen> {
   }
 
   void _navigateToEndPhaseForms() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => EndPhaseFormsScreen(
-          projectId: widget.project.id,
-          projectName: widget.project.partName,
-          project: widget.project,
-          userRole: widget.userRole,
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
+    if (isMobile) {
+      // Navigate to new page for mobile
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => EndPhaseFormsScreen(
+            projectId: widget.project.id,
+            projectName: widget.project.partName,
+            project: widget.project,
+            userRole: widget.userRole,
+          ),
         ),
-      ),
-    ).then((_) {
-      // Refresh count when returning
-      _fetchEndPhaseFormsCount();
-    });
+      ).then((_) {
+        // Refresh count when returning
+        _fetchEndPhaseFormsCount();
+      });
+    } else {
+      // Show dialog for web/desktop/tablet
+      showDialog(
+        context: context,
+        builder: (context) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 1200, maxHeight: 800),
+            child: EndPhaseFormsScreen(
+              projectId: widget.project.id,
+              projectName: widget.project.partName,
+              project: widget.project,
+              userRole: widget.userRole,
+              isDialog: true,
+            ),
+          ),
+        ),
+      ).then((_) {
+        // Refresh count when dialog closes
+        _fetchEndPhaseFormsCount();
+      });
+    }
   }
 
   void _showExportDialog(BuildContext context) {
