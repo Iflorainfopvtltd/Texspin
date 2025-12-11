@@ -151,6 +151,8 @@ class _TaskManagementScreenState extends State<TaskManagementScreen> {
     switch (status.toLowerCase()) {
       case 'completed':
         return AppTheme.green500;
+      case 'approved':
+        return AppTheme.green500;
       case 'in progress':
         return AppTheme.blue500;
       case 'submitted':
@@ -391,7 +393,9 @@ class _TaskManagementScreenState extends State<TaskManagementScreen> {
                     tooltip: 'Download File',
                   ),
                 // Edit button (only for pending and in progress tasks)
-                if (task.status.toLowerCase() != 'completed')
+                if (task.status.toLowerCase() != 'completed' && 
+                    task.status.toLowerCase() != 'approved' && 
+                    task.status.toLowerCase() != 'rejected')
                   IconButton(
                     icon: const Icon(Icons.edit_outlined, color: AppTheme.blue600),
                     onPressed: () => _showAddEditTaskScreen(task: task),
