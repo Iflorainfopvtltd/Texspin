@@ -7,7 +7,15 @@ class ApiService {
       'http://192.168.29.110:5000'; // Update with actual base URL
   late final Dio _dio;
 
-  ApiService() {
+  // Singleton pattern to ensure consistent configuration
+  static ApiService? _instance;
+  
+  factory ApiService() {
+    _instance ??= ApiService._internal();
+    return _instance!;
+  }
+
+  ApiService._internal() {
     _dio = Dio(
       BaseOptions(
         baseUrl: baseUrl,
@@ -20,6 +28,9 @@ class ApiService {
     _dio.interceptors.add(
       LogInterceptor(requestBody: true, responseBody: true, error: true),
     );
+    
+    // Debug logging to verify base URL configuration
+    print('🔥 ApiService initialized with baseUrl: $baseUrl');
   }
 
   // Create Activity
@@ -915,7 +926,10 @@ class ApiService {
     if (error.response != null) {
       // Server responded with error
       final statusCode = error.response?.statusCode;
-      final message = error.response?.data?['message'] ?? 'An error occurred';
+      // Safely convert message to string to handle different data types
+      final messageData = error.response?.data?['message'];
+      final message = messageData?.toString() ?? 'An error occurred';
+      
       if (statusCode == 401) {
         SharedPreferencesManager.clearAll();
         if (App.onGlobalLogout != null) {
@@ -1648,7 +1662,59 @@ class ApiService {
     }
   }
 
-  // Update Task Status (Approve/Reject)
+  // Update APQP Project Activity Status (Approve/Reject)
+  Future<Map<String, dynamic>> updateApqpActivityStatus({
+    required String projectId,
+    required String phaseId,
+    required String activityId,
+    required String fileAction, // 'approve' or 'reject'
+    String? rejectionReason,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      
+      // Ensure all values are properly formatted as strings
+      final phaseIdStr = phaseId.toString().trim();
+      final activityIdStr = activityId.toString().trim();
+      final fileActionStr = fileAction.toString().trim();
+      
+      final data = <String, dynamic>{
+        'phase': phaseIdStr,
+        'activity': activityIdStr,
+        'fileAction': fileActionStr,
+      };
+      
+      if (fileAction == 'reject' && rejectionReason != null) {
+        data['rejectionReason'] = rejectionReason.toString().trim();
+      }
+      
+      final url = '/texspin/api/apqpproject/$projectId/activity';
+      final fullUrl = '$baseUrl$url';
+      
+      // Debug logging to verify the URL
+      print('🔥 API Base URL: $baseUrl');
+      print('🔥 API Endpoint: $url');
+      print('🔥 Full URL: $fullUrl');
+      print('🔥 Dio Base URL: ${_dio.options.baseUrl}');
+      print('🔥 Project ID: "$projectId"');
+      print('🔥 Phase ID: "$phaseIdStr"');
+      print('🔥 Activity ID: "$activityIdStr"');
+      print('🔥 File Action: "$fileActionStr"');
+      
+      final response = await _dio.patch(
+        url,
+        data: data,
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // Keep the old method for backward compatibility (deprecated)
+  @deprecated
   Future<Map<String, dynamic>> updateTaskStatus({
     required String taskId,
     required String status, // 'approved' or 'rejected'
@@ -1666,8 +1732,11 @@ class ApiService {
         data['rejectionReason'] = rejectionReason;
       }
       
+      final url = '/texspin/api/task/$taskId/status';
+
+      
       final response = await _dio.put(
-        '/texspin/api/task/$taskId/status',
+        url,
         data: data,
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );

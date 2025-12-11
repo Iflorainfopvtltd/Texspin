@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter/foundation.dart';
-import 'dart:io';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_card.dart';
-import '../widgets/custom_badge.dart';
 import '../widgets/custom_button.dart';
 import 'dart:developer' as developer;
 
@@ -56,36 +52,49 @@ class _TaskUpdatesScreenState extends State<TaskUpdatesScreen> {
     }
   }
 
-  Future<void> _updateTaskStatus(String taskId, String status, {String? rejectionReason}) async {
+  Future<void> _updateTaskStatus(Map<String, dynamic> approval, String action, {String? rejectionReason}) async {
     try {
-      await _apiService.updateTaskStatus(
-        taskId: taskId,
-        status: status,
+      final projectId = approval['projectId']?.toString() ?? '';
+      final phaseId = approval['phaseId']?.toString() ?? '';
+      final activityId = approval['activityId']?.toString() ?? '';
+      
+      // Debug logging
+      developer.log('🔥 Updating task status:');
+      developer.log('🔥 Project ID: $projectId');
+      developer.log('🔥 Phase ID: $phaseId');
+      developer.log('🔥 Activity ID: $activityId');
+      developer.log('🔥 Action: $action');
+      developer.log('🔥 ApiService baseUrl: ${ApiService.baseUrl}');
+      
+      final response = await _apiService.updateApqpActivityStatus(
+        projectId: projectId,
+        phaseId: phaseId,
+        activityId: activityId,
+        fileAction: action, // 'approve' or 'reject'
         rejectionReason: rejectionReason,
       );
 
       if (mounted) {
+        // Use the message from API response if available, otherwise use default
+        final successMessage = response['message']?.toString() ?? 
+          (action == 'approve' ? 'Task approved successfully' : 'Task rejected successfully');
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(
               children: [
                 const Icon(Icons.check_circle, color: Colors.white),
                 const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    status == 'approved' 
-                      ? 'Task approved successfully'
-                      : 'Task rejected successfully',
-                  ),
-                ),
+                Expanded(child: Text(successMessage)),
               ],
             ),
-            backgroundColor: status == 'approved' ? AppTheme.green500 : AppTheme.red500,
+            backgroundColor: action == 'approve' ? AppTheme.green500 : AppTheme.red500,
           ),
         );
         _fetchApprovals(); // Refresh the list
       }
     } catch (e) {
+      developer.log('Error updating task status: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -93,7 +102,7 @@ class _TaskUpdatesScreenState extends State<TaskUpdatesScreen> {
               children: [
                 const Icon(Icons.error, color: Colors.white),
                 const SizedBox(width: 8),
-                Expanded(child: Text('Error: $e')),
+                Expanded(child: Text('Error: ${e.toString()}')),
               ],
             ),
             backgroundColor: AppTheme.red500,
@@ -103,7 +112,7 @@ class _TaskUpdatesScreenState extends State<TaskUpdatesScreen> {
     }
   }
 
-  void _showRejectDialog(String taskId, String activityName) {
+  void _showRejectDialog(Map<String, dynamic> approval, String activityName) {
     final TextEditingController reasonController = TextEditingController();
     
     showDialog(
@@ -145,7 +154,7 @@ class _TaskUpdatesScreenState extends State<TaskUpdatesScreen> {
                 return;
               }
               Navigator.pop(context);
-              _updateTaskStatus(taskId, 'rejected', rejectionReason: reasonController.text.trim());
+              _updateTaskStatus(approval, 'reject', rejectionReason: reasonController.text.trim());
             },
             variant: ButtonVariant.destructive,
             size: ButtonSize.sm,
@@ -155,7 +164,7 @@ class _TaskUpdatesScreenState extends State<TaskUpdatesScreen> {
     );
   }
 
-  void _showApproveDialog(String taskId, String activityName) {
+  void _showApproveDialog(Map<String, dynamic> approval, String activityName) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -170,7 +179,7 @@ class _TaskUpdatesScreenState extends State<TaskUpdatesScreen> {
             text: 'Approve',
             onPressed: () {
               Navigator.pop(context);
-              _updateTaskStatus(taskId, 'approved');
+              _updateTaskStatus(approval, 'approve');
             },
             variant: ButtonVariant.default_,
             size: ButtonSize.sm,
@@ -388,7 +397,6 @@ class _TaskUpdatesScreenState extends State<TaskUpdatesScreen> {
     final phaseName = approval['phaseName']?.toString() ?? 'Unknown Phase';
     final activityName = approval['activityName']?.toString() ?? 'Unknown Activity';
     final uploadedBy = approval['uploadedBy']?.toString() ?? 'Unknown';
-    final taskId = approval['taskId']?.toString() ?? '';
     final fileUrl = approval['fileUrl']?.toString() ?? '';
     final fileName = fileUrl.split('/').last;
 
@@ -463,7 +471,7 @@ class _TaskUpdatesScreenState extends State<TaskUpdatesScreen> {
                 Expanded(
                   child: CustomButton(
                     text: 'Approve',
-                    onPressed: () => _showApproveDialog(taskId, activityName),
+                    onPressed: () => _showApproveDialog(approval, activityName),
                     variant: ButtonVariant.default_,
                     size: ButtonSize.sm,
                     icon: const Icon(Icons.check, size: 16, color: Colors.white),
@@ -473,7 +481,7 @@ class _TaskUpdatesScreenState extends State<TaskUpdatesScreen> {
                 Expanded(
                   child: CustomButton(
                     text: 'Reject',
-                    onPressed: () => _showRejectDialog(taskId, activityName),
+                    onPressed: () => _showRejectDialog(approval, activityName),
                     variant: ButtonVariant.destructive,
                     size: ButtonSize.sm,
                     icon: const Icon(Icons.close, size: 16, color: Colors.white),
@@ -523,7 +531,6 @@ class _TaskUpdatesScreenState extends State<TaskUpdatesScreen> {
     final phaseName = approval['phaseName']?.toString() ?? 'Unknown Phase';
     final activityName = approval['activityName']?.toString() ?? 'Unknown Activity';
     final uploadedBy = approval['uploadedBy']?.toString() ?? 'Unknown';
-    final taskId = approval['taskId']?.toString() ?? '';
     final fileUrl = approval['fileUrl']?.toString() ?? '';
     final fileName = fileUrl.split('/').last;
 
@@ -561,7 +568,7 @@ class _TaskUpdatesScreenState extends State<TaskUpdatesScreen> {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // if (fileUrl.isNotEmpty)
+              if (fileUrl.isNotEmpty)
                 IconButton(
                   icon: const Icon(Icons.download, color: AppTheme.blue600),
                   onPressed: () => _downloadFile(fileUrl, fileName),
@@ -569,12 +576,12 @@ class _TaskUpdatesScreenState extends State<TaskUpdatesScreen> {
                 ),
               IconButton(
                 icon: const Icon(Icons.check_circle_outline, color: AppTheme.green600),
-                onPressed: () => _showApproveDialog(taskId, activityName),
+                onPressed: () => _showApproveDialog(approval, activityName),
                 tooltip: 'Approve',
               ),
               IconButton(
                 icon: const Icon(Icons.cancel_outlined, color: AppTheme.red500),
-                onPressed: () => _showRejectDialog(taskId, activityName),
+                onPressed: () => _showRejectDialog(approval, activityName),
                 tooltip: 'Reject',
               ),
             ],
