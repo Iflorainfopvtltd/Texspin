@@ -57,14 +57,7 @@ class _TaskUpdatesScreenState extends State<TaskUpdatesScreen> {
       final projectId = approval['projectId']?.toString() ?? '';
       final phaseId = approval['phaseId']?.toString() ?? '';
       final activityId = approval['activityId']?.toString() ?? '';
-      
-      // Debug logging
-      developer.log('🔥 Updating task status:');
-      developer.log('🔥 Project ID: $projectId');
-      developer.log('🔥 Phase ID: $phaseId');
-      developer.log('🔥 Activity ID: $activityId');
-      developer.log('🔥 Action: $action');
-      developer.log('🔥 ApiService baseUrl: ${ApiService.baseUrl}');
+    
       
       final response = await _apiService.updateApqpActivityStatus(
         projectId: projectId,
