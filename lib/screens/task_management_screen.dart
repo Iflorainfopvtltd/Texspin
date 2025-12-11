@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/models.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
@@ -152,10 +153,343 @@ class _TaskManagementScreenState extends State<TaskManagementScreen> {
         return AppTheme.green500;
       case 'in progress':
         return AppTheme.blue500;
+      case 'submitted':
+        return AppTheme.blue500;
+      case 'rejected':
+        return AppTheme.red500;
+      case 'pending':
+        return AppTheme.yellow500;
       default:
         return AppTheme.yellow500;
     }
   }
+
+  void _showApproveDialog(Task task) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Approve Task'),
+        content: Text('Are you sure you want to approve "${task.name}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          CustomButton(
+            text: 'Approve',
+            onPressed: () {
+              Navigator.pop(context);
+              _reviewTask(task.id, 'completed');
+            },
+            variant: ButtonVariant.default_,
+            size: ButtonSize.sm,
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showRejectDialog(Task task) {
+    final TextEditingController reasonController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reject Task'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Are you sure you want to reject "${task.name}"?'),
+            const SizedBox(height: 16),
+            CustomTextInput(
+              label: 'Rejection Reason',
+              hint: 'Please provide a reason for rejection',
+              controller: reasonController,
+              maxLines: 3,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Please provide a rejection reason';
+                }
+                return null;
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          CustomButton(
+            text: 'Reject',
+            onPressed: () {
+              if (reasonController.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Please provide a rejection reason'),
+                    backgroundColor: AppTheme.red500,
+                  ),
+                );
+                return;
+              }
+              Navigator.pop(context);
+              _reviewTask(task.id, 'rejected', rejectionReason: reasonController.text.trim());
+            },
+            variant: ButtonVariant.destructive,
+            size: ButtonSize.sm,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _reviewTask(String taskId, String status, {String? rejectionReason}) async {
+    try {
+      final response = await _apiService.reviewTask(
+        taskId: taskId,
+        status: status,
+        rejectionReason: rejectionReason,
+      );
+
+      if (mounted) {
+        // Use API response message if available, otherwise use default
+        String successMessage;
+        if (response['message'] != null) {
+          successMessage = response['message'].toString();
+        } else {
+          successMessage = status == 'completed' 
+              ? 'Task approved successfully' 
+              : 'Task rejected successfully';
+        }
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(child: Text(successMessage)),
+              ],
+            ),
+            backgroundColor: status == 'completed' ? AppTheme.green500 : AppTheme.red500,
+          ),
+        );
+        _loadTasks(); // Refresh the task list
+      }
+    } catch (e) {
+      developer.log('Error reviewing task: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(child: Text('Error: ${e.toString()}')),
+              ],
+            ),
+            backgroundColor: AppTheme.red500,
+          ),
+        );
+      }
+    }
+  }
+
+  DataRow _buildTaskDataRow(Task task) {
+    final assignedStaffName = '${task.assignedStaff['firstName'] ?? ''} ${task.assignedStaff['lastName'] ?? ''}'.trim();
+    
+    return DataRow(
+      cells: [
+        DataCell(
+          SizedBox(
+            width: 150,
+            child: Text(
+              task.name,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
+              style: const TextStyle(
+                fontWeight: FontWeight.w500,
+                color: AppTheme.gray900,
+              ),
+            ),
+          ),
+        ),
+        DataCell(
+          SizedBox(
+            width: 200,
+            child: Text(
+              task.description,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
+              style: const TextStyle(
+                color: AppTheme.gray600,
+              ),
+            ),
+          ),
+        ),
+        DataCell(
+          Text(
+            assignedStaffName,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
+        ),
+        DataCell(
+          Text(
+            _formatDate(task.deadline),
+            style: const TextStyle(
+              color: AppTheme.gray700,
+            ),
+          ),
+        ),
+        DataCell(
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 8,
+              vertical: 4,
+            ),
+            decoration: BoxDecoration(
+              color: _getStatusColor(task.status).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              task.status.toUpperCase(),
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: _getStatusColor(task.status),
+              ),
+            ),
+          ),
+        ),
+        DataCell(
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // For submitted tasks: only show approve and reject
+              if (task.status.toLowerCase() == 'submitted') ...[
+                // Approve button
+                IconButton(
+                  icon: const Icon(Icons.check_circle_outline, color: AppTheme.green600),
+                  onPressed: () => _showApproveDialog(task),
+                  tooltip: 'Approve',
+                ),
+                // Reject button
+                IconButton(
+                  icon: const Icon(Icons.cancel_outlined, color: AppTheme.red500),
+                  onPressed: () => _showRejectDialog(task),
+                  tooltip: 'Reject',
+                ),
+              ] else ...[
+                // For non-submitted tasks: show other actions
+                // Download button (if task has attachments)
+                if (task.attachments != null && task.attachments!.isNotEmpty)
+                  IconButton(
+                    icon: const Icon(Icons.download, color: AppTheme.blue600),
+                    onPressed: () => _downloadTaskFile(task),
+                    tooltip: 'Download File',
+                  ),
+                // Edit button (only for pending and in progress tasks)
+                if (task.status.toLowerCase() != 'completed')
+                  IconButton(
+                    icon: const Icon(Icons.edit_outlined, color: AppTheme.blue600),
+                    onPressed: () => _showAddEditTaskScreen(task: task),
+                    tooltip: 'Edit',
+                  ),
+                // Delete button
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, color: AppTheme.red500),
+                  onPressed: () => _deleteTask(task.id),
+                  tooltip: 'Delete',
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _downloadTaskFile(Task task) async {
+    try {
+      if (task.attachments == null || task.attachments!.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No files to download'),
+            backgroundColor: AppTheme.yellow500,
+          ),
+        );
+        return;
+      }
+
+      // For now, download the first attachment
+      final attachment = task.attachments!.first;
+      final fileUrl = attachment['fileUrl'] ?? '';
+      final fileName = attachment['fileName'] ?? 'task_file';
+
+      if (fileUrl.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('File URL not available'),
+            backgroundColor: AppTheme.red500,
+          ),
+        );
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Downloading $fileName...'),
+          backgroundColor: AppTheme.blue600,
+        ),
+      );
+
+      // Construct full URL using ApiService baseUrl
+      final String fullUrl = ApiService.baseUrl + fileUrl;
+      
+      // Use url_launcher to open/download the file
+      final Uri url = Uri.parse(fullUrl);
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.white),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text('$fileName download started')),
+                ],
+              ),
+              backgroundColor: AppTheme.green500,
+            ),
+          );
+        }
+      } else {
+        throw 'Could not launch $fullUrl';
+      }
+    } catch (e) {
+      developer.log('Error downloading file: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(child: Text('Error downloading file: $e')),
+              ],
+            ),
+            backgroundColor: AppTheme.red500,
+          ),
+        );
+      }
+    }
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -226,7 +560,7 @@ class _TaskManagementScreenState extends State<TaskManagementScreen> {
                         : const Icon(Icons.search),
                   ),
                 ),
-                // Task List
+                // Task Table
                 Expanded(
                   child: _filteredTasks.isEmpty
                       ? Center(
@@ -261,168 +595,94 @@ class _TaskManagementScreenState extends State<TaskManagementScreen> {
                         )
                       : RefreshIndicator(
                           onRefresh: _loadTasks,
-                          child: ListView.builder(
-                            padding: const EdgeInsets.only(
-                              left: 16,
-                              right: 16,
-                              bottom: 16,
-                            ),
-                            itemCount: _filteredTasks.length,
-                            itemBuilder: (context, index) {
-                              final task = _filteredTasks[index];
-                              final assignedStaffName =
-                                  '${task.assignedStaff['firstName'] ?? ''} ${task.assignedStaff['lastName'] ?? ''}'
-                                      .trim();
-
-                              return Container(
-                                margin: const EdgeInsets.only(bottom: 12),
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: AppTheme.gray200),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.05),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            task.name,
-                                            style: const TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                              color: AppTheme.gray900,
-                                            ),
-                                          ),
-                                        ),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 4,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: _getStatusColor(
-                                              task.status,
-                                            ).withOpacity(0.1),
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                          ),
-                                          child: Text(
-                                            task.status.toUpperCase(),
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.bold,
-                                              color: _getStatusColor(
-                                                task.status,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        PopupMenuButton(
-                                          icon: const Icon(
-                                            Icons.more_vert,
-                                            size: 20,
-                                          ),
-                                          itemBuilder: (context) => [
-                                            const PopupMenuItem(
-                                              value: 'edit',
-                                              child: Row(
-                                                children: [
-                                                  Icon(
-                                                    Icons.edit,
-                                                    size: 18,
-                                                    color: AppTheme.blue600,
-                                                  ),
-                                                  SizedBox(width: 8),
-                                                  Text('Edit'),
-                                                ],
-                                              ),
-                                            ),
-                                            const PopupMenuItem(
-                                              value: 'delete',
-                                              child: Row(
-                                                children: [
-                                                  Icon(
-                                                    Icons.delete,
-                                                    size: 18,
-                                                    color: AppTheme.red500,
-                                                  ),
-                                                  SizedBox(width: 8),
-                                                  Text('Delete'),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                          onSelected: (value) {
-                                            if (value == 'edit') {
-                                              _showAddEditTaskScreen(
-                                                task: task,
-                                              );
-                                            } else if (value == 'delete') {
-                                              _deleteTask(task.id);
-                                            }
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      task.description,
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        color: AppTheme.gray600,
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.all(16),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: AppTheme.gray200),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.05),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Table Header
+                                  Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.blue50,
+                                      borderRadius: const BorderRadius.only(
+                                        topLeft: Radius.circular(12),
+                                        topRight: Radius.circular(12),
                                       ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                    const SizedBox(height: 12),
-                                    Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.person_outline,
-                                          size: 16,
-                                          color: AppTheme.gray500,
-                                        ),
-                                        const SizedBox(width: 6),
-                                        Expanded(
-                                          child: Text(
-                                            assignedStaffName,
-                                            style: const TextStyle(
-                                              fontSize: 13,
-                                              color: AppTheme.gray700,
-                                            ),
+                                    child: const Text(
+                                      'Individual Tasks',
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w500,
+                                        color: AppTheme.gray900,
+                                      ),
+                                    ),
+                                  ),
+                                  // Table Content
+                                  SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: DataTable(
+                                      columnSpacing: 24,
+                                      headingRowColor: WidgetStateProperty.all(AppTheme.gray100),
+                                      dataRowColor: WidgetStateProperty.all(Colors.white),
+                                      columns: const [
+                                        DataColumn(
+                                          label: Text(
+                                            'Task Name',
+                                            style: TextStyle(fontWeight: FontWeight.w600),
                                           ),
                                         ),
-                                        const Icon(
-                                          Icons.calendar_today,
-                                          size: 16,
-                                          color: AppTheme.gray500,
+                                        DataColumn(
+                                          label: Text(
+                                            'Description',
+                                            style: TextStyle(fontWeight: FontWeight.w600),
+                                          ),
                                         ),
-                                        const SizedBox(width: 6),
-                                        Text(
-                                          _formatDate(task.deadline),
-                                          style: const TextStyle(
-                                            fontSize: 13,
-                                            color: AppTheme.gray700,
+                                        DataColumn(
+                                          label: Text(
+                                            'Assigned To',
+                                            style: TextStyle(fontWeight: FontWeight.w600),
+                                          ),
+                                        ),
+                                        DataColumn(
+                                          label: Text(
+                                            'Deadline',
+                                            style: TextStyle(fontWeight: FontWeight.w600),
+                                          ),
+                                        ),
+                                        DataColumn(
+                                          label: Text(
+                                            'Status',
+                                            style: TextStyle(fontWeight: FontWeight.w600),
+                                          ),
+                                        ),
+                                        DataColumn(
+                                          label: Text(
+                                            'Actions',
+                                            style: TextStyle(fontWeight: FontWeight.w600),
                                           ),
                                         ),
                                       ],
+                                      rows: _filteredTasks.map((task) => _buildTaskDataRow(task)).toList(),
                                     ),
-                                  ],
-                                ),
-                              );
-                            },
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
                 ),

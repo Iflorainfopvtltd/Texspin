@@ -490,6 +490,7 @@ class Task {
   final String status;
   final String createdAt;
   final String updatedAt;
+  final List<Map<String, dynamic>>? attachments;
 
   Task({
     required this.id,
@@ -501,6 +502,7 @@ class Task {
     required this.status,
     required this.createdAt,
     required this.updatedAt,
+    this.attachments,
   });
 
   factory Task.fromJson(Map<String, dynamic> json) {
@@ -514,6 +516,9 @@ class Task {
       status: json['status'] ?? 'pending',
       createdAt: json['createdAt'] ?? '',
       updatedAt: json['updatedAt'] ?? '',
+      attachments: json['attachments'] != null 
+          ? List<Map<String, dynamic>>.from(json['attachments'])
+          : null,
     );
   }
 
@@ -528,6 +533,7 @@ class Task {
       'status': status,
       'createdAt': createdAt,
       'updatedAt': updatedAt,
+      if (attachments != null) 'attachments': attachments,
     };
   }
 }

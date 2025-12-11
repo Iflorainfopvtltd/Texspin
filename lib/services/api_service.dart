@@ -926,9 +926,25 @@ class ApiService {
     if (error.response != null) {
       // Server responded with error
       final statusCode = error.response?.statusCode;
-      // Safely convert message to string to handle different data types
-      final messageData = error.response?.data?['message'];
-      final message = messageData?.toString() ?? 'An error occurred';
+      // Safely handle different response data types
+      final responseData = error.response?.data;
+      String message = 'An error occurred';
+      
+      if (responseData != null) {
+        if (responseData is Map<String, dynamic>) {
+          // Handle JSON response
+          final messageData = responseData['message'];
+          if (messageData != null) {
+            message = messageData.toString();
+          }
+        } else if (responseData is String) {
+          // Handle string response
+          message = responseData;
+        } else {
+          // Handle other types
+          message = responseData.toString();
+        }
+      }
       
       if (statusCode == 401) {
         SharedPreferencesManager.clearAll();
@@ -1166,6 +1182,35 @@ class ApiService {
         data: {"fcmToken": fcmToken},
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // Review Task (Approve/Reject)
+  Future<Map<String, dynamic>> reviewTask({
+    required String taskId,
+    required String status, // 'completed' or 'rejected'
+    String? rejectionReason,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      
+      final data = <String, dynamic>{
+        'status': status,
+      };
+      
+      if (status == 'rejected' && rejectionReason != null) {
+        data['rejectionReason'] = rejectionReason;
+      }
+      
+      final response = await _dio.put(
+        '/texspin/api/task/$taskId/review',
+        data: data,
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
     } on DioException catch (e) {
       throw _handleError(e);
     }
@@ -1690,17 +1735,6 @@ class ApiService {
       }
       
       final url = '/texspin/api/apqpproject/$projectId/activity';
-      final fullUrl = '$baseUrl$url';
-      
-      // Debug logging to verify the URL
-      print('🔥 API Base URL: $baseUrl');
-      print('🔥 API Endpoint: $url');
-      print('🔥 Full URL: $fullUrl');
-      print('🔥 Dio Base URL: ${_dio.options.baseUrl}');
-      print('🔥 Project ID: "$projectId"');
-      print('🔥 Phase ID: "$phaseIdStr"');
-      print('🔥 Activity ID: "$activityIdStr"');
-      print('🔥 File Action: "$fileActionStr"');
       
       final response = await _dio.patch(
         url,

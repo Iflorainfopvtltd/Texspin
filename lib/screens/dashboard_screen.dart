@@ -784,57 +784,59 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               )
             else if (filteredProjects.isEmpty)
-              CustomCard(
-                padding: EdgeInsets.all(isMobile ? 32 : 48),
-                child: Column(
-                  children: [
-                    Icon(
-                      _filterText.isEmpty
-                          ? Icons.inventory_2
-                          : Icons.search_off,
-                      size: isMobile ? 48 : 64,
-                      color: _filterText.isEmpty
-                          ? AppTheme.gray300
-                          : AppTheme.gray500,
-                    ),
-                    SizedBox(height: isMobile ? 12 : 16),
-                    Text(
-                      _filterText.isEmpty
-                          ? 'No Projects Yet'
-                          : 'No Projects Found',
-                      style: TextStyle(
-                        fontSize: isMobile ? 18 : 20,
-                        fontWeight: FontWeight.w500,
-                        color: AppTheme.gray900,
+              Center(
+                child: CustomCard(
+                  padding: EdgeInsets.all(isMobile ? 32 : 48),
+                  child: Column(
+                    children: [
+                      Icon(
+                        _filterText.isEmpty
+                            ? Icons.inventory_2
+                            : Icons.search_off,
+                        size: isMobile ? 48 : 64,
+                        color: _filterText.isEmpty
+                            ? AppTheme.gray300
+                            : AppTheme.gray500,
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _filterText.isEmpty
-                          ? 'Get started by creating your first APQP project'
-                          : 'Try adjusting your search terms.',
-                      style: TextStyle(
-                        fontSize: isMobile ? 13 : 14,
-                        color: AppTheme.gray600,
+                      SizedBox(height: isMobile ? 12 : 16),
+                      Text(
+                        _filterText.isEmpty
+                            ? 'No Projects Yet'
+                            : 'No Projects Found',
+                        style: TextStyle(
+                          fontSize: isMobile ? 18 : 20,
+                          fontWeight: FontWeight.w500,
+                          color: AppTheme.gray900,
+                        ),
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: isMobile ? 20 : 24),
-                    if (_filterText.isEmpty)
-                      CustomButton(
-                        text: 'Create Your First Project',
-                        onPressed: widget.onCreateProject,
-                        icon: const Icon(Icons.add, size: 16),
-                        isFullWidth: isMobile,
-                      )
-                    else
-                      CustomButton(
-                        text: 'Clear Filter',
-                        onPressed: () => setState(() => _filterText = ''),
-                        variant: ButtonVariant.outline,
-                        isFullWidth: isMobile,
+                      const SizedBox(height: 8),
+                      Text(
+                        _filterText.isEmpty
+                            ? 'Get started by creating your first APQP project'
+                            : 'Try adjusting your search terms.',
+                        style: TextStyle(
+                          fontSize: isMobile ? 13 : 14,
+                          color: AppTheme.gray600,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                  ],
+                      SizedBox(height: isMobile ? 20 : 24),
+                      if (_filterText.isEmpty)
+                        CustomButton(
+                          text: 'Create Your First Project',
+                          onPressed: widget.onCreateProject,
+                          icon: const Icon(Icons.add, size: 16),
+                          isFullWidth: isMobile,
+                        )
+                      else
+                        CustomButton(
+                          text: 'Clear Filter',
+                          onPressed: () => setState(() => _filterText = ''),
+                          variant: ButtonVariant.outline,
+                          isFullWidth: isMobile,
+                        ),
+                    ],
+                  ),
                 ),
               )
             else if (!_isTableView)
