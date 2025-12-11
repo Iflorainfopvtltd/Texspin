@@ -14,6 +14,7 @@ import '../utils/shared_preferences_manager.dart';
 import '../widgets/profile_dialog.dart';
 import '../widgets/task_management_dialog.dart';
 import '../screens/task_management_screen.dart';
+import '../screens/task_updates_screen.dart';
 
 class ManagerDashboardScreen extends StatefulWidget {
   final Function(Project project) onViewProject;
@@ -147,6 +148,11 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
           icon: Icons.help_outline,
           label: 'Task Help',
           onTap: () {},
+        ),
+        NavigationItem(
+          icon: Icons.task_alt,
+          label: 'Task Updates',
+          onTap: () => _navigateToTaskUpdates(),
         ),
         NavigationItem(
           icon: Icons.person_outline,
@@ -894,6 +900,33 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
   void _refreshProjects() {
     if (_staffId != null) {
       context.read<ManagerBloc>().add(LoadManagerProjects(_staffId!));
+    }
+  }
+
+  void _navigateToTaskUpdates() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
+    if (isMobile) {
+      // Navigate to new page for mobile
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const TaskUpdatesScreen(),
+        ),
+      );
+    } else {
+      // Show dialog for web/desktop/tablet
+      showDialog(
+        context: context,
+        builder: (context) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 900, maxHeight: 600),
+            child: const TaskUpdatesScreen(isDialog: true),
+          ),
+        ),
+      );
     }
   }
 }

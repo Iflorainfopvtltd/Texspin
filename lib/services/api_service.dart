@@ -1633,4 +1633,47 @@ class ApiService {
       throw _handleError(e);
     }
   }
+
+  // Get Project Approvals for Task Updates
+  Future<Map<String, dynamic>> getProjectApprovals({String? bearerToken}) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      final response = await _dio.get(
+        '/texspin/api/status/project-approvals',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return {'approvals': response.data};
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // Update Task Status (Approve/Reject)
+  Future<Map<String, dynamic>> updateTaskStatus({
+    required String taskId,
+    required String status, // 'approved' or 'rejected'
+    String? rejectionReason,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      
+      final data = <String, dynamic>{
+        'status': status,
+      };
+      
+      if (status == 'rejected' && rejectionReason != null) {
+        data['rejectionReason'] = rejectionReason;
+      }
+      
+      final response = await _dio.put(
+        '/texspin/api/task/$taskId/status',
+        data: data,
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
 }
