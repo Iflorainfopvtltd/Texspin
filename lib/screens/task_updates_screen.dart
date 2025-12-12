@@ -320,7 +320,7 @@ class _TaskUpdatesScreenState extends State<TaskUpdatesScreen> {
           color: AppTheme.gray900,
         ),
         title: const Text(
-          'Task Updates',
+          'APQP Tasks',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w500,

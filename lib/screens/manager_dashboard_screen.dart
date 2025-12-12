@@ -13,7 +13,9 @@ import '../bloc/manager/manager_bloc.dart';
 import '../utils/shared_preferences_manager.dart';
 import '../widgets/profile_dialog.dart';
 import '../widgets/task_management_dialog.dart';
-import '../screens/task_management_screen.dart';
+import '../screens/task_grid_screen.dart';
+import '../screens/department_task_grid_screen.dart';
+import '../widgets/department_task_management_dialog.dart';
 import '../screens/task_updates_screen.dart';
 
 class ManagerDashboardScreen extends StatefulWidget {
@@ -151,7 +153,7 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
         ),
         NavigationItem(
           icon: Icons.task_alt,
-          label: 'Task Updates',
+          label: 'APQP Task',
           onTap: () => _navigateToTaskUpdates(),
         ),
         NavigationItem(
@@ -163,7 +165,7 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
               // Mobile: Open full screen
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) => const TaskManagementScreen(),
+                  builder: (_) => const TaskGridScreen(),
                 ),
               );
             } else {
@@ -171,6 +173,27 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
               showDialog(
                 context: context,
                 builder: (_) => const TaskManagementDialog(),
+              );
+            }
+          },
+        ),
+        NavigationItem(
+          icon: Icons.business,
+          label: 'Department Tasks',
+          onTap: () {
+            final screenWidth = MediaQuery.of(context).size.width;
+            if (screenWidth < 600) {
+              // Mobile: Open full screen
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const DepartmentTaskGridScreen(),
+                ),
+              );
+            } else {
+              // Web/Tablet: Open dialog
+              showDialog(
+                context: context,
+                builder: (_) => const DepartmentTaskManagementDialog(),
               );
             }
           },

@@ -1779,4 +1779,109 @@ class ApiService {
       throw _handleError(e);
     }
   }
+
+  // Department Task APIs
+  Future<Map<String, dynamic>> getDepartmentTasks({String? bearerToken}) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      final response = await _dio.get(
+        '/texspin/api/department-task',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> createDepartmentTask({
+    required String name,
+    required String description,
+    required String deadline,
+    required String assignedStaffId,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      final response = await _dio.post(
+        '/texspin/api/department-task',
+        data: {
+          'name': name,
+          'description': description,
+          'deadline': deadline,
+          'assignedStaffId': assignedStaffId,
+        },
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> reviewDepartmentTask({
+    required String taskId,
+    required String status, // 'completed' or 'rejected'
+    String? rejectionReason,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      
+      final data = <String, dynamic>{
+        'status': status,
+      };
+      
+      if (status == 'rejected' && rejectionReason != null) {
+        data['rejectionReason'] = rejectionReason;
+      }
+      
+      final response = await _dio.put(
+        '/texspin/api/department-task/$taskId/review',
+        data: data,
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> deleteDepartmentTask({
+    required String taskId,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      final response = await _dio.delete(
+        '/texspin/api/department-task/$taskId',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> reassignDepartmentTask({
+    required String taskId,
+    required String assignedStaffId,
+    required String deadline,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      final response = await _dio.put(
+        '/texspin/api/department-task/$taskId/reassign',
+        data: {
+          'assignedStaffId': assignedStaffId,
+          'deadline': deadline,
+        },
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
 }

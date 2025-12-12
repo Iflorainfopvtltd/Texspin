@@ -490,6 +490,10 @@ class Task {
   final String status;
   final String createdAt;
   final String updatedAt;
+  final String? fileName;
+  final String? fileUrl;
+  final String? viewUrl;
+  final String? downloadUrl;
   final List<Map<String, dynamic>>? attachments;
 
   Task({
@@ -502,6 +506,10 @@ class Task {
     required this.status,
     required this.createdAt,
     required this.updatedAt,
+    this.fileName,
+    this.fileUrl,
+    this.viewUrl,
+    this.downloadUrl,
     this.attachments,
   });
 
@@ -516,6 +524,10 @@ class Task {
       status: json['status'] ?? 'pending',
       createdAt: json['createdAt'] ?? '',
       updatedAt: json['updatedAt'] ?? '',
+      fileName: json['fileName'],
+      fileUrl: json['fileUrl'],
+      viewUrl: json['viewUrl'],
+      downloadUrl: json['downloadUrl'],
       attachments: json['attachments'] != null 
           ? List<Map<String, dynamic>>.from(json['attachments'])
           : null,
@@ -533,6 +545,84 @@ class Task {
       'status': status,
       'createdAt': createdAt,
       'updatedAt': updatedAt,
+      if (fileName != null) 'fileName': fileName,
+      if (fileUrl != null) 'fileUrl': fileUrl,
+      if (viewUrl != null) 'viewUrl': viewUrl,
+      if (downloadUrl != null) 'downloadUrl': downloadUrl,
+      if (attachments != null) 'attachments': attachments,
+    };
+  }
+}
+
+class DepartmentTask {
+  final String id;
+  final String name;
+  final String description;
+  final String deadline;
+  final Map<String, dynamic> assignedStaff;
+  final Map<String, dynamic> createdBy;
+  final String status;
+  final String createdAt;
+  final String updatedAt;
+  final String? fileName;
+  final String? fileUrl;
+  final String? viewUrl;
+  final String? downloadUrl;
+  final List<Map<String, dynamic>>? attachments;
+
+  DepartmentTask({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.deadline,
+    required this.assignedStaff,
+    required this.createdBy,
+    required this.status,
+    required this.createdAt,
+    required this.updatedAt,
+    this.fileName,
+    this.fileUrl,
+    this.viewUrl,
+    this.downloadUrl,
+    this.attachments,
+  });
+
+  factory DepartmentTask.fromJson(Map<String, dynamic> json) {
+    return DepartmentTask(
+      id: json['_id'] ?? json['id'] ?? '',
+      name: json['name'] ?? '',
+      description: json['description'] ?? '',
+      deadline: json['deadline'] ?? '',
+      assignedStaff: json['assignedStaff'] ?? {},
+      createdBy: json['createdBy'] ?? {},
+      status: json['status'] ?? 'pending',
+      createdAt: json['createdAt'] ?? '',
+      updatedAt: json['updatedAt'] ?? '',
+      fileName: json['fileName'],
+      fileUrl: json['fileUrl'],
+      viewUrl: json['viewUrl'],
+      downloadUrl: json['downloadUrl'],
+      attachments: json['attachments'] != null 
+          ? List<Map<String, dynamic>>.from(json['attachments'])
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'description': description,
+      'deadline': deadline,
+      'assignedStaff': assignedStaff,
+      'createdBy': createdBy,
+      'status': status,
+      'createdAt': createdAt,
+      'updatedAt': updatedAt,
+      if (fileName != null) 'fileName': fileName,
+      if (fileUrl != null) 'fileUrl': fileUrl,
+      if (viewUrl != null) 'viewUrl': viewUrl,
+      if (downloadUrl != null) 'downloadUrl': downloadUrl,
       if (attachments != null) 'attachments': attachments,
     };
   }

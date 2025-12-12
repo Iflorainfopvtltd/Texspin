@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+
 import '../models/models.dart';
 import '../services/api_service.dart';
+import '../services/file_download_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_input.dart';
@@ -369,8 +370,15 @@ class _TaskManagementScreenState extends State<TaskManagementScreen> {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // For submitted tasks: only show approve and reject
+              // For submitted tasks: show download, approve and reject
               if (task.status.toLowerCase() == 'submitted') ...[
+                // Download button (if downloadUrl is available)
+                if (task.downloadUrl != null && task.downloadUrl!.isNotEmpty)
+                  IconButton(
+                    icon: const Icon(Icons.download, color: AppTheme.blue600),
+                    onPressed: () => _downloadTaskFile(task),
+                    tooltip: 'Download File',
+                  ),
                 // Approve button
                 IconButton(
                   icon: const Icon(Icons.check_circle_outline, color: AppTheme.green600),
@@ -385,8 +393,9 @@ class _TaskManagementScreenState extends State<TaskManagementScreen> {
                 ),
               ] else ...[
                 // For non-submitted tasks: show other actions
-                // Download button (if task has attachments)
-                if (task.attachments != null && task.attachments!.isNotEmpty)
+                // Download button (if downloadUrl is available or has attachments)
+                if ((task.downloadUrl != null && task.downloadUrl!.isNotEmpty) ||
+                    (task.attachments != null && task.attachments!.isNotEmpty))
                   IconButton(
                     icon: const Icon(Icons.download, color: AppTheme.blue600),
                     onPressed: () => _downloadTaskFile(task),
@@ -417,7 +426,22 @@ class _TaskManagementScreenState extends State<TaskManagementScreen> {
 
   Future<void> _downloadTaskFile(Task task) async {
     try {
-      if (task.attachments == null || task.attachments!.isEmpty) {
+      String? fileUrl;
+      String? fileName;
+
+      // Check if task has downloadUrl (new structure)
+      if (task.downloadUrl != null && task.downloadUrl!.isNotEmpty) {
+        fileUrl = task.downloadUrl;
+        fileName = task.fileName ?? 'task_file';
+      } 
+      // Fallback to attachments (old structure)
+      else if (task.attachments != null && task.attachments!.isNotEmpty) {
+        final attachment = task.attachments!.first;
+        fileUrl = attachment['fileUrl'] ?? '';
+        fileName = attachment['fileName'] ?? 'task_file';
+      }
+
+      if (fileUrl == null || fileUrl.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('No files to download'),
@@ -427,52 +451,89 @@ class _TaskManagementScreenState extends State<TaskManagementScreen> {
         return;
       }
 
-      // For now, download the first attachment
-      final attachment = task.attachments!.first;
-      final fileUrl = attachment['fileUrl'] ?? '';
-      final fileName = attachment['fileName'] ?? 'task_file';
-
-      if (fileUrl.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('File URL not available'),
-            backgroundColor: AppTheme.red500,
-          ),
-        );
-        return;
+      // Check storage permission first
+      if (!await FileDownloadService.hasStoragePermission()) {
+        final granted = await FileDownloadService.requestStoragePermission();
+        if (!granted) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Storage permission is required to download files'),
+                backgroundColor: AppTheme.red500,
+              ),
+            );
+          }
+          return;
+        }
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Downloading $fileName...'),
-          backgroundColor: AppTheme.blue600,
-        ),
-      );
+      // Show downloading message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(child: Text('Downloading $fileName...')),
+              ],
+            ),
+            backgroundColor: AppTheme.blue600,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
 
       // Construct full URL using ApiService baseUrl
       final String fullUrl = ApiService.baseUrl + fileUrl;
       
-      // Use url_launcher to open/download the file
-      final Uri url = Uri.parse(fullUrl);
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url, mode: LaunchMode.externalApplication);
-        
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.check_circle, color: Colors.white),
-                  const SizedBox(width: 8),
-                  Expanded(child: Text('$fileName download started')),
-                ],
-              ),
-              backgroundColor: AppTheme.green500,
+      // Download the file using our custom service
+      final filePath = await FileDownloadService.downloadFile(
+        url: fullUrl,
+        fileName: fileName!,
+        onProgress: (received, total) {
+          developer.log('Download progress: ${(received / total * 100).toStringAsFixed(1)}%');
+        },
+      );
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('$fileName downloaded successfully'),
+                      Text(
+                        'Saved to: ${filePath.split('/').last}',
+                        style: const TextStyle(fontSize: 12, color: Colors.white70),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          );
-        }
-      } else {
-        throw 'Could not launch $fullUrl';
+            backgroundColor: AppTheme.green500,
+            duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: 'Open',
+              textColor: Colors.white,
+              onPressed: () => FileDownloadService.openFile(filePath),
+            ),
+          ),
+        );
       }
     } catch (e) {
       developer.log('Error downloading file: $e');
@@ -483,10 +544,11 @@ class _TaskManagementScreenState extends State<TaskManagementScreen> {
               children: [
                 const Icon(Icons.error, color: Colors.white),
                 const SizedBox(width: 8),
-                Expanded(child: Text('Error downloading file: $e')),
+                Expanded(child: Text('Error downloading file: ${e.toString()}')),
               ],
             ),
             backgroundColor: AppTheme.red500,
+            duration: const Duration(seconds: 4),
           ),
         );
       }

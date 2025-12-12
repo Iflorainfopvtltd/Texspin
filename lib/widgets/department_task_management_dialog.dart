@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../models/models.dart';
 import '../services/api_service.dart';
 import '../services/file_download_service.dart';
@@ -9,18 +8,18 @@ import '../widgets/custom_text_input.dart';
 import '../widgets/single_select_dropdown.dart';
 import 'dart:developer' as developer;
 
-class TaskManagementDialog extends StatefulWidget {
-  const TaskManagementDialog({super.key});
+class DepartmentTaskManagementDialog extends StatefulWidget {
+  const DepartmentTaskManagementDialog({super.key});
 
   @override
-  State<TaskManagementDialog> createState() => _TaskManagementDialogState();
+  State<DepartmentTaskManagementDialog> createState() => _DepartmentTaskManagementDialogState();
 }
 
-class _TaskManagementDialogState extends State<TaskManagementDialog> {
+class _DepartmentTaskManagementDialogState extends State<DepartmentTaskManagementDialog> {
   final ApiService _apiService = ApiService();
   final TextEditingController _searchController = TextEditingController();
-  List<Task> _tasks = [];
-  List<Task> _filteredTasks = [];
+  List<DepartmentTask> _tasks = [];
+  List<DepartmentTask> _filteredTasks = [];
   bool _isLoading = true;
   String? _error;
 
@@ -43,18 +42,18 @@ class _TaskManagementDialogState extends State<TaskManagementDialog> {
     });
 
     try {
-      final response = await _apiService.getTasks();
+      final response = await _apiService.getDepartmentTasks();
       if (response['tasks'] != null) {
         setState(() {
           _tasks = (response['tasks'] as List)
-              .map((task) => Task.fromJson(task))
+              .map((task) => DepartmentTask.fromJson(task))
               .toList();
           _filteredTasks = _tasks;
           _isLoading = false;
         });
       }
     } catch (e) {
-      developer.log('Error loading tasks: $e', name: 'TaskManagement');
+      developer.log('Error loading department tasks: $e', name: 'DepartmentTaskManagement');
       setState(() {
         _error = e.toString();
         _isLoading = false;
@@ -80,10 +79,10 @@ class _TaskManagementDialogState extends State<TaskManagementDialog> {
     });
   }
 
-  void _showAddEditTaskDialog({Task? task}) {
+  void _showAddEditTaskDialog({DepartmentTask? task}) {
     showDialog(
       context: context,
-      builder: (context) => AddEditTaskDialog(
+      builder: (context) => AddEditDepartmentTaskDialog(
         task: task,
         onSaved: () {
           Navigator.of(context).pop();
@@ -97,8 +96,8 @@ class _TaskManagementDialogState extends State<TaskManagementDialog> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Task'),
-        content: const Text('Are you sure you want to delete this task?'),
+        title: const Text('Delete Department Task'),
+        content: const Text('Are you sure you want to delete this department task?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -115,11 +114,11 @@ class _TaskManagementDialogState extends State<TaskManagementDialog> {
 
     if (confirm == true) {
       try {
-        await _apiService.deleteTask(taskId: taskId);
+        await _apiService.deleteDepartmentTask(taskId: taskId);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Task deleted successfully'),
+              content: Text('Department task deleted successfully'),
               backgroundColor: AppTheme.green500,
             ),
           );
@@ -142,10 +141,8 @@ class _TaskManagementDialogState extends State<TaskManagementDialog> {
     switch (status.toLowerCase()) {
       case 'completed':
         return AppTheme.green500;
-      case 'approved':
+      case 'accepted':
         return AppTheme.green500;
-      case 'in progress':
-        return AppTheme.blue500;
       case 'submitted':
         return AppTheme.blue500;
       case 'rejected':
@@ -157,19 +154,19 @@ class _TaskManagementDialogState extends State<TaskManagementDialog> {
     }
   }
 
-  void _showApproveDialog(Task task) {
+  void _showAcceptDialog(DepartmentTask task) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Approve Task'),
-        content: Text('Are you sure you want to approve "${task.name}"?'),
+        title: const Text('Accept Task'),
+        content: Text('Are you sure you want to accept "${task.name}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
           CustomButton(
-            text: 'Approve',
+            text: 'Accept',
             onPressed: () {
               Navigator.pop(context);
               _reviewTask(task.id, 'completed');
@@ -182,7 +179,7 @@ class _TaskManagementDialogState extends State<TaskManagementDialog> {
     );
   }
 
-  void _showRejectDialog(Task task) {
+  void _showRejectDialog(DepartmentTask task) {
     final TextEditingController reasonController = TextEditingController();
     
     showDialog(
@@ -237,9 +234,19 @@ class _TaskManagementDialogState extends State<TaskManagementDialog> {
     );
   }
 
+  void _showReassignDialog(DepartmentTask task) {
+    showDialog(
+      context: context,
+      builder: (context) => ReassignDepartmentTaskDialog(
+        task: task,
+        onReassigned: _loadTasks,
+      ),
+    );
+  }
+
   Future<void> _reviewTask(String taskId, String status, {String? rejectionReason}) async {
     try {
-      final response = await _apiService.reviewTask(
+      final response = await _apiService.reviewDepartmentTask(
         taskId: taskId,
         status: status,
         rejectionReason: rejectionReason,
@@ -252,7 +259,7 @@ class _TaskManagementDialogState extends State<TaskManagementDialog> {
           successMessage = response['message'].toString();
         } else {
           successMessage = status == 'completed' 
-              ? 'Task approved successfully' 
+              ? 'Task accepted successfully' 
               : 'Task rejected successfully';
         }
         
@@ -298,132 +305,7 @@ class _TaskManagementDialogState extends State<TaskManagementDialog> {
     }
   }
 
-  DataRow _buildTaskDataRow(Task task) {
-    final assignedStaffName = '${task.assignedStaff['firstName'] ?? ''} ${task.assignedStaff['lastName'] ?? ''}'.trim();
-    
-    return DataRow(
-      cells: [
-        DataCell(
-          SizedBox(
-            width: 150,
-            child: Text(
-              task.name,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 2,
-              style: const TextStyle(
-                fontWeight: FontWeight.w500,
-                color: AppTheme.gray900,
-              ),
-            ),
-          ),
-        ),
-        DataCell(
-          SizedBox(
-            width: 200,
-            child: Text(
-              task.description,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 2,
-              style: const TextStyle(
-                color: AppTheme.gray600,
-              ),
-            ),
-          ),
-        ),
-        DataCell(
-          Text(
-            assignedStaffName,
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
-          ),
-        ),
-        DataCell(
-          Text(
-            _formatDate(task.deadline),
-            style: const TextStyle(
-              color: AppTheme.gray700,
-            ),
-          ),
-        ),
-        DataCell(
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 8,
-              vertical: 4,
-            ),
-            decoration: BoxDecoration(
-              color: _getStatusColor(task.status).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              task.status.toUpperCase(),
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                color: _getStatusColor(task.status),
-              ),
-            ),
-          ),
-        ),
-        DataCell(
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // For submitted tasks: show download, approve and reject
-              if (task.status.toLowerCase() == 'submitted') ...[
-                // Download button (if downloadUrl is available)
-                if (task.downloadUrl != null && task.downloadUrl!.isNotEmpty)
-                  IconButton(
-                    icon: const Icon(Icons.download, color: AppTheme.blue600),
-                    onPressed: () => _downloadTaskFile(task),
-                    tooltip: 'Download File',
-                  ),
-                // Approve button
-                IconButton(
-                  icon: const Icon(Icons.check_circle_outline, color: AppTheme.green600),
-                  onPressed: () => _showApproveDialog(task),
-                  tooltip: 'Approve',
-                ),
-                // Reject button
-                IconButton(
-                  icon: const Icon(Icons.cancel_outlined, color: AppTheme.red500),
-                  onPressed: () => _showRejectDialog(task),
-                  tooltip: 'Reject',
-                ),
-              ] else ...[
-                // For non-submitted tasks: show other actions
-                // Download button (if downloadUrl is available or has attachments)
-                if ((task.downloadUrl != null && task.downloadUrl!.isNotEmpty) ||
-                    (task.attachments != null && task.attachments!.isNotEmpty))
-                  IconButton(
-                    icon: const Icon(Icons.download, color: AppTheme.blue600),
-                    onPressed: () => _downloadTaskFile(task),
-                    tooltip: 'Download File',
-                  ),
-                // Edit button (only for pending and in progress tasks)
-                if (task.status.toLowerCase() != 'completed' && 
-                    task.status.toLowerCase() != 'approved' && 
-                    task.status.toLowerCase() != 'rejected')
-                  IconButton(
-                    icon: const Icon(Icons.edit_outlined, color: AppTheme.blue600),
-                    onPressed: () => _showAddEditTaskDialog(task: task),
-                    tooltip: 'Edit',
-                  ),
-                // Delete button
-                IconButton(
-                  icon: const Icon(Icons.delete_outline, color: AppTheme.red500),
-                  onPressed: () => _deleteTask(task.id),
-                  tooltip: 'Delete',
-                ),
-              ],
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _downloadTaskFile(Task task) async {
+  Future<void> _downloadTaskFile(DepartmentTask task) async {
     try {
       String? fileUrl;
       String? fileName;
@@ -431,13 +313,13 @@ class _TaskManagementDialogState extends State<TaskManagementDialog> {
       // Check if task has downloadUrl (new structure)
       if (task.downloadUrl != null && task.downloadUrl!.isNotEmpty) {
         fileUrl = task.downloadUrl;
-        fileName = task.fileName ?? 'task_file';
+        fileName = task.fileName ?? 'dept_task_file';
       } 
       // Fallback to attachments (old structure)
       else if (task.attachments != null && task.attachments!.isNotEmpty) {
         final attachment = task.attachments!.first;
         fileUrl = attachment['fileUrl'] ?? '';
-        fileName = attachment['fileName'] ?? 'task_file';
+        fileName = attachment['fileName'] ?? 'dept_task_file';
       }
 
       if (fileUrl == null || fileUrl.isEmpty) {
@@ -554,7 +436,143 @@ class _TaskManagementDialogState extends State<TaskManagementDialog> {
     }
   }
 
-
+  DataRow _buildTaskDataRow(DepartmentTask task) {
+    final assignedStaffName = '${task.assignedStaff['firstName'] ?? ''} ${task.assignedStaff['lastName'] ?? ''}'.trim();
+    
+    return DataRow(
+      cells: [
+        DataCell(
+          SizedBox(
+            width: 150,
+            child: Text(
+              task.name,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
+              style: const TextStyle(
+                fontWeight: FontWeight.w500,
+                color: AppTheme.gray900,
+              ),
+            ),
+          ),
+        ),
+        DataCell(
+          SizedBox(
+            width: 200,
+            child: Text(
+              task.description,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
+              style: const TextStyle(
+                color: AppTheme.gray600,
+              ),
+            ),
+          ),
+        ),
+        DataCell(
+          Text(
+            assignedStaffName,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
+        ),
+        DataCell(
+          Text(
+            _formatDate(task.deadline),
+            style: const TextStyle(
+              color: AppTheme.gray700,
+            ),
+          ),
+        ),
+        DataCell(
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 8,
+              vertical: 4,
+            ),
+            decoration: BoxDecoration(
+              color: _getStatusColor(task.status).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              task.status.toUpperCase(),
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: _getStatusColor(task.status),
+              ),
+            ),
+          ),
+        ),
+        DataCell(
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // For submitted tasks: show download, accept and reject
+              if (task.status.toLowerCase() == 'submitted') ...[
+                // Download button (if downloadUrl is available)
+                if (task.downloadUrl != null && task.downloadUrl!.isNotEmpty)
+                  IconButton(
+                    icon: const Icon(Icons.download, color: AppTheme.blue600),
+                    onPressed: () => _downloadTaskFile(task),
+                    tooltip: 'Download File',
+                  ),
+                // Accept button
+                IconButton(
+                  icon: const Icon(Icons.check_circle_outline, color: AppTheme.green600),
+                  onPressed: () => _showAcceptDialog(task),
+                  tooltip: 'Accept',
+                ),
+                // Reject button
+                IconButton(
+                  icon: const Icon(Icons.cancel_outlined, color: AppTheme.red500),
+                  onPressed: () => _showRejectDialog(task),
+                  tooltip: 'Reject',
+                ),
+              ] 
+              // For rejected tasks: show reassign button
+              else if (task.status.toLowerCase() == 'rejected') ...[
+                IconButton(
+                  icon: const Icon(Icons.person_add, color: AppTheme.blue600),
+                  onPressed: () => _showReassignDialog(task),
+                  tooltip: 'Reassign',
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, color: AppTheme.red500),
+                  onPressed: () => _deleteTask(task.id),
+                  tooltip: 'Delete',
+                ),
+              ] 
+              else ...[
+                // For other tasks: show download (if available), edit and delete
+                // Download button (if downloadUrl is available or has attachments)
+                if ((task.downloadUrl != null && task.downloadUrl!.isNotEmpty) ||
+                    (task.attachments != null && task.attachments!.isNotEmpty))
+                  IconButton(
+                    icon: const Icon(Icons.download, color: AppTheme.blue600),
+                    onPressed: () => _downloadTaskFile(task),
+                    tooltip: 'Download File',
+                  ),
+                // Edit button (only for pending tasks)
+                if (task.status.toLowerCase() == 'pending')
+                  IconButton(
+                    icon: const Icon(Icons.edit_outlined, color: AppTheme.blue600),
+                    onPressed: () => _showAddEditTaskDialog(task: task),
+                    tooltip: 'Edit',
+                  ),
+                // Delete button (only for pending tasks)
+                if (task.status.toLowerCase() == 'pending')
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, color: AppTheme.red500),
+                    onPressed: () => _deleteTask(task.id),
+                    tooltip: 'Delete',
+                  ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -607,14 +625,14 @@ class _TaskManagementDialogState extends State<TaskManagementDialog> {
                   child: Row(
                     children: [
                       Icon(
-                        Icons.task_alt,
+                        Icons.business,
                         color: Colors.white,
                         size: isMobile ? 24 : 28,
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Individual Tasks',
+                          'Department Tasks',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: isMobile ? 20 : 24,
@@ -648,7 +666,7 @@ class _TaskManagementDialogState extends State<TaskManagementDialog> {
                                 ),
                                 const SizedBox(height: 16),
                                 Text(
-                                  'Error loading tasks',
+                                  'Error loading department tasks',
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -700,7 +718,7 @@ class _TaskManagementDialogState extends State<TaskManagementDialog> {
                                         children: [
                                           Icon(
                                             _tasks.isEmpty
-                                                ? Icons.task
+                                                ? Icons.business
                                                 : Icons.search_off,
                                             size: 64,
                                             color: AppTheme.gray300,
@@ -708,7 +726,7 @@ class _TaskManagementDialogState extends State<TaskManagementDialog> {
                                           const SizedBox(height: 16),
                                           Text(
                                             _tasks.isEmpty
-                                                ? 'No tasks yet'
+                                                ? 'No department tasks yet'
                                                 : 'No tasks found',
                                             style: TextStyle(
                                               fontSize: 18,
@@ -718,7 +736,7 @@ class _TaskManagementDialogState extends State<TaskManagementDialog> {
                                           if (_tasks.isEmpty) ...[
                                             const SizedBox(height: 24),
                                             CustomButton(
-                                              text: 'Add First Task',
+                                              text: 'Add First Department Task',
                                               onPressed: () =>
                                                   _showAddEditTaskDialog(),
                                               icon: const Icon(
@@ -814,17 +832,17 @@ class _TaskManagementDialogState extends State<TaskManagementDialog> {
   }
 }
 
-class AddEditTaskDialog extends StatefulWidget {
-  final Task? task;
+class AddEditDepartmentTaskDialog extends StatefulWidget {
+  final DepartmentTask? task;
   final VoidCallback onSaved;
 
-  const AddEditTaskDialog({super.key, this.task, required this.onSaved});
+  const AddEditDepartmentTaskDialog({super.key, this.task, required this.onSaved});
 
   @override
-  State<AddEditTaskDialog> createState() => _AddEditTaskDialogState();
+  State<AddEditDepartmentTaskDialog> createState() => _AddEditDepartmentTaskDialogState();
 }
 
-class _AddEditTaskDialogState extends State<AddEditTaskDialog> {
+class _AddEditDepartmentTaskDialogState extends State<AddEditDepartmentTaskDialog> {
   final ApiService _apiService = ApiService();
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
@@ -912,23 +930,18 @@ class _AddEditTaskDialogState extends State<AddEditTaskDialog> {
     setState(() => _isLoading = true);
 
     try {
-      final deadlineStr = _deadline!.toIso8601String();
+      final deadlineStr = _deadline!.toIso8601String().split('T')[0]; // Format as YYYY-MM-DD
 
       if (widget.task == null) {
-        await _apiService.createTask(
+        await _apiService.createDepartmentTask(
           name: _nameController.text.trim(),
           description: _descriptionController.text.trim(),
           deadline: deadlineStr,
           assignedStaffId: _selectedStaffId!,
         );
       } else {
-        await _apiService.updateTask(
-          taskId: widget.task!.id,
-          name: _nameController.text.trim(),
-          description: _descriptionController.text.trim(),
-          deadline: deadlineStr,
-          assignedStaffId: _selectedStaffId!,
-        );
+        // Note: Update functionality would need to be implemented in the API
+        throw Exception('Editing department tasks is not yet supported');
       }
 
       if (mounted) {
@@ -936,8 +949,8 @@ class _AddEditTaskDialogState extends State<AddEditTaskDialog> {
           SnackBar(
             content: Text(
               widget.task == null
-                  ? 'Task created successfully'
-                  : 'Task updated successfully',
+                  ? 'Department task created successfully'
+                  : 'Department task updated successfully',
             ),
             backgroundColor: AppTheme.green500,
           ),
@@ -959,16 +972,10 @@ class _AddEditTaskDialogState extends State<AddEditTaskDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-
     return Dialog(
       child: Container(
-        constraints: BoxConstraints(
-          maxWidth: 500,
-          maxHeight: MediaQuery.of(context).size.height * 0.9,
-        ),
-        padding: EdgeInsets.all(isMobile ? 20 : 24),
+        constraints: const BoxConstraints(maxWidth: 500),
+        padding: const EdgeInsets.all(24),
         child: Form(
           key: _formKey,
           child: SingleChildScrollView(
@@ -978,11 +985,16 @@ class _AddEditTaskDialogState extends State<AddEditTaskDialog> {
               children: [
                 Row(
                   children: [
+                    Icon(
+                      Icons.business,
+                      color: AppTheme.primary,
+                    ),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        widget.task == null ? 'Add Task' : 'Edit Task',
-                        style: TextStyle(
-                          fontSize: isMobile ? 20 : 24,
+                        widget.task == null ? 'Add Department Task' : 'Edit Department Task',
+                        style: const TextStyle(
+                          fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -996,7 +1008,7 @@ class _AddEditTaskDialogState extends State<AddEditTaskDialog> {
                 const SizedBox(height: 20),
                 CustomTextInput(
                   label: 'Task Name',
-                  hint: 'Enter task name',
+                  hint: 'Enter department task name',
                   controller: _nameController,
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
@@ -1119,6 +1131,261 @@ class _AddEditTaskDialogState extends State<AddEditTaskDialog> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class ReassignDepartmentTaskDialog extends StatefulWidget {
+  final DepartmentTask task;
+  final VoidCallback? onReassigned;
+
+  const ReassignDepartmentTaskDialog({
+    super.key,
+    required this.task,
+    this.onReassigned,
+  });
+
+  @override
+  State<ReassignDepartmentTaskDialog> createState() => _ReassignDepartmentTaskDialogState();
+}
+
+class _ReassignDepartmentTaskDialogState extends State<ReassignDepartmentTaskDialog> {
+  final ApiService _apiService = ApiService();
+  DateTime? _deadline;
+  String? _selectedStaffId;
+  List<Staff> _staff = [];
+  bool _isLoading = false;
+  bool _isLoadingStaff = true;
+
+  @override
+  void initState() {
+    super.initState();
+    try {
+      _deadline = DateTime.parse(widget.task.deadline);
+    } catch (e) {
+      developer.log('Error parsing deadline: $e');
+    }
+    _loadStaff();
+  }
+
+  Future<void> _loadStaff() async {
+    try {
+      final response = await _apiService.getStaff();
+      if (response['staff'] != null) {
+        setState(() {
+          _staff = (response['staff'] as List)
+              .map((s) => Staff.fromJson(s))
+              .toList();
+          _isLoadingStaff = false;
+        });
+      }
+    } catch (e) {
+      developer.log('Error loading staff: $e');
+      setState(() => _isLoadingStaff = false);
+    }
+  }
+
+  Future<void> _selectDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _deadline ?? DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2030),
+    );
+    if (picked != null) {
+      setState(() => _deadline = picked);
+    }
+  }
+
+  Future<void> _reassignTask() async {
+    if (_deadline == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a deadline'),
+          backgroundColor: AppTheme.red500,
+        ),
+      );
+      return;
+    }
+    if (_selectedStaffId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a staff member'),
+          backgroundColor: AppTheme.red500,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final deadlineStr = _deadline!.toIso8601String().split('T')[0]; // Format as YYYY-MM-DD
+
+      await _apiService.reassignDepartmentTask(
+        taskId: widget.task.id,
+        assignedStaffId: _selectedStaffId!,
+        deadline: deadlineStr,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Department task reassigned successfully'),
+            backgroundColor: AppTheme.green500,
+          ),
+        );
+        Navigator.of(context).pop();
+        widget.onReassigned?.call();
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppTheme.red500,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 500),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.business,
+                  color: AppTheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Reassign Department Task: ${widget.task.name}',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            
+            // Staff Selection
+            _isLoadingStaff
+                ? const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(20),
+                      child: CircularProgressIndicator(),
+                    ),
+                  )
+                : SingleSelectDropdown<Staff>(
+                    label: 'Reassign to Staff',
+                    isRequired: true,
+                    options: _staff,
+                    selectedId: _selectedStaffId,
+                    onSelectionChanged: (value) {
+                      setState(() => _selectedStaffId = value);
+                    },
+                    getDisplayText: (staff) => staff.fullName,
+                    getSubText: (staff) => staff.designation ?? staff.role,
+                    getId: (staff) => staff.id,
+                    hintText: 'Select staff member',
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please select a staff member';
+                      }
+                      return null;
+                    },
+                    enabled: !_isLoading,
+                  ),
+            const SizedBox(height: 16),
+            
+            // Deadline Selection
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'New Deadline',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: AppTheme.foreground,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                InkWell(
+                  onTap: _isLoading ? null : _selectDate,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.inputBackground,
+                      border: Border.all(color: AppTheme.border),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _deadline != null
+                                ? '${_deadline!.day}/${_deadline!.month}/${_deadline!.year}'
+                                : 'Select new deadline',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: _deadline != null
+                                  ? AppTheme.foreground
+                                  : AppTheme.mutedForeground,
+                            ),
+                          ),
+                        ),
+                        const Icon(
+                          Icons.calendar_today,
+                          color: AppTheme.mutedForeground,
+                          size: 20,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            
+            // Action Buttons
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
+                ),
+                const SizedBox(width: 12),
+                CustomButton(
+                  text: _isLoading ? 'Reassigning...' : 'Reassign Task',
+                  onPressed: _isLoading ? null : _reassignTask,
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
