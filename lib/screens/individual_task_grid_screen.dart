@@ -119,6 +119,44 @@ class _IndividualTaskGridScreenState extends State<IndividualTaskGridScreen> {
     );
   }
 
+  Future<void> _sendReminder(String taskId) async {
+    try {
+      final response = await _apiService.sendIndividualTaskReminder(taskId: taskId);
+      
+      if (mounted) {
+        final successMessage = response['message']?.toString() ?? 'Reminder sent successfully';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(child: Text(successMessage)),
+              ],
+            ),
+            backgroundColor: AppTheme.green500,
+          ),
+        );
+      }
+    } catch (e) {
+      developer.log('Error sending reminder: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(child: Text('Error sending reminder: ${e.toString()}')),
+              ],
+            ),
+            backgroundColor: AppTheme.red500,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _deleteTask(String taskId) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -339,6 +377,7 @@ class _IndividualTaskGridScreenState extends State<IndividualTaskGridScreen> {
                                 onEdit: () => _showAddEditTaskDialog(task: task),
                                 onDelete: () => _deleteTask(task.id),
                                 onRefresh: _loadTasks,
+                                onReminder: () => _sendReminder(task.id),
                                 showActions: true,
                                 isCompact: false,
                               );

@@ -273,6 +273,44 @@ class _IndividualTaskManagementDialogState extends State<IndividualTaskManagemen
     );
   }
 
+  Future<void> _sendReminder(String taskId) async {
+    try {
+      final response = await _apiService.sendIndividualTaskReminder(taskId: taskId);
+      
+      if (mounted) {
+        final successMessage = response['message']?.toString() ?? 'Reminder sent successfully';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(child: Text(successMessage)),
+              ],
+            ),
+            backgroundColor: AppTheme.green500,
+          ),
+        );
+      }
+    } catch (e) {
+      developer.log('Error sending reminder: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(child: Text('Error sending reminder: ${e.toString()}')),
+              ],
+            ),
+            backgroundColor: AppTheme.red500,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _reviewTask(String taskId, String status, {String? rejectionReason}) async {
     try {
       final response = await _apiService.reviewTask(
@@ -606,6 +644,13 @@ class _IndividualTaskManagementDialogState extends State<IndividualTaskManagemen
                     icon: const Icon(Icons.download, color: AppTheme.blue600),
                     onPressed: () => _downloadTaskFile(task),
                     tooltip: 'Download File',
+                  ),
+                // Reminder button (only for pending tasks)
+                if (task.status.toLowerCase() == 'pending')
+                  IconButton(
+                    icon: const Icon(Icons.send_outlined, color: AppTheme.yellow500),
+                    onPressed: () => _sendReminder(task.id),
+                    tooltip: 'Send Reminder',
                   ),
                 // Edit button (only for pending tasks)
                 if (task.status.toLowerCase() == 'pending')

@@ -1311,6 +1311,57 @@ class ApiService {
     }
   }
 
+  // Send Individual Task Reminder (POST)
+  Future<Map<String, dynamic>> sendIndividualTaskReminder({
+    required String taskId,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      final response = await _dio.post(
+        '/texspin/api/task/$taskId/reminder',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // Send Department Task Reminder (POST)
+  Future<Map<String, dynamic>> sendDepartmentTaskReminder({
+    required String taskId,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      final response = await _dio.post(
+        '/texspin/api/department-task/$taskId/reminder',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // Send APQP Task Reminder (POST)
+  Future<Map<String, dynamic>> sendApqpTaskReminder({
+    required String projectId,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      final response = await _dio.post(
+        '/texspin/api/apqpproject/$projectId/reminder',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
   // Assign Activity Staff (PATCH for new assignment)
   Future<Map<String, dynamic>> assignActivityStaff({
     required String projectId,

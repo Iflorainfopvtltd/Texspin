@@ -273,6 +273,45 @@ class DepartmentTaskCard extends StatelessWidget {
     );
   }
 
+  Future<void> _sendReminder(BuildContext context) async {
+    try {
+      final apiService = ApiService();
+      final response = await apiService.sendDepartmentTaskReminder(taskId: task.id);
+      
+      if (context.mounted) {
+        final successMessage = response['message']?.toString() ?? 'Reminder sent successfully';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(child: Text(successMessage)),
+              ],
+            ),
+            backgroundColor: AppTheme.green500,
+          ),
+        );
+      }
+    } catch (e) {
+      developer.log('Error sending reminder: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(child: Text('Error sending reminder: ${e.toString()}')),
+              ],
+            ),
+            backgroundColor: AppTheme.red500,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _reviewTask(BuildContext context, String status, {String? rejectionReason}) async {
     try {
       final apiService = ApiService();
@@ -527,6 +566,20 @@ class DepartmentTaskCard extends StatelessWidget {
                       ),
                     if ((task.downloadUrl != null && task.downloadUrl!.isNotEmpty) ||
                         (task.attachments != null && task.attachments!.isNotEmpty))
+                      const SizedBox(width: 8),
+                    
+                    // Reminder button (only for pending tasks)
+                    if (task.status.toLowerCase() == 'pending')
+                      Expanded(
+                        child: CustomButton(
+                          text: 'Remind',
+                          onPressed: () => _sendReminder(context),
+                          variant: ButtonVariant.outline,
+                          size: ButtonSize.sm,
+                          icon: const Icon(Icons.send, size: 16),
+                        ),
+                      ),
+                    if (task.status.toLowerCase() == 'pending')
                       const SizedBox(width: 8),
                     
                     // Edit button (only for pending tasks)

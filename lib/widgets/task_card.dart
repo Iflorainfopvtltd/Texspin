@@ -13,6 +13,7 @@ class TaskCard extends StatelessWidget {
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
   final VoidCallback? onRefresh;
+  final VoidCallback? onReminder;
   final bool showActions;
   final bool isCompact;
 
@@ -22,6 +23,7 @@ class TaskCard extends StatelessWidget {
     this.onEdit,
     this.onDelete,
     this.onRefresh,
+    this.onReminder,
     this.showActions = true,
     this.isCompact = false,
   });
@@ -275,6 +277,8 @@ class TaskCard extends StatelessWidget {
       ),
     );
   }
+
+
 
   Future<void> _reviewTask(BuildContext context, String status, {String? rejectionReason}) async {
     try {
@@ -530,6 +534,22 @@ class TaskCard extends StatelessWidget {
                       ),
                     if ((task.downloadUrl != null && task.downloadUrl!.isNotEmpty) ||
                         (task.attachments != null && task.attachments!.isNotEmpty))
+                      const SizedBox(width: 8),
+                    
+                    // Reminder button (only for pending tasks)
+                    if (task.status.toLowerCase() == 'pending' && onReminder != null)
+                      Expanded(
+                        child: CustomButton(
+                          text: 'Remind',
+                          onPressed: onReminder,
+                          variant: ButtonVariant.outline,
+                          size: ButtonSize.sm,
+                          icon: const Icon(Icons.send, size: 16),
+                        ),
+                      ),
+                    if (task.status.toLowerCase() == 'pending' && onReminder != null)
+                      const SizedBox(width: 8),
+                    if (task.status.toLowerCase() == 'pending')
                       const SizedBox(width: 8),
                     
                     // Edit button (only for pending tasks)

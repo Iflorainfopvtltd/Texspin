@@ -16,7 +16,9 @@ import '../widgets/individual_task_management_dialog.dart';
 import '../screens/individual_task_grid_screen.dart';
 import '../screens/department_task_grid_screen.dart';
 import '../widgets/department_task_management_dialog.dart';
-import '../screens/task_updates_screen.dart';
+import '../widgets/apqp_task_management_dialog.dart';
+import '../screens/apqp_task_grid_screen.dart';
+
 
 class ManagerDashboardScreen extends StatefulWidget {
   final Function(Project project) onViewProject;
@@ -144,7 +146,23 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
         NavigationItem(
           icon: Icons.task_alt,
           label: 'APQP Task',
-          onTap: () => _navigateToTaskUpdates(),
+          onTap: () {
+            final screenWidth = MediaQuery.of(context).size.width;
+            if (screenWidth < 600) {
+              // Mobile: Open full screen
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const ApqpTaskGridScreen(),
+                ),
+              );
+            } else {
+              // Web/Tablet: Open dialog
+              showDialog(
+                context: context,
+                builder: (_) => const ApqpTaskManagementDialog(),
+              );
+            }
+          },
         ),
         NavigationItem(
           icon: Icons.person_outline,
@@ -887,31 +905,5 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
     }
   }
 
-  void _navigateToTaskUpdates() {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
 
-    if (isMobile) {
-      // Navigate to new page for mobile
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const TaskUpdatesScreen(),
-        ),
-      );
-      
-    } else {
-      // Show dialog for web/desktop/tablet
-      showDialog(
-        context: context,
-        builder: (context) => Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 900, maxHeight: 600),
-            child: const TaskUpdatesScreen(isDialog: true),
-          ),
-        ),
-      );
-    }
-  }
 }
