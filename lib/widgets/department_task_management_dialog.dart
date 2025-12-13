@@ -22,6 +22,7 @@ class _DepartmentTaskManagementDialogState extends State<DepartmentTaskManagemen
   List<DepartmentTask> _filteredTasks = [];
   bool _isLoading = true;
   String? _error;
+  String _selectedFilter = 'all';
 
   @override
   void initState() {
@@ -63,20 +64,46 @@ class _DepartmentTaskManagementDialogState extends State<DepartmentTaskManagemen
 
   void _filterTasks(String query) {
     setState(() {
-      if (query.isEmpty) {
-        _filteredTasks = _tasks;
-      } else {
-        _filteredTasks = _tasks.where((task) {
-          final taskName = task.name.toLowerCase();
-          final staffName =
-              '${task.assignedStaff['firstName'] ?? ''} ${task.assignedStaff['lastName'] ?? ''}'
-                  .toLowerCase();
-          final searchLower = query.toLowerCase();
-          return taskName.contains(searchLower) ||
-              staffName.contains(searchLower);
-        }).toList();
-      }
+      _applyFilters(query, _selectedFilter);
     });
+  }
+
+  void _applyFilters(String query, String statusFilter) {
+    var filtered = _tasks;
+
+    // Apply status filter
+    if (statusFilter != 'all') {
+      filtered = filtered.where((task) {
+        final status = task.status.toLowerCase();
+        switch (statusFilter) {
+          case 'pending':
+            return status == 'pending';
+          case 'submitted':
+            return status == 'submitted';
+          case 'accepted':
+            return status == 'completed' || status == 'accepted';
+          case 'rejected':
+            return status == 'rejected';
+          default:
+            return true;
+        }
+      }).toList();
+    }
+
+    // Apply text filter
+    if (query.isNotEmpty) {
+      filtered = filtered.where((task) {
+        final taskName = task.name.toLowerCase();
+        final staffName =
+            '${task.assignedStaff['firstName'] ?? ''} ${task.assignedStaff['lastName'] ?? ''}'
+                .toLowerCase();
+        final searchLower = query.toLowerCase();
+        return taskName.contains(searchLower) ||
+            staffName.contains(searchLower);
+      }).toList();
+    }
+
+    _filteredTasks = filtered;
   }
 
   void _showAddEditTaskDialog({DepartmentTask? task}) {
@@ -436,6 +463,32 @@ class _DepartmentTaskManagementDialogState extends State<DepartmentTaskManagemen
     }
   }
 
+  Widget _buildFilterChip(String label, String value) {
+    final isSelected = _selectedFilter == value;
+    return FilterChip(
+      label: Text(
+        label,
+        style: TextStyle(
+          color: isSelected ? Colors.white : AppTheme.gray700,
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+        ),
+      ),
+      selected: isSelected,
+      onSelected: (selected) {
+        setState(() {
+          _selectedFilter = value;
+          _applyFilters(_searchController.text, _selectedFilter);
+        });
+      },
+      backgroundColor: AppTheme.gray100,
+      selectedColor: AppTheme.primary,
+      checkmarkColor: Colors.white,
+      side: BorderSide(
+        color: isSelected ? AppTheme.primary : AppTheme.gray300,
+      ),
+    );
+  }
+
   DataRow _buildTaskDataRow(DepartmentTask task) {
     final assignedStaffName = '${task.assignedStaff['firstName'] ?? ''} ${task.assignedStaff['lastName'] ?? ''}'.trim();
     
@@ -694,19 +747,41 @@ class _DepartmentTaskManagementDialogState extends State<DepartmentTaskManagemen
                             // Search Bar
                             Padding(
                               padding: EdgeInsets.all(isMobile ? 16 : 24),
-                              child: CustomTextInput(
-                                controller: _searchController,
-                                hint: 'Search by task name or staff name...',
-                                onChanged: _filterTasks,
-                                suffixIcon: _searchController.text.isNotEmpty
-                                    ? IconButton(
-                                        icon: const Icon(Icons.clear, size: 20),
-                                        onPressed: () {
-                                          _searchController.clear();
-                                          _filterTasks('');
-                                        },
-                                      )
-                                    : const Icon(Icons.search),
+                              child: Column(
+                                children: [
+                                  CustomTextInput(
+                                    controller: _searchController,
+                                    hint: 'Search by task name or staff name...',
+                                    onChanged: _filterTasks,
+                                    suffixIcon: _searchController.text.isNotEmpty
+                                        ? IconButton(
+                                            icon: const Icon(Icons.clear, size: 20),
+                                            onPressed: () {
+                                              _searchController.clear();
+                                              _filterTasks('');
+                                            },
+                                          )
+                                        : const Icon(Icons.search),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  // Status Filter Chips
+                                  SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: Row(
+                                      children: [
+                                        _buildFilterChip('All', 'all'),
+                                        const SizedBox(width: 8),
+                                        _buildFilterChip('Pending', 'pending'),
+                                        const SizedBox(width: 8),
+                                        _buildFilterChip('Submitted', 'submitted'),
+                                        const SizedBox(width: 8),
+                                        _buildFilterChip('Accepted', 'accepted'),
+                                        const SizedBox(width: 8),
+                                        _buildFilterChip('Rejected', 'rejected'),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                             // Task List

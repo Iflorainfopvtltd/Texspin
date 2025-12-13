@@ -22,6 +22,7 @@ class _IndividualTaskManagementDialogState extends State<IndividualTaskManagemen
   List<Task> _filteredTasks = [];
   bool _isLoading = true;
   String? _error;
+  String _selectedFilter = 'all';
 
   @override
   void initState() {
@@ -63,20 +64,46 @@ class _IndividualTaskManagementDialogState extends State<IndividualTaskManagemen
 
   void _filterTasks(String query) {
     setState(() {
-      if (query.isEmpty) {
-        _filteredTasks = _tasks;
-      } else {
-        _filteredTasks = _tasks.where((task) {
-          final taskName = task.name.toLowerCase();
-          final staffName =
-              '${task.assignedStaff['firstName'] ?? ''} ${task.assignedStaff['lastName'] ?? ''}'
-                  .toLowerCase();
-          final searchLower = query.toLowerCase();
-          return taskName.contains(searchLower) ||
-              staffName.contains(searchLower);
-        }).toList();
-      }
+      _applyFilters(query, _selectedFilter);
     });
+  }
+
+  void _applyFilters(String query, String statusFilter) {
+    var filtered = _tasks;
+
+    // Apply status filter
+    if (statusFilter != 'all') {
+      filtered = filtered.where((task) {
+        final status = task.status.toLowerCase();
+        switch (statusFilter) {
+          case 'pending':
+            return status == 'pending';
+          case 'submitted':
+            return status == 'submitted';
+          case 'approved':
+            return status == 'completed' || status == 'approved';
+          case 'rejected':
+            return status == 'rejected';
+          default:
+            return true;
+        }
+      }).toList();
+    }
+
+    // Apply text filter
+    if (query.isNotEmpty) {
+      filtered = filtered.where((task) {
+        final taskName = task.name.toLowerCase();
+        final staffName =
+            '${task.assignedStaff['firstName'] ?? ''} ${task.assignedStaff['lastName'] ?? ''}'
+                .toLowerCase();
+        final searchLower = query.toLowerCase();
+        return taskName.contains(searchLower) ||
+            staffName.contains(searchLower);
+      }).toList();
+    }
+
+    _filteredTasks = filtered;
   }
 
   void _showAddEditTaskDialog({Task? task}) {
@@ -438,6 +465,32 @@ class _IndividualTaskManagementDialogState extends State<IndividualTaskManagemen
     }
   }
 
+  Widget _buildFilterChip(String label, String value) {
+    final isSelected = _selectedFilter == value;
+    return FilterChip(
+      label: Text(
+        label,
+        style: TextStyle(
+          color: isSelected ? Colors.white : AppTheme.gray700,
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+        ),
+      ),
+      selected: isSelected,
+      onSelected: (selected) {
+        setState(() {
+          _selectedFilter = value;
+          _applyFilters(_searchController.text, _selectedFilter);
+        });
+      },
+      backgroundColor: AppTheme.gray100,
+      selectedColor: AppTheme.primary,
+      checkmarkColor: Colors.white,
+      side: BorderSide(
+        color: isSelected ? AppTheme.primary : AppTheme.gray300,
+      ),
+    );
+  }
+
   DataRow _buildTaskDataRow(Task task) {
     final assignedStaffName = '${task.assignedStaff['firstName'] ?? ''} ${task.assignedStaff['lastName'] ?? ''}'.trim();
     
@@ -534,7 +587,7 @@ class _IndividualTaskManagementDialogState extends State<IndividualTaskManagemen
               // For rejected tasks: show reassign button
               else if (task.status.toLowerCase() == 'rejected') ...[
                 IconButton(
-                  icon: const Icon(Icons.group, color: AppTheme.blue600),
+                  icon: const Icon(Icons.person_add, color: AppTheme.blue600),
                   onPressed: () => _showReassignDialog(task),
                   tooltip: 'Reassign',
                 ),
@@ -643,11 +696,6 @@ class _IndividualTaskManagementDialogState extends State<IndividualTaskManagemen
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.add, color: Colors.white),
-                        onPressed: () => _showAddEditTaskDialog(),
-                        tooltip: 'Add Task',
-                      ),
-                      IconButton(
                         icon: const Icon(Icons.close, color: Colors.white),
                         onPressed: () => Navigator.of(context).pop(),
                       ),
@@ -701,19 +749,41 @@ class _IndividualTaskManagementDialogState extends State<IndividualTaskManagemen
                             // Search Bar
                             Padding(
                               padding: EdgeInsets.all(isMobile ? 16 : 24),
-                              child: CustomTextInput(
-                                controller: _searchController,
-                                hint: 'Search by task name or staff name...',
-                                onChanged: _filterTasks,
-                                suffixIcon: _searchController.text.isNotEmpty
-                                    ? IconButton(
-                                        icon: const Icon(Icons.clear, size: 20),
-                                        onPressed: () {
-                                          _searchController.clear();
-                                          _filterTasks('');
-                                        },
-                                      )
-                                    : const Icon(Icons.search),
+                              child: Column(
+                                children: [
+                                  CustomTextInput(
+                                    controller: _searchController,
+                                    hint: 'Search by task name or staff name...',
+                                    onChanged: _filterTasks,
+                                    suffixIcon: _searchController.text.isNotEmpty
+                                        ? IconButton(
+                                            icon: const Icon(Icons.clear, size: 20),
+                                            onPressed: () {
+                                              _searchController.clear();
+                                              _filterTasks('');
+                                            },
+                                          )
+                                        : const Icon(Icons.search),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  // Status Filter Chips
+                                  SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: Row(
+                                      children: [
+                                        _buildFilterChip('All', 'all'),
+                                        const SizedBox(width: 8),
+                                        _buildFilterChip('Pending', 'pending'),
+                                        const SizedBox(width: 8),
+                                        _buildFilterChip('Submitted', 'submitted'),
+                                        const SizedBox(width: 8),
+                                        _buildFilterChip('Approved', 'approved'),
+                                        const SizedBox(width: 8),
+                                        _buildFilterChip('Rejected', 'rejected'),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                             // Task List
@@ -821,6 +891,16 @@ class _IndividualTaskManagementDialogState extends State<IndividualTaskManagemen
                         ),
                 ),
               ],
+            ),
+            // Floating Action Button
+            Positioned(
+              right: isMobile ? 16 : 24,
+              bottom: isMobile ? 16 : 24,
+              child: FloatingActionButton(
+                onPressed: () => _showAddEditTaskDialog(),
+                backgroundColor: AppTheme.primary,
+                child: const Icon(Icons.add, color: Colors.white),
+              ),
             ),
           ],
         ),

@@ -6,7 +6,7 @@ import '../widgets/custom_button.dart';
 import '../widgets/custom_text_input.dart';
 import '../widgets/single_select_dropdown.dart';
 import '../widgets/department_task_card.dart';
-import '../widgets/department_task_management_dialog.dart';
+
 import 'dart:developer' as developer;
 
 class DepartmentTaskGridScreen extends StatefulWidget {
@@ -68,8 +68,21 @@ class _DepartmentTaskGridScreenState extends State<DepartmentTaskGridScreen> {
 
     // Apply status filter
     if (_selectedFilter != 'all') {
-      filtered = filtered.where((task) => 
-        task.status.toLowerCase() == _selectedFilter.toLowerCase()).toList();
+      filtered = filtered.where((task) {
+        final status = task.status.toLowerCase();
+        switch (_selectedFilter) {
+          case 'pending':
+            return status == 'pending';
+          case 'submitted':
+            return status == 'submitted';
+          case 'accepted':
+            return status == 'completed' || status == 'accepted';
+          case 'rejected':
+            return status == 'rejected';
+          default:
+            return true;
+        }
+      }).toList();
     }
 
     // Apply search filter
@@ -166,18 +179,6 @@ class _DepartmentTaskGridScreenState extends State<DepartmentTaskGridScreen> {
         title: const Text('Department Tasks'),
         backgroundColor: AppTheme.primary,
         foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.view_list),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) => const DepartmentTaskManagementDialog(),
-              );
-            },
-            tooltip: 'Table View',
-          ),
-        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddEditTaskDialog(),
@@ -253,11 +254,9 @@ class _DepartmentTaskGridScreenState extends State<DepartmentTaskGridScreen> {
                             const SizedBox(width: 8),
                             _buildFilterChip('Pending', 'pending'),
                             const SizedBox(width: 8),
-                            _buildFilterChip('Accepted', 'accepted'),
-                            const SizedBox(width: 8),
                             _buildFilterChip('Submitted', 'submitted'),
                             const SizedBox(width: 8),
-                            _buildFilterChip('Completed', 'completed'),
+                            _buildFilterChip('Accepted', 'accepted'),
                             const SizedBox(width: 8),
                             _buildFilterChip('Rejected', 'rejected'),
                           ],
