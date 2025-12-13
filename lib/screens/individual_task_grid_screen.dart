@@ -363,9 +363,9 @@ class _IndividualTaskGridScreenState extends State<IndividualTaskGridScreen> {
                           onRefresh: _loadTasks,
                           child: GridView.builder(
                             padding: const EdgeInsets.all(16),
-                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 1,
-                              childAspectRatio: 2.5,
+                              childAspectRatio: MediaQuery.of(context).size.width < 600 ? 1.8 : 2.5,
                               crossAxisSpacing: 16,
                               mainAxisSpacing: 16,
                             ),

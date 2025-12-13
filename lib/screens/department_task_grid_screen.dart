@@ -315,7 +315,9 @@ class _DepartmentTaskGridScreenState extends State<DepartmentTaskGridScreen> {
                                 padding: const EdgeInsets.all(16),
                                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                                   crossAxisCount: crossAxisCount,
-                                  childAspectRatio: crossAxisCount == 1 ? 3.5 : 1.2,
+                                  childAspectRatio: crossAxisCount == 1 
+                                    ? (MediaQuery.of(context).size.width < 600 ? 2.2 : 3.5)
+                                    : 1.2,
                                   crossAxisSpacing: 16,
                                   mainAxisSpacing: 16,
                                 ),

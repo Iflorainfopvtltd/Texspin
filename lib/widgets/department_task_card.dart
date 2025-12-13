@@ -365,6 +365,216 @@ class DepartmentTaskCard extends StatelessWidget {
     }
   }
 
+  Widget _buildMobileActions(BuildContext context) {
+    final status = task.status.toLowerCase();
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    
+    if (status == 'submitted') {
+      return Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: Column(
+          children: [
+            // First row: Download (if available)
+            if (task.downloadUrl != null && task.downloadUrl!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: CustomButton(
+                    text: 'Download File',
+                    onPressed: () => _downloadTaskFile(context),
+                    variant: ButtonVariant.outline,
+                    size: ButtonSize.sm,
+                    icon: const Icon(Icons.download, size: 16),
+                  ),
+                ),
+              ),
+            // Second row: Accept and Reject
+            Row(
+              children: [
+                Expanded(
+                  child: CustomButton(
+                    text: 'Accept',
+                    onPressed: () => _showAcceptDialog(context),
+                    variant: ButtonVariant.default_,
+                    size: ButtonSize.sm,
+                    icon: const Icon(Icons.check, size: 16),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: CustomButton(
+                    text: 'Reject',
+                    onPressed: () => _showRejectDialog(context),
+                    variant: ButtonVariant.destructive,
+                    size: ButtonSize.sm,
+                    icon: const Icon(Icons.close, size: 16),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    } else if (status == 'rejected') {
+      return Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: Row(
+          children: [
+            Expanded(
+              child: CustomButton(
+                text: 'Reassign',
+                onPressed: () => _showReassignDialog(context),
+                variant: ButtonVariant.outline,
+                size: ButtonSize.sm,
+                icon: const Icon(Icons.person_add, size: 16),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: CustomButton(
+                text: 'Delete',
+                onPressed: onDelete,
+                variant: ButtonVariant.destructive,
+                size: ButtonSize.sm,
+                icon: const Icon(Icons.delete, size: 16),
+              ),
+            ),
+          ],
+        ),
+      );
+    } else if (status == 'pending') {
+      return Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: isMobile ? Column(
+          children: [
+            // First row: Download (if available) and Reminder
+            if ((task.downloadUrl != null && task.downloadUrl!.isNotEmpty) ||
+                (task.attachments != null && task.attachments!.isNotEmpty))
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: CustomButton(
+                        text: 'Download',
+                        onPressed: () => _downloadTaskFile(context),
+                        variant: ButtonVariant.outline,
+                        size: ButtonSize.sm,
+                        icon: const Icon(Icons.download, size: 16),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: CustomButton(
+                        text: 'Remind',
+                        onPressed: () => _sendReminder(context),
+                        variant: ButtonVariant.outline,
+                        size: ButtonSize.sm,
+                        icon: const Icon(Icons.send, size: 16),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            // Second row: Edit and Delete
+            Row(
+              children: [
+                Expanded(
+                  child: CustomButton(
+                    text: 'Edit',
+                    onPressed: onEdit,
+                    variant: ButtonVariant.outline,
+                    size: ButtonSize.sm,
+                    icon: const Icon(Icons.edit, size: 16),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: CustomButton(
+                    text: 'Delete',
+                    onPressed: onDelete,
+                    variant: ButtonVariant.destructive,
+                    size: ButtonSize.sm,
+                    icon: const Icon(Icons.delete, size: 16),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ) : Row(
+          children: [
+            // Desktop layout - single row
+            if ((task.downloadUrl != null && task.downloadUrl!.isNotEmpty) ||
+                (task.attachments != null && task.attachments!.isNotEmpty))
+              Expanded(
+                child: CustomButton(
+                  text: 'Download',
+                  onPressed: () => _downloadTaskFile(context),
+                  variant: ButtonVariant.outline,
+                  size: ButtonSize.sm,
+                  icon: const Icon(Icons.download, size: 16),
+                ),
+              ),
+            if ((task.downloadUrl != null && task.downloadUrl!.isNotEmpty) ||
+                (task.attachments != null && task.attachments!.isNotEmpty))
+              const SizedBox(width: 8),
+            Expanded(
+              child: CustomButton(
+                text: 'Remind',
+                onPressed: () => _sendReminder(context),
+                variant: ButtonVariant.outline,
+                size: ButtonSize.sm,
+                icon: const Icon(Icons.send, size: 16),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: CustomButton(
+                text: 'Edit',
+                onPressed: onEdit,
+                variant: ButtonVariant.outline,
+                size: ButtonSize.sm,
+                icon: const Icon(Icons.edit, size: 16),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: CustomButton(
+                text: 'Delete',
+                onPressed: onDelete,
+                variant: ButtonVariant.destructive,
+                size: ButtonSize.sm,
+                icon: const Icon(Icons.delete, size: 16),
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      // For completed tasks: show download only
+      return Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: Row(
+          children: [
+            if ((task.downloadUrl != null && task.downloadUrl!.isNotEmpty) ||
+                (task.attachments != null && task.attachments!.isNotEmpty))
+              Expanded(
+                child: CustomButton(
+                  text: 'Download File',
+                  onPressed: () => _downloadTaskFile(context),
+                  variant: ButtonVariant.outline,
+                  size: ButtonSize.sm,
+                  icon: const Icon(Icons.download, size: 16),
+                ),
+              ),
+          ],
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final assignedStaffName = '${task.assignedStaff['firstName'] ?? ''} ${task.assignedStaff['lastName'] ?? ''}'.trim();
@@ -383,9 +593,11 @@ class DepartmentTaskCard extends StatelessWidget {
         ),
       ),
       child: Container(
+        width: double.infinity,
         padding: EdgeInsets.all(isCompact ? 12 : 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             // Header Row
             Row(
@@ -487,129 +699,8 @@ class DepartmentTaskCard extends StatelessWidget {
               const Divider(height: 1),
               const SizedBox(height: 8),
               
-              // Actions Row
-              Row(
-                children: [
-                  // For submitted tasks: show download, accept and reject
-                  if (task.status.toLowerCase() == 'submitted') ...[
-                    // Download button (if downloadUrl is available)
-                    if (task.downloadUrl != null && task.downloadUrl!.isNotEmpty)
-                      Expanded(
-                        child: CustomButton(
-                          text: 'Download',
-                          onPressed: () => _downloadTaskFile(context),
-                          variant: ButtonVariant.outline,
-                          size: ButtonSize.sm,
-                          icon: const Icon(Icons.download, size: 16),
-                        ),
-                      ),
-                    if (task.downloadUrl != null && task.downloadUrl!.isNotEmpty)
-                      const SizedBox(width: 8),
-                    // Accept button
-                    Expanded(
-                      child: CustomButton(
-                        text: 'Accept',
-                        onPressed: () => _showAcceptDialog(context),
-                        variant: ButtonVariant.default_,
-                        size: ButtonSize.sm,
-                        icon: const Icon(Icons.check, size: 16),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    // Reject button
-                    Expanded(
-                      child: CustomButton(
-                        text: 'Reject',
-                        onPressed: () => _showRejectDialog(context),
-                        variant: ButtonVariant.destructive,
-                        size: ButtonSize.sm,
-                        icon: const Icon(Icons.close, size: 16),
-                      ),
-                    ),
-                  ] 
-                  // For rejected tasks: show reassign button
-                  else if (task.status.toLowerCase() == 'rejected') ...[
-                    Expanded(
-                      child: CustomButton(
-                        text: 'Reassign',
-                        onPressed: () => _showReassignDialog(context),
-                        variant: ButtonVariant.outline,
-                        size: ButtonSize.sm,
-                        icon: const Icon(Icons.person_add, size: 16),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    // Delete button
-                    Expanded(
-                      child: CustomButton(
-                        text: 'Delete',
-                        onPressed: onDelete,
-                        variant: ButtonVariant.destructive,
-                        size: ButtonSize.sm,
-                        icon: const Icon(Icons.delete, size: 16),
-                      ),
-                    ),
-                  ] 
-                  else ...[
-                    // For other tasks: show download (if available), edit and delete
-                    // Download button (if downloadUrl is available or has attachments)
-                    if ((task.downloadUrl != null && task.downloadUrl!.isNotEmpty) ||
-                        (task.attachments != null && task.attachments!.isNotEmpty))
-                      Expanded(
-                        child: CustomButton(
-                          text: 'Download',
-                          onPressed: () => _downloadTaskFile(context),
-                          variant: ButtonVariant.outline,
-                          size: ButtonSize.sm,
-                          icon: const Icon(Icons.download, size: 16),
-                        ),
-                      ),
-                    if ((task.downloadUrl != null && task.downloadUrl!.isNotEmpty) ||
-                        (task.attachments != null && task.attachments!.isNotEmpty))
-                      const SizedBox(width: 8),
-                    
-                    // Reminder button (only for pending tasks)
-                    if (task.status.toLowerCase() == 'pending')
-                      Expanded(
-                        child: CustomButton(
-                          text: 'Remind',
-                          onPressed: () => _sendReminder(context),
-                          variant: ButtonVariant.outline,
-                          size: ButtonSize.sm,
-                          icon: const Icon(Icons.send, size: 16),
-                        ),
-                      ),
-                    if (task.status.toLowerCase() == 'pending')
-                      const SizedBox(width: 8),
-                    
-                    // Edit button (only for pending tasks)
-                    if (task.status.toLowerCase() == 'pending')
-                      Expanded(
-                        child: CustomButton(
-                          text: 'Edit',
-                          onPressed: onEdit,
-                          variant: ButtonVariant.outline,
-                          size: ButtonSize.sm,
-                          icon: const Icon(Icons.edit, size: 16),
-                        ),
-                      ),
-                    if (task.status.toLowerCase() == 'pending')
-                      const SizedBox(width: 8),
-                    
-                    // Delete button (only for pending tasks)
-                    if (task.status.toLowerCase() == 'pending')
-                      Expanded(
-                        child: CustomButton(
-                          text: 'Delete',
-                          onPressed: onDelete,
-                          variant: ButtonVariant.destructive,
-                          size: ButtonSize.sm,
-                          icon: const Icon(Icons.delete, size: 16),
-                        ),
-                      ),
-                  ],
-                ],
-              ),
+              // Actions Row - Mobile Optimized
+              _buildMobileActions(context),
             ],
           ],
         ),
