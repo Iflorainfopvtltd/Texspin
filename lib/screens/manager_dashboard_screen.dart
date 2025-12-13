@@ -12,8 +12,8 @@ import '../theme/app_theme.dart';
 import '../bloc/manager/manager_bloc.dart';
 import '../utils/shared_preferences_manager.dart';
 import '../widgets/profile_dialog.dart';
-import '../widgets/task_management_dialog.dart';
-import '../screens/task_grid_screen.dart';
+import '../widgets/individual_task_management_dialog.dart';
+import '../screens/individual_task_grid_screen.dart';
 import '../screens/department_task_grid_screen.dart';
 import '../widgets/department_task_management_dialog.dart';
 import '../screens/task_updates_screen.dart';
@@ -132,18 +132,8 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
       navigationItems: [
         NavigationItem(icon: Icons.dashboard, label: 'Dashboard', onTap: () {}),
         NavigationItem(
-          icon: Icons.folder_outlined,
-          label: 'New Projects',
-          onTap: () {},
-        ),
-        NavigationItem(
           icon: Icons.check_circle_outline,
           label: 'Audit Tasks',
-          onTap: () {},
-        ),
-        NavigationItem(
-          icon: Icons.assignment_outlined,
-          label: 'Department Tasks',
           onTap: () {},
         ),
         NavigationItem(
@@ -165,14 +155,14 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
               // Mobile: Open full screen
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) => const TaskGridScreen(),
+                  builder: (_) => const IndividualTaskGridScreen(),
                 ),
               );
             } else {
               // Web/Tablet: Open dialog
               showDialog(
                 context: context,
-                builder: (_) => const TaskManagementDialog(),
+                builder: (_) => const IndividualTaskManagementDialog(),
               );
             }
           },
@@ -273,26 +263,6 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
     );
   }
 
-  // Widget _buildHeader(bool isMobile, bool isTablet) {
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       Text(
-  //         'Manager Dashboard',
-  //         style: TextStyle(
-  //           fontSize: isMobile ? 24 : (isTablet ? 26 : 28),
-  //           fontWeight: FontWeight.w500,
-  //           color: AppTheme.gray900,
-  //         ),
-  //       ),
-  //       const SizedBox(height: 4),
-  //       const Text(
-  //         'View and manage your team projects',
-  //         style: TextStyle(fontSize: 14, color: AppTheme.gray600),
-  //       ),
-  //     ],
-  //   );
-  // }
 
   Widget _buildStatsOverview(
     List<Project> projects,
@@ -389,15 +359,6 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
       child: CustomCard(
         padding: padding,
         child: Container(
-          // decoration: isSelected
-          //     ? BoxDecoration(
-          //         border: Border.all(
-          //           color: iconColor,
-          //           width: 2,
-          //         ),
-          //         borderRadius: BorderRadius.circular(8),
-          //       )
-          //     : null,
           padding: isSelected ? const EdgeInsets.all(2) : null,
           child: Row(
             children: [
@@ -938,6 +899,7 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
           builder: (context) => const TaskUpdatesScreen(),
         ),
       );
+      
     } else {
       // Show dialog for web/desktop/tablet
       showDialog(

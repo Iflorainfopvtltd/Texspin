@@ -1291,13 +1291,18 @@ class ApiService {
   Future<Map<String, dynamic>> reassignTaskStaff({
     required String taskId,
     required String assignedStaffId,
+    String? deadline,
     String? bearerToken,
   }) async {
     try {
       final token = bearerToken ?? await _getToken();
+      final data = {'assignedStaffId': assignedStaffId};
+      if (deadline != null) {
+        data['deadline'] = deadline;
+      }
       final response = await _dio.put(
         '/texspin/api/task/$taskId/reassign',
-        data: {'assignedStaffId': assignedStaffId},
+        data: data,
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       return response.data;

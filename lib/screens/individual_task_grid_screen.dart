@@ -5,24 +5,23 @@ import '../theme/app_theme.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_input.dart';
 import '../widgets/task_card.dart';
-import '../widgets/task_management_dialog.dart';
+import '../widgets/individual_task_management_dialog.dart';
 import 'dart:developer' as developer;
 
-class TaskGridScreen extends StatefulWidget {
-  const TaskGridScreen({super.key});
+class IndividualTaskGridScreen extends StatefulWidget {
+  const IndividualTaskGridScreen({super.key});
 
   @override
-  State<TaskGridScreen> createState() => _TaskGridScreenState();
+  State<IndividualTaskGridScreen> createState() => _IndividualTaskGridScreenState();
 }
 
-class _TaskGridScreenState extends State<TaskGridScreen> {
+class _IndividualTaskGridScreenState extends State<IndividualTaskGridScreen> {
   final ApiService _apiService = ApiService();
   final TextEditingController _searchController = TextEditingController();
   List<Task> _tasks = [];
   List<Task> _filteredTasks = [];
   bool _isLoading = true;
   String? _error;
-  String _selectedFilter = 'all';
 
   @override
   void initState() {
@@ -49,12 +48,12 @@ class _TaskGridScreenState extends State<TaskGridScreen> {
           _tasks = (response['tasks'] as List)
               .map((task) => Task.fromJson(task))
               .toList();
-          _applyFilters();
+          _filteredTasks = _tasks;
           _isLoading = false;
         });
       }
     } catch (e) {
-      developer.log('Error loading tasks: $e', name: 'TaskGrid');
+      developer.log('Error loading tasks: $e', name: 'IndividualTaskGrid');
       setState(() {
         _error = e.toString();
         _isLoading = false;
@@ -62,47 +61,28 @@ class _TaskGridScreenState extends State<TaskGridScreen> {
     }
   }
 
-  void _applyFilters() {
-    List<Task> filtered = _tasks;
-
-    // Apply status filter
-    if (_selectedFilter != 'all') {
-      filtered = filtered.where((task) => 
-        task.status.toLowerCase() == _selectedFilter.toLowerCase()).toList();
-    }
-
-    // Apply search filter
-    final query = _searchController.text.toLowerCase();
-    if (query.isNotEmpty) {
-      filtered = filtered.where((task) {
-        final taskName = task.name.toLowerCase();
-        final staffName =
-            '${task.assignedStaff['firstName'] ?? ''} ${task.assignedStaff['lastName'] ?? ''}'
-                .toLowerCase();
-        return taskName.contains(query) || staffName.contains(query);
-      }).toList();
-    }
-
+  void _filterTasks(String query) {
     setState(() {
-      _filteredTasks = filtered;
+      if (query.isEmpty) {
+        _filteredTasks = _tasks;
+      } else {
+        _filteredTasks = _tasks.where((task) {
+          final taskName = task.name.toLowerCase();
+          final staffName =
+              '${task.assignedStaff['firstName'] ?? ''} ${task.assignedStaff['lastName'] ?? ''}'
+                  .toLowerCase();
+          final searchLower = query.toLowerCase();
+          return taskName.contains(searchLower) ||
+              staffName.contains(searchLower);
+        }).toList();
+      }
     });
-  }
-
-  void _onSearchChanged(String query) {
-    _applyFilters();
-  }
-
-  void _onFilterChanged(String filter) {
-    setState(() {
-      _selectedFilter = filter;
-    });
-    _applyFilters();
   }
 
   void _showAddEditTaskDialog({Task? task}) {
     showDialog(
       context: context,
-      builder: (context) => AddEditTaskDialog(
+      builder: (context) => AddEditIndividualTaskDialog(
         task: task,
         onSaved: () {
           Navigator.of(context).pop();
@@ -167,14 +147,9 @@ class _TaskGridScreenState extends State<TaskGridScreen> {
         foregroundColor: Colors.white,
         actions: [
           IconButton(
-            icon: const Icon(Icons.view_list),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) => const TaskManagementDialog(),
-              );
-            },
-            tooltip: 'Table View',
+            icon: const Icon(Icons.add),
+            onPressed: () => _showAddEditTaskDialog(),
+            tooltip: 'Add Task',
           ),
         ],
       ),
@@ -220,52 +195,24 @@ class _TaskGridScreenState extends State<TaskGridScreen> {
             )
           : Column(
               children: [
-                // Search and Filter Bar
-                Container(
+                // Search Bar
+                Padding(
                   padding: const EdgeInsets.all(16),
-                  color: Colors.white,
-                  child: Column(
-                    children: [
-                      // Search Bar
-                      CustomTextInput(
-                        controller: _searchController,
-                        hint: 'Search by task name or staff name...',
-                        onChanged: _onSearchChanged,
-                        suffixIcon: _searchController.text.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear, size: 20),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  _onSearchChanged('');
-                                },
-                              )
-                            : const Icon(Icons.search),
-                      ),
-                      const SizedBox(height: 12),
-                      
-                      // Filter Chips
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: [
-                            _buildFilterChip('All', 'all'),
-                            const SizedBox(width: 8),
-                            _buildFilterChip('Pending', 'pending'),
-                            const SizedBox(width: 8),
-                            _buildFilterChip('In Progress', 'in progress'),
-                            const SizedBox(width: 8),
-                            _buildFilterChip('Submitted', 'submitted'),
-                            const SizedBox(width: 8),
-                            _buildFilterChip('Completed', 'completed'),
-                            const SizedBox(width: 8),
-                            _buildFilterChip('Rejected', 'rejected'),
-                          ],
-                        ),
-                      ),
-                    ],
+                  child: CustomTextInput(
+                    controller: _searchController,
+                    hint: 'Search by task name or staff name...',
+                    onChanged: _filterTasks,
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 20),
+                            onPressed: () {
+                              _searchController.clear();
+                              _filterTasks('');
+                            },
+                          )
+                        : const Icon(Icons.search),
                   ),
                 ),
-                
                 // Task Grid
                 Expanded(
                   child: _filteredTasks.isEmpty
@@ -274,14 +221,14 @@ class _TaskGridScreenState extends State<TaskGridScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                _tasks.isEmpty ? Icons.task : Icons.search_off,
+                                _tasks.isEmpty ? Icons.person_outline : Icons.search_off,
                                 size: 64,
                                 color: AppTheme.gray300,
                               ),
                               const SizedBox(height: 16),
                               Text(
                                 _tasks.isEmpty
-                                    ? 'No tasks yet'
+                                    ? 'No individual tasks yet'
                                     : 'No tasks found',
                                 style: TextStyle(
                                   fontSize: 18,
@@ -291,7 +238,7 @@ class _TaskGridScreenState extends State<TaskGridScreen> {
                               if (_tasks.isEmpty) ...[
                                 const SizedBox(height: 24),
                                 CustomButton(
-                                  text: 'Add First Task',
+                                  text: 'Add First Individual Task',
                                   onPressed: () => _showAddEditTaskDialog(),
                                   icon: const Icon(Icons.add, size: 20),
                                 ),
@@ -301,35 +248,24 @@ class _TaskGridScreenState extends State<TaskGridScreen> {
                         )
                       : RefreshIndicator(
                           onRefresh: _loadTasks,
-                          child: LayoutBuilder(
-                            builder: (context, constraints) {
-                              // Calculate number of columns based on screen width
-                              int crossAxisCount = 1;
-                              if (constraints.maxWidth > 1200) {
-                                crossAxisCount = 3;
-                              } else if (constraints.maxWidth > 800) {
-                                crossAxisCount = 2;
-                              }
-                              
-                              return GridView.builder(
-                                padding: const EdgeInsets.all(16),
-                                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: crossAxisCount,
-                                  childAspectRatio: crossAxisCount == 1 ? 3.5 : 1.2,
-                                  crossAxisSpacing: 16,
-                                  mainAxisSpacing: 16,
-                                ),
-                                itemCount: _filteredTasks.length,
-                                itemBuilder: (context, index) {
-                                  final task = _filteredTasks[index];
-                                  return TaskCard(
-                                    task: task,
-                                    isCompact: crossAxisCount > 1,
-                                    onEdit: () => _showAddEditTaskDialog(task: task),
-                                    onDelete: () => _deleteTask(task.id),
-                                    onRefresh: _loadTasks,
-                                  );
-                                },
+                          child: GridView.builder(
+                            padding: const EdgeInsets.all(16),
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 1,
+                              childAspectRatio: 2.5,
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
+                            ),
+                            itemCount: _filteredTasks.length,
+                            itemBuilder: (context, index) {
+                              final task = _filteredTasks[index];
+                              return TaskCard(
+                                task: task,
+                                onEdit: () => _showAddEditTaskDialog(task: task),
+                                onDelete: () => _deleteTask(task.id),
+                                onRefresh: _loadTasks,
+                                showActions: true,
+                                isCompact: false,
                               );
                             },
                           ),
@@ -337,29 +273,6 @@ class _TaskGridScreenState extends State<TaskGridScreen> {
                 ),
               ],
             ),
-    );
-  }
-
-  Widget _buildFilterChip(String label, String value) {
-    final isSelected = _selectedFilter == value;
-    return FilterChip(
-      label: Text(
-        label,
-        style: TextStyle(
-          color: isSelected ? Colors.white : AppTheme.gray700,
-          fontSize: 12,
-          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-        ),
-      ),
-      selected: isSelected,
-      onSelected: (selected) => _onFilterChanged(value),
-      backgroundColor: Colors.white,
-      selectedColor: AppTheme.primary,
-      checkmarkColor: Colors.white,
-      side: BorderSide(
-        color: isSelected ? AppTheme.primary : AppTheme.gray300,
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
     );
   }
 }

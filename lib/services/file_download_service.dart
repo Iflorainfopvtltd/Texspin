@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter/foundation.dart';
 
 import 'dart:developer' as developer;
 
@@ -15,8 +16,8 @@ class FileDownloadService {
     Function(int, int)? onProgress,
   }) async {
     try {
-      // Request storage permission on Android
-      if (Platform.isAndroid) {
+      // Request storage permission on Android (only on mobile platforms)
+      if (!kIsWeb && Platform.isAndroid) {
         var status = await Permission.storage.status;
         if (!status.isGranted) {
           status = await Permission.storage.request();
@@ -29,7 +30,10 @@ class FileDownloadService {
       // Get the appropriate directory for downloads
       Directory? directory;
       
-      if (Platform.isAndroid) {
+      if (kIsWeb) {
+        // For web, we'll use a temporary directory and let the browser handle the download
+        directory = await getApplicationDocumentsDirectory();
+      } else if (Platform.isAndroid) {
         // Try to get the Downloads directory
         directory = Directory('/storage/emulated/0/Download');
         if (!await directory.exists()) {
@@ -101,7 +105,10 @@ class FileDownloadService {
   /// Opens the file with the default system application
   static Future<void> openFile(String filePath) async {
     try {
-      if (Platform.isAndroid || Platform.isIOS) {
+      if (kIsWeb) {
+        // For web, the browser handles the download automatically
+        developer.log('File downloaded in browser: $filePath');
+      } else if (Platform.isAndroid || Platform.isIOS) {
         // For mobile platforms, we can use url_launcher or open_file package
         // For now, we'll just show the file location
         developer.log('File saved at: $filePath');
@@ -136,7 +143,9 @@ class FileDownloadService {
 
   /// Checks if the app has storage permission
   static Future<bool> hasStoragePermission() async {
-    if (Platform.isAndroid) {
+    if (kIsWeb) {
+      return true; // Web doesn't need storage permission
+    } else if (Platform.isAndroid) {
       return await Permission.storage.isGranted;
     }
     return true; // iOS and other platforms don't need explicit storage permission for app documents
@@ -144,7 +153,9 @@ class FileDownloadService {
 
   /// Requests storage permission
   static Future<bool> requestStoragePermission() async {
-    if (Platform.isAndroid) {
+    if (kIsWeb) {
+      return true; // Web doesn't need storage permission
+    } else if (Platform.isAndroid) {
       final status = await Permission.storage.request();
       return status.isGranted;
     }

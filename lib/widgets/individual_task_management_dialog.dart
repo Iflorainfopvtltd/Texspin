@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../models/models.dart';
 import '../services/api_service.dart';
 import '../services/file_download_service.dart';
@@ -9,14 +8,14 @@ import '../widgets/custom_text_input.dart';
 import '../widgets/single_select_dropdown.dart';
 import 'dart:developer' as developer;
 
-class TaskManagementDialog extends StatefulWidget {
-  const TaskManagementDialog({super.key});
+class IndividualTaskManagementDialog extends StatefulWidget {
+  const IndividualTaskManagementDialog({super.key});
 
   @override
-  State<TaskManagementDialog> createState() => _TaskManagementDialogState();
+  State<IndividualTaskManagementDialog> createState() => _IndividualTaskManagementDialogState();
 }
 
-class _TaskManagementDialogState extends State<TaskManagementDialog> {
+class _IndividualTaskManagementDialogState extends State<IndividualTaskManagementDialog> {
   final ApiService _apiService = ApiService();
   final TextEditingController _searchController = TextEditingController();
   List<Task> _tasks = [];
@@ -54,7 +53,7 @@ class _TaskManagementDialogState extends State<TaskManagementDialog> {
         });
       }
     } catch (e) {
-      developer.log('Error loading tasks: $e', name: 'TaskManagement');
+      developer.log('Error loading tasks: $e', name: 'IndividualTaskManagement');
       setState(() {
         _error = e.toString();
         _isLoading = false;
@@ -83,7 +82,7 @@ class _TaskManagementDialogState extends State<TaskManagementDialog> {
   void _showAddEditTaskDialog({Task? task}) {
     showDialog(
       context: context,
-      builder: (context) => AddEditTaskDialog(
+      builder: (context) => AddEditIndividualTaskDialog(
         task: task,
         onSaved: () {
           Navigator.of(context).pop();
@@ -237,6 +236,16 @@ class _TaskManagementDialogState extends State<TaskManagementDialog> {
     );
   }
 
+  void _showReassignDialog(Task task) {
+    showDialog(
+      context: context,
+      builder: (context) => ReassignIndividualTaskDialog(
+        task: task,
+        onReassigned: _loadTasks,
+      ),
+    );
+  }
+
   Future<void> _reviewTask(String taskId, String status, {String? rejectionReason}) async {
     try {
       final response = await _apiService.reviewTask(
@@ -296,131 +305,6 @@ class _TaskManagementDialogState extends State<TaskManagementDialog> {
     } catch (e) {
       return dateStr;
     }
-  }
-
-  DataRow _buildTaskDataRow(Task task) {
-    final assignedStaffName = '${task.assignedStaff['firstName'] ?? ''} ${task.assignedStaff['lastName'] ?? ''}'.trim();
-    
-    return DataRow(
-      cells: [
-        DataCell(
-          SizedBox(
-            width: 150,
-            child: Text(
-              task.name,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 2,
-              style: const TextStyle(
-                fontWeight: FontWeight.w500,
-                color: AppTheme.gray900,
-              ),
-            ),
-          ),
-        ),
-        DataCell(
-          SizedBox(
-            width: 200,
-            child: Text(
-              task.description,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 2,
-              style: const TextStyle(
-                color: AppTheme.gray600,
-              ),
-            ),
-          ),
-        ),
-        DataCell(
-          Text(
-            assignedStaffName,
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
-          ),
-        ),
-        DataCell(
-          Text(
-            _formatDate(task.deadline),
-            style: const TextStyle(
-              color: AppTheme.gray700,
-            ),
-          ),
-        ),
-        DataCell(
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 8,
-              vertical: 4,
-            ),
-            decoration: BoxDecoration(
-              color: _getStatusColor(task.status).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              task.status.toUpperCase(),
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                color: _getStatusColor(task.status),
-              ),
-            ),
-          ),
-        ),
-        DataCell(
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // For submitted tasks: show download, approve and reject
-              if (task.status.toLowerCase() == 'submitted') ...[
-                // Download button (if downloadUrl is available)
-                if (task.downloadUrl != null && task.downloadUrl!.isNotEmpty)
-                  IconButton(
-                    icon: const Icon(Icons.download, color: AppTheme.blue600),
-                    onPressed: () => _downloadTaskFile(task),
-                    tooltip: 'Download File',
-                  ),
-                // Approve button
-                IconButton(
-                  icon: const Icon(Icons.check_circle_outline, color: AppTheme.green600),
-                  onPressed: () => _showApproveDialog(task),
-                  tooltip: 'Approve',
-                ),
-                // Reject button
-                IconButton(
-                  icon: const Icon(Icons.cancel_outlined, color: AppTheme.red500),
-                  onPressed: () => _showRejectDialog(task),
-                  tooltip: 'Reject',
-                ),
-              ] else ...[
-                // For non-submitted tasks: show other actions
-                // Download button (if downloadUrl is available or has attachments)
-                if ((task.downloadUrl != null && task.downloadUrl!.isNotEmpty) ||
-                    (task.attachments != null && task.attachments!.isNotEmpty))
-                  IconButton(
-                    icon: const Icon(Icons.download, color: AppTheme.blue600),
-                    onPressed: () => _downloadTaskFile(task),
-                    tooltip: 'Download File',
-                  ),
-                // Edit button (only for pending and in progress tasks)
-                if (task.status.toLowerCase() != 'completed' && 
-                    task.status.toLowerCase() != 'approved' && 
-                    task.status.toLowerCase() != 'rejected')
-                  IconButton(
-                    icon: const Icon(Icons.edit_outlined, color: AppTheme.blue600),
-                    onPressed: () => _showAddEditTaskDialog(task: task),
-                    tooltip: 'Edit',
-                  ),
-                // Delete button
-                IconButton(
-                  icon: const Icon(Icons.delete_outline, color: AppTheme.red500),
-                  onPressed: () => _deleteTask(task.id),
-                  tooltip: 'Delete',
-                ),
-              ],
-            ],
-          ),
-        ),
-      ],
-    );
   }
 
   Future<void> _downloadTaskFile(Task task) async {
@@ -554,7 +438,143 @@ class _TaskManagementDialogState extends State<TaskManagementDialog> {
     }
   }
 
-
+  DataRow _buildTaskDataRow(Task task) {
+    final assignedStaffName = '${task.assignedStaff['firstName'] ?? ''} ${task.assignedStaff['lastName'] ?? ''}'.trim();
+    
+    return DataRow(
+      cells: [
+        DataCell(
+          SizedBox(
+            width: 150,
+            child: Text(
+              task.name,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
+              style: const TextStyle(
+                fontWeight: FontWeight.w500,
+                color: AppTheme.gray900,
+              ),
+            ),
+          ),
+        ),
+        DataCell(
+          SizedBox(
+            width: 200,
+            child: Text(
+              task.description,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
+              style: const TextStyle(
+                color: AppTheme.gray600,
+              ),
+            ),
+          ),
+        ),
+        DataCell(
+          Text(
+            assignedStaffName,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
+        ),
+        DataCell(
+          Text(
+            _formatDate(task.deadline),
+            style: const TextStyle(
+              color: AppTheme.gray700,
+            ),
+          ),
+        ),
+        DataCell(
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 8,
+              vertical: 4,
+            ),
+            decoration: BoxDecoration(
+              color: _getStatusColor(task.status).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              task.status.toUpperCase(),
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: _getStatusColor(task.status),
+              ),
+            ),
+          ),
+        ),
+        DataCell(
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // For submitted tasks: show download, approve and reject
+              if (task.status.toLowerCase() == 'submitted') ...[
+                // Download button (if downloadUrl is available)
+                if (task.downloadUrl != null && task.downloadUrl!.isNotEmpty)
+                  IconButton(
+                    icon: const Icon(Icons.download, color: AppTheme.blue600),
+                    onPressed: () => _downloadTaskFile(task),
+                    tooltip: 'Download File',
+                  ),
+                // Approve button
+                IconButton(
+                  icon: const Icon(Icons.check_circle_outline, color: AppTheme.green600),
+                  onPressed: () => _showApproveDialog(task),
+                  tooltip: 'Approve',
+                ),
+                // Reject button
+                IconButton(
+                  icon: const Icon(Icons.cancel_outlined, color: AppTheme.red500),
+                  onPressed: () => _showRejectDialog(task),
+                  tooltip: 'Reject',
+                ),
+              ] 
+              // For rejected tasks: show reassign button
+              else if (task.status.toLowerCase() == 'rejected') ...[
+                IconButton(
+                  icon: const Icon(Icons.group, color: AppTheme.blue600),
+                  onPressed: () => _showReassignDialog(task),
+                  tooltip: 'Reassign',
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, color: AppTheme.red500),
+                  onPressed: () => _deleteTask(task.id),
+                  tooltip: 'Delete',
+                ),
+              ] 
+              else ...[
+                // For other tasks: show download (if available), edit and delete
+                // Download button (if downloadUrl is available or has attachments)
+                if ((task.downloadUrl != null && task.downloadUrl!.isNotEmpty) ||
+                    (task.attachments != null && task.attachments!.isNotEmpty))
+                  IconButton(
+                    icon: const Icon(Icons.download, color: AppTheme.blue600),
+                    onPressed: () => _downloadTaskFile(task),
+                    tooltip: 'Download File',
+                  ),
+                // Edit button (only for pending tasks)
+                if (task.status.toLowerCase() == 'pending')
+                  IconButton(
+                    icon: const Icon(Icons.edit_outlined, color: AppTheme.blue600),
+                    onPressed: () => _showAddEditTaskDialog(task: task),
+                    tooltip: 'Edit',
+                  ),
+                // Delete button (only for pending tasks)
+                if (task.status.toLowerCase() == 'pending')
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, color: AppTheme.red500),
+                    onPressed: () => _deleteTask(task.id),
+                    tooltip: 'Delete',
+                  ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -607,7 +627,7 @@ class _TaskManagementDialogState extends State<TaskManagementDialog> {
                   child: Row(
                     children: [
                       Icon(
-                        Icons.task_alt,
+                        Icons.person_outline,
                         color: Colors.white,
                         size: isMobile ? 24 : 28,
                       ),
@@ -621,6 +641,11 @@ class _TaskManagementDialogState extends State<TaskManagementDialog> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.add, color: Colors.white),
+                        onPressed: () => _showAddEditTaskDialog(),
+                        tooltip: 'Add Task',
                       ),
                       IconButton(
                         icon: const Icon(Icons.close, color: Colors.white),
@@ -700,7 +725,7 @@ class _TaskManagementDialogState extends State<TaskManagementDialog> {
                                         children: [
                                           Icon(
                                             _tasks.isEmpty
-                                                ? Icons.task
+                                                ? Icons.person_outline
                                                 : Icons.search_off,
                                             size: 64,
                                             color: AppTheme.gray300,
@@ -708,7 +733,7 @@ class _TaskManagementDialogState extends State<TaskManagementDialog> {
                                           const SizedBox(height: 16),
                                           Text(
                                             _tasks.isEmpty
-                                                ? 'No tasks yet'
+                                                ? 'No individual tasks yet'
                                                 : 'No tasks found',
                                             style: TextStyle(
                                               fontSize: 18,
@@ -718,7 +743,7 @@ class _TaskManagementDialogState extends State<TaskManagementDialog> {
                                           if (_tasks.isEmpty) ...[
                                             const SizedBox(height: 24),
                                             CustomButton(
-                                              text: 'Add First Task',
+                                              text: 'Add First Individual Task',
                                               onPressed: () =>
                                                   _showAddEditTaskDialog(),
                                               icon: const Icon(
@@ -797,16 +822,6 @@ class _TaskManagementDialogState extends State<TaskManagementDialog> {
                 ),
               ],
             ),
-            // Floating Action Button
-            Positioned(
-              right: isMobile ? 16 : 24,
-              bottom: isMobile ? 16 : 24,
-              child: FloatingActionButton(
-                onPressed: () => _showAddEditTaskDialog(),
-                backgroundColor: AppTheme.primary,
-                child: const Icon(Icons.add, color: Colors.white),
-              ),
-            ),
           ],
         ),
       ),
@@ -814,17 +829,17 @@ class _TaskManagementDialogState extends State<TaskManagementDialog> {
   }
 }
 
-class AddEditTaskDialog extends StatefulWidget {
+class AddEditIndividualTaskDialog extends StatefulWidget {
   final Task? task;
   final VoidCallback onSaved;
 
-  const AddEditTaskDialog({super.key, this.task, required this.onSaved});
+  const AddEditIndividualTaskDialog({super.key, this.task, required this.onSaved});
 
   @override
-  State<AddEditTaskDialog> createState() => _AddEditTaskDialogState();
+  State<AddEditIndividualTaskDialog> createState() => _AddEditIndividualTaskDialogState();
 }
 
-class _AddEditTaskDialogState extends State<AddEditTaskDialog> {
+class _AddEditIndividualTaskDialogState extends State<AddEditIndividualTaskDialog> {
   final ApiService _apiService = ApiService();
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
@@ -959,166 +974,419 @@ class _AddEditTaskDialogState extends State<AddEditTaskDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-
     return Dialog(
       child: Container(
-        constraints: BoxConstraints(
-          maxWidth: 500,
-          maxHeight: MediaQuery.of(context).size.height * 0.9,
-        ),
-        padding: EdgeInsets.all(isMobile ? 20 : 24),
+        constraints: const BoxConstraints(maxWidth: 500),
+        padding: const EdgeInsets.all(24),
         child: Form(
           key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        widget.task == null ? 'Add Task' : 'Edit Task',
-                        style: TextStyle(
-                          fontSize: isMobile ? 20 : 24,
-                          fontWeight: FontWeight.bold,
-                        ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      widget.task == null ? 'Add Individual Task' : 'Edit Individual Task',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.of(context).pop(),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              
+              CustomTextInput(
+                label: 'Task Name',
+                hint: 'Enter task name',
+                controller: _nameController,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Please enter task name';
+                  }
+                  return null;
+                },
+                enabled: !_isLoading,
+              ),
+              const SizedBox(height: 16),
+              
+              CustomTextInput(
+                label: 'Description',
+                hint: 'Enter task description',
+                controller: _descriptionController,
+                maxLines: 4,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Please enter description';
+                  }
+                  return null;
+                },
+                enabled: !_isLoading,
+              ),
+              const SizedBox(height: 16),
+              
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Deadline',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.foreground,
                     ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                CustomTextInput(
-                  label: 'Task Name',
-                  hint: 'Enter task name',
-                  controller: _nameController,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter task name';
-                    }
-                    return null;
-                  },
-                  enabled: !_isLoading,
-                ),
-                const SizedBox(height: 16),
-                CustomTextInput(
-                  label: 'Description',
-                  hint: 'Enter task description',
-                  controller: _descriptionController,
-                  maxLines: 3,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter description';
-                    }
-                    return null;
-                  },
-                  enabled: !_isLoading,
-                ),
-                const SizedBox(height: 16),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Deadline',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: AppTheme.foreground,
+                  ),
+                  const SizedBox(height: 8),
+                  InkWell(
+                    onTap: _isLoading ? null : _selectDate,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    InkWell(
-                      onTap: _isLoading ? null : _selectDate,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.inputBackground,
-                          border: Border.all(color: AppTheme.border),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                _deadline != null
-                                    ? '${_deadline!.day}/${_deadline!.month}/${_deadline!.year}'
-                                    : 'Select deadline',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: _deadline != null
-                                      ? AppTheme.foreground
-                                      : AppTheme.mutedForeground,
-                                ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.inputBackground,
+                        border: Border.all(color: AppTheme.border),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              _deadline != null
+                                  ? '${_deadline!.day}/${_deadline!.month}/${_deadline!.year}'
+                                  : 'Select deadline',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: _deadline != null
+                                    ? AppTheme.foreground
+                                    : AppTheme.mutedForeground,
                               ),
                             ),
-                            const Icon(
-                              Icons.calendar_today,
-                              color: AppTheme.mutedForeground,
-                              size: 20,
-                            ),
-                          ],
-                        ),
+                          ),
+                          const Icon(
+                            Icons.calendar_today,
+                            color: AppTheme.mutedForeground,
+                            size: 20,
+                          ),
+                        ],
                       ),
                     ),
-                  ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              
+              _isLoadingStaff
+                  ? const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(20),
+                        child: CircularProgressIndicator(),
+                      ),
+                    )
+                  : SingleSelectDropdown<Staff>(
+                      label: 'Assign to Staff',
+                      isRequired: true,
+                      options: _staff,
+                      selectedId: _selectedStaffId,
+                      onSelectionChanged: (value) {
+                        setState(() => _selectedStaffId = value);
+                      },
+                      getDisplayText: (staff) => staff.fullName,
+                      getSubText: (staff) => staff.designation ?? staff.role,
+                      getId: (staff) => staff.id,
+                      hintText: 'Select staff member',
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please select a staff member';
+                        }
+                        return null;
+                      },
+                      enabled: !_isLoading,
+                    ),
+              const SizedBox(height: 24),
+              
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Cancel'),
+                  ),
+                  const SizedBox(width: 12),
+                  CustomButton(
+                    text: _isLoading
+                        ? 'Saving...'
+                        : (widget.task == null ? 'Create Task' : 'Update Task'),
+                    onPressed: _isLoading ? null : _saveTask,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class ReassignIndividualTaskDialog extends StatefulWidget {
+  final Task task;
+  final VoidCallback? onReassigned;
+
+  const ReassignIndividualTaskDialog({
+    super.key,
+    required this.task,
+    this.onReassigned,
+  });
+
+  @override
+  State<ReassignIndividualTaskDialog> createState() => _ReassignIndividualTaskDialogState();
+}
+
+class _ReassignIndividualTaskDialogState extends State<ReassignIndividualTaskDialog> {
+  final ApiService _apiService = ApiService();
+  DateTime? _deadline;
+  String? _selectedStaffId;
+  List<Staff> _staff = [];
+  bool _isLoading = false;
+  bool _isLoadingStaff = true;
+
+  @override
+  void initState() {
+    super.initState();
+    try {
+      _deadline = DateTime.parse(widget.task.deadline);
+    } catch (e) {
+      developer.log('Error parsing deadline: $e');
+    }
+    _loadStaff();
+  }
+
+  Future<void> _loadStaff() async {
+    try {
+      final response = await _apiService.getStaff();
+      if (response['staff'] != null) {
+        setState(() {
+          _staff = (response['staff'] as List)
+              .map((s) => Staff.fromJson(s))
+              .toList();
+          _isLoadingStaff = false;
+        });
+      }
+    } catch (e) {
+      developer.log('Error loading staff: $e');
+      setState(() => _isLoadingStaff = false);
+    }
+  }
+
+  Future<void> _selectDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _deadline ?? DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2030),
+    );
+    if (picked != null) {
+      setState(() => _deadline = picked);
+    }
+  }
+
+  Future<void> _reassignTask() async {
+    if (_deadline == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a deadline'),
+          backgroundColor: AppTheme.red500,
+        ),
+      );
+      return;
+    }
+    if (_selectedStaffId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a staff member'),
+          backgroundColor: AppTheme.red500,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final deadlineStr = _deadline!.toIso8601String();
+
+      await _apiService.reassignTaskStaff(
+        taskId: widget.task.id,
+        assignedStaffId: _selectedStaffId!,
+        deadline: deadlineStr,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Task reassigned successfully'),
+            backgroundColor: AppTheme.green500,
+          ),
+        );
+        Navigator.of(context).pop();
+        widget.onReassigned?.call();
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppTheme.red500,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 500),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.person_outline,
+                  color: AppTheme.primary,
+                  size: 24,
                 ),
-                const SizedBox(height: 16),
-                _isLoadingStaff
-                    ? const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(20),
-                          child: CircularProgressIndicator(),
-                        ),
-                      )
-                    : SingleSelectDropdown<Staff>(
-                        label: 'Assign to Staff',
-                        isRequired: true,
-                        options: _staff,
-                        selectedId: _selectedStaffId,
-                        onSelectionChanged: (value) {
-                          setState(() => _selectedStaffId = value);
-                        },
-                        getDisplayText: (staff) => staff.fullName,
-                        getSubText: (staff) => staff.designation ?? staff.role,
-                        getId: (staff) => staff.id,
-                        hintText: 'Select staff member',
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please select a staff member';
-                          }
-                          return null;
-                        },
-                        enabled: !_isLoading,
-                      ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Cancel'),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Reassign Individual Task: ${widget.task.name}',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
                     ),
-                    const SizedBox(width: 12),
-                    CustomButton(
-                      text: _isLoading
-                          ? 'Saving...'
-                          : (widget.task == null ? 'Create' : 'Update'),
-                      onPressed: _isLoading ? null : _saveTask,
-                    ),
-                  ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.of(context).pop(),
                 ),
               ],
             ),
-          ),
+            const SizedBox(height: 20),
+            
+            // Staff Selection
+            _isLoadingStaff
+                ? const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(20),
+                      child: CircularProgressIndicator(),
+                    ),
+                  )
+                : SingleSelectDropdown<Staff>(
+                    label: 'Reassign to Staff',
+                    isRequired: true,
+                    options: _staff,
+                    selectedId: _selectedStaffId,
+                    onSelectionChanged: (value) {
+                      setState(() => _selectedStaffId = value);
+                    },
+                    getDisplayText: (staff) => staff.fullName,
+                    getSubText: (staff) => staff.designation ?? staff.role,
+                    getId: (staff) => staff.id,
+                    hintText: 'Select staff member',
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please select a staff member';
+                      }
+                      return null;
+                    },
+                    enabled: !_isLoading,
+                  ),
+            const SizedBox(height: 16),
+            
+            // Deadline Selection
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'New Deadline',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: AppTheme.foreground,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                InkWell(
+                  onTap: _isLoading ? null : _selectDate,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.inputBackground,
+                      border: Border.all(color: AppTheme.border),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _deadline != null
+                                ? '${_deadline!.day}/${_deadline!.month}/${_deadline!.year}'
+                                : 'Select new deadline',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: _deadline != null
+                                  ? AppTheme.foreground
+                                  : AppTheme.mutedForeground,
+                            ),
+                          ),
+                        ),
+                        const Icon(
+                          Icons.calendar_today,
+                          color: AppTheme.mutedForeground,
+                          size: 20,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            
+            // Action Buttons
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
+                ),
+                const SizedBox(width: 12),
+                CustomButton(
+                  text: _isLoading ? 'Reassigning...' : 'Reassign Task',
+                  onPressed: _isLoading ? null : _reassignTask,
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );

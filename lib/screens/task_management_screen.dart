@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../models/models.dart';
 import '../services/api_service.dart';
 import '../services/file_download_service.dart';
@@ -7,6 +6,7 @@ import '../theme/app_theme.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_input.dart';
 import '../widgets/single_select_dropdown.dart';
+import '../widgets/individual_task_management_dialog.dart';
 import 'dart:developer' as developer;
 
 class TaskManagementScreen extends StatefulWidget {
@@ -90,6 +90,16 @@ class _TaskManagementScreenState extends State<TaskManagementScreen> {
             _loadTasks();
           },
         ),
+      ),
+    );
+  }
+
+  void _showReassignDialog(Task task) {
+    showDialog(
+      context: context,
+      builder: (context) => ReassignIndividualTaskDialog(
+        task: task,
+        onReassigned: _loadTasks,
       ),
     );
   }
@@ -370,53 +380,76 @@ class _TaskManagementScreenState extends State<TaskManagementScreen> {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // For submitted tasks: show download, approve and reject
-              if (task.status.toLowerCase() == 'submitted') ...[
-                // Download button (if downloadUrl is available)
-                if (task.downloadUrl != null && task.downloadUrl!.isNotEmpty)
-                  IconButton(
-                    icon: const Icon(Icons.download, color: AppTheme.blue600),
-                    onPressed: () => _downloadTaskFile(task),
-                    tooltip: 'Download File',
-                  ),
-                // Approve button
-                IconButton(
-                  icon: const Icon(Icons.check_circle_outline, color: AppTheme.green600),
-                  onPressed: () => _showApproveDialog(task),
-                  tooltip: 'Approve',
-                ),
-                // Reject button
-                IconButton(
-                  icon: const Icon(Icons.cancel_outlined, color: AppTheme.red500),
-                  onPressed: () => _showRejectDialog(task),
-                  tooltip: 'Reject',
-                ),
-              ] else ...[
-                // For non-submitted tasks: show other actions
-                // Download button (if downloadUrl is available or has attachments)
-                if ((task.downloadUrl != null && task.downloadUrl!.isNotEmpty) ||
-                    (task.attachments != null && task.attachments!.isNotEmpty))
-                  IconButton(
-                    icon: const Icon(Icons.download, color: AppTheme.blue600),
-                    onPressed: () => _downloadTaskFile(task),
-                    tooltip: 'Download File',
-                  ),
-                // Edit button (only for pending and in progress tasks)
-                if (task.status.toLowerCase() != 'completed' && 
-                    task.status.toLowerCase() != 'approved' && 
-                    task.status.toLowerCase() != 'rejected')
-                  IconButton(
-                    icon: const Icon(Icons.edit_outlined, color: AppTheme.blue600),
-                    onPressed: () => _showAddEditTaskScreen(task: task),
-                    tooltip: 'Edit',
-                  ),
-                // Delete button
-                IconButton(
-                  icon: const Icon(Icons.delete_outline, color: AppTheme.red500),
-                  onPressed: () => _deleteTask(task.id),
-                  tooltip: 'Delete',
-                ),
-              ],
+              // Check task status and show appropriate buttons
+              ...() {
+                final status = task.status.toUpperCase().trim();
+                
+                if (status == 'SUBMITTED') {
+                  return [
+                    // Download button (if downloadUrl is available)
+                    if (task.downloadUrl != null && task.downloadUrl!.isNotEmpty)
+                      IconButton(
+                        icon: const Icon(Icons.download, color: AppTheme.blue600),
+                        onPressed: () => _downloadTaskFile(task),
+                        tooltip: 'Download File',
+                      ),
+                    // Approve button
+                    IconButton(
+                      icon: const Icon(Icons.check_circle_outline, color: AppTheme.green600),
+                      onPressed: () => _showApproveDialog(task),
+                      tooltip: 'Approve',
+                    ),
+                    // Reject button
+                    IconButton(
+                      icon: const Icon(Icons.cancel_outlined, color: AppTheme.red500),
+                      onPressed: () => _showRejectDialog(task),
+                      tooltip: 'Reject',
+                    ),
+                  ];
+                } else if (status.contains('REJECT')) {
+                  return [
+                    // Reassign button
+                    IconButton(
+                      icon: const Icon(Icons.group, color: AppTheme.blue600),
+                      onPressed: () => _showReassignDialog(task),
+                      tooltip: 'Reassign',
+                    ),
+                    // Delete button
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline, color: AppTheme.red500),
+                      onPressed: () => _deleteTask(task.id),
+                      tooltip: 'Delete',
+                    ),
+                  ];
+                } else {
+                  return [ 
+                    // For non-submitted tasks: show other actions
+                    // Download button (if downloadUrl is available or has attachments)
+                    if ((task.downloadUrl != null && task.downloadUrl!.isNotEmpty) ||
+                        (task.attachments != null && task.attachments!.isNotEmpty))
+                      IconButton(
+                        icon: const Icon(Icons.download, color: AppTheme.blue600),
+                        onPressed: () => _downloadTaskFile(task),
+                        tooltip: 'Download File',
+                      ),
+                    // Edit button (only for pending and in progress tasks)
+                    if (!status.contains('COMPLET') && 
+                        !status.contains('APPROV') && 
+                        !status.contains('REJECT'))
+                      IconButton(
+                        icon: const Icon(Icons.edit_outlined, color: AppTheme.blue600),
+                        onPressed: () => _showAddEditTaskScreen(task: task),
+                        tooltip: 'Edit',
+                      ),
+                    // Delete button
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline, color: AppTheme.red500),
+                      onPressed: () => _deleteTask(task.id),
+                      tooltip: 'Delete',
+                    ),
+                  ];
+                }
+              }(),
             ],
           ),
         ),
@@ -559,18 +592,28 @@ class _TaskManagementScreenState extends State<TaskManagementScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
     return Scaffold(
       backgroundColor: AppTheme.gray50,
       appBar: AppBar(
         title: const Text('Individual Tasks'),
         backgroundColor: AppTheme.primary,
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () => _showAddEditTaskScreen(),
+            tooltip: 'Add Task',
+          ),
+        ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: isMobile ? FloatingActionButton(
         onPressed: () => _showAddEditTaskScreen(),
         backgroundColor: AppTheme.primary,
         child: const Icon(Icons.add, color: Colors.white),
-      ),
+      ) : null,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
@@ -610,7 +653,7 @@ class _TaskManagementScreenState extends State<TaskManagementScreen> {
               children: [
                 // Search Bar
                 Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.all(isMobile ? 16 : 24),
                   child: CustomTextInput(
                     controller: _searchController,
                     hint: 'Search by task name or staff name...',
@@ -626,7 +669,7 @@ class _TaskManagementScreenState extends State<TaskManagementScreen> {
                         : const Icon(Icons.search),
                   ),
                 ),
-                // Task Table
+                // Task List
                 Expanded(
                   child: _filteredTasks.isEmpty
                       ? Center(
@@ -634,14 +677,14 @@ class _TaskManagementScreenState extends State<TaskManagementScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                _tasks.isEmpty ? Icons.task : Icons.search_off,
+                                _tasks.isEmpty ? Icons.person_outline : Icons.search_off,
                                 size: 64,
                                 color: AppTheme.gray300,
                               ),
                               const SizedBox(height: 16),
                               Text(
                                 _tasks.isEmpty
-                                    ? 'No tasks yet'
+                                    ? 'No individual tasks yet'
                                     : 'No tasks found',
                                 style: TextStyle(
                                   fontSize: 18,
@@ -651,7 +694,7 @@ class _TaskManagementScreenState extends State<TaskManagementScreen> {
                               if (_tasks.isEmpty) ...[
                                 const SizedBox(height: 24),
                                 CustomButton(
-                                  text: 'Add First Task',
+                                  text: 'Add First Individual Task',
                                   onPressed: () => _showAddEditTaskScreen(),
                                   icon: const Icon(Icons.add, size: 20),
                                 ),
@@ -662,91 +705,63 @@ class _TaskManagementScreenState extends State<TaskManagementScreen> {
                       : RefreshIndicator(
                           onRefresh: _loadTasks,
                           child: SingleChildScrollView(
-                            padding: const EdgeInsets.all(16),
+                            padding: EdgeInsets.only(
+                              left: isMobile ? 16 : 24,
+                              right: isMobile ? 16 : 24,
+                              bottom: isMobile ? 16 : 24,
+                            ),
                             child: Container(
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: AppTheme.gray50,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(color: AppTheme.gray200),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.05),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
                               ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Table Header
-                                  Container(
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.blue50,
-                                      borderRadius: const BorderRadius.only(
-                                        topLeft: Radius.circular(12),
-                                        topRight: Radius.circular(12),
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: DataTable(
+                                  columnSpacing: isMobile ? 16 : 24,
+                                  headingRowColor: WidgetStateProperty.all(AppTheme.blue50),
+                                  dataRowColor: WidgetStateProperty.all(Colors.white),
+                                  columns: const [
+                                    DataColumn(
+                                      label: Text(
+                                        'Task Name',
+                                        style: TextStyle(fontWeight: FontWeight.w600),
                                       ),
                                     ),
-                                    child: const Text(
-                                      'Individual Tasks',
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.w500,
-                                        color: AppTheme.gray900,
+                                    DataColumn(
+                                      label: Text(
+                                        'Description',
+                                        style: TextStyle(fontWeight: FontWeight.w600),
                                       ),
                                     ),
-                                  ),
-                                  // Table Content
-                                  SingleChildScrollView(
-                                    scrollDirection: Axis.horizontal,
-                                    child: DataTable(
-                                      columnSpacing: 24,
-                                      headingRowColor: WidgetStateProperty.all(AppTheme.gray100),
-                                      dataRowColor: WidgetStateProperty.all(Colors.white),
-                                      columns: const [
-                                        DataColumn(
-                                          label: Text(
-                                            'Task Name',
-                                            style: TextStyle(fontWeight: FontWeight.w600),
-                                          ),
-                                        ),
-                                        DataColumn(
-                                          label: Text(
-                                            'Description',
-                                            style: TextStyle(fontWeight: FontWeight.w600),
-                                          ),
-                                        ),
-                                        DataColumn(
-                                          label: Text(
-                                            'Assigned To',
-                                            style: TextStyle(fontWeight: FontWeight.w600),
-                                          ),
-                                        ),
-                                        DataColumn(
-                                          label: Text(
-                                            'Deadline',
-                                            style: TextStyle(fontWeight: FontWeight.w600),
-                                          ),
-                                        ),
-                                        DataColumn(
-                                          label: Text(
-                                            'Status',
-                                            style: TextStyle(fontWeight: FontWeight.w600),
-                                          ),
-                                        ),
-                                        DataColumn(
-                                          label: Text(
-                                            'Actions',
-                                            style: TextStyle(fontWeight: FontWeight.w600),
-                                          ),
-                                        ),
-                                      ],
-                                      rows: _filteredTasks.map((task) => _buildTaskDataRow(task)).toList(),
+                                    DataColumn(
+                                      label: Text(
+                                        'Assigned To',
+                                        style: TextStyle(fontWeight: FontWeight.w600),
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                    DataColumn(
+                                      label: Text(
+                                        'Deadline',
+                                        style: TextStyle(fontWeight: FontWeight.w600),
+                                      ),
+                                    ),
+                                    DataColumn(
+                                      label: Text(
+                                        'Status',
+                                        style: TextStyle(fontWeight: FontWeight.w600),
+                                      ),
+                                    ),
+                                    DataColumn(
+                                      label: Text(
+                                        'Actions',
+                                        style: TextStyle(fontWeight: FontWeight.w600),
+                                      ),
+                                    ),
+                                  ],
+                                  rows: _filteredTasks.map((task) => _buildTaskDataRow(task)).toList(),
+                                ),
                               ),
                             ),
                           ),
