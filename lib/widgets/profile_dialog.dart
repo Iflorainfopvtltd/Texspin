@@ -98,49 +98,50 @@ class _ProfileDialogState extends State<ProfileDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header with gradient
-            Container(
-              padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [AppTheme.primary, AppTheme.primary.withOpacity(0.8)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(isSmallScreen ? 16 : 24),
-                  topRight: Radius.circular(isSmallScreen ? 16 : 24),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.person,
-                    color: Colors.white,
-                    size: isSmallScreen ? 24 : 28,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Profile',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: isSmallScreen ? 20 : 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
-                    onPressed: () => Navigator.of(context).pop(),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                ],
-              ),
-            ),
+_buildHeader(context),
+            // // Header with gradient
+            // Container(
+            //   padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
+            //   decoration: BoxDecoration(
+            //     gradient: LinearGradient(
+            //       colors: [AppTheme.primary, AppTheme.primary.withOpacity(0.8)],
+            //       begin: Alignment.topLeft,
+            //       end: Alignment.bottomRight,
+            //     ),
+            //     borderRadius: BorderRadius.only(
+            //       topLeft: Radius.circular(isSmallScreen ? 16 : 24),
+            //       topRight: Radius.circular(isSmallScreen ? 16 : 24),
+            //     ),
+            //   ),
+            //   child: Row(
+            //     children: [
+            //       Icon(
+            //         Icons.person,
+            //         color: Colors.white,
+            //         size: isSmallScreen ? 24 : 28,
+            //       ),
+            //       const SizedBox(width: 12),
+            //       Expanded(
+            //         child: Text(
+            //           'Profile',
+            //           style: TextStyle(
+            //             color: Colors.white,
+            //             fontSize: isSmallScreen ? 20 : 24,
+            //             fontWeight: FontWeight.bold,
+            //           ),
+            //         ),
+            //       ),
+            //       IconButton(
+            //         icon: const Icon(Icons.close, color: Colors.white),
+            //         onPressed: () => Navigator.of(context).pop(),
+            //         padding: EdgeInsets.zero,
+            //         constraints: const BoxConstraints(),
+            //       ),
+            //     ],
+            //   ),
+            // ),
 
-            // Content
+            // // Content
             Flexible(
               child: _isLoading
                   ? Center(
@@ -491,3 +492,32 @@ class _ProfileDialogState extends State<ProfileDialog> {
     }
   }
 }
+
+ Widget _buildHeader(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: AppTheme.border)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.person, color: AppTheme.gray600, size: 24),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Text(
+              'Prodile',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w500,
+                color: AppTheme.gray900,
+              ),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close, color: AppTheme.gray600),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
+    );
+  }

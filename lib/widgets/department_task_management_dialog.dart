@@ -548,7 +548,7 @@ class _DepartmentTaskManagementDialogState extends State<DepartmentTaskManagemen
         ),
         DataCell(
           SizedBox(
-            width: 200,
+            width: 150,
             child: Text(
               task.description,
               overflow: TextOverflow.ellipsis,
@@ -560,10 +560,13 @@ class _DepartmentTaskManagementDialogState extends State<DepartmentTaskManagemen
           ),
         ),
         DataCell(
-          Text(
-            assignedStaffName,
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
+          SizedBox(
+             width: 150,
+            child: Text(
+              assignedStaffName,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
           ),
         ),
         DataCell(
@@ -884,7 +887,7 @@ class _DepartmentTaskManagementDialogState extends State<DepartmentTaskManagemen
                                         child: SingleChildScrollView(
                                           scrollDirection: Axis.horizontal,
                                           child: DataTable(
-                                            columnSpacing: isMobile ? 16 : 24,
+                                            columnSpacing: isMobile ? 16 : 16,
                                             headingRowColor: WidgetStateProperty.all(AppTheme.blue50),
                                             dataRowColor: WidgetStateProperty.all(Colors.white),
                                             columns: const [

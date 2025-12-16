@@ -550,7 +550,7 @@ class _IndividualTaskManagementDialogState extends State<IndividualTaskManagemen
         ),
         DataCell(
           SizedBox(
-            width: 200,
+            width: 150,
             child: Text(
               task.description,
               overflow: TextOverflow.ellipsis,
@@ -562,10 +562,13 @@ class _IndividualTaskManagementDialogState extends State<IndividualTaskManagemen
           ),
         ),
         DataCell(
-          Text(
-            assignedStaffName,
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
+          SizedBox(
+            width: 150,
+            child: Text(
+              assignedStaffName,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
           ),
         ),
         DataCell(
@@ -886,7 +889,7 @@ class _IndividualTaskManagementDialogState extends State<IndividualTaskManagemen
                                         child: SingleChildScrollView(
                                           scrollDirection: Axis.horizontal,
                                           child: DataTable(
-                                            columnSpacing: isMobile ? 16 : 24,
+                                            columnSpacing: isMobile ? 16 : 16,
                                             headingRowColor: WidgetStateProperty.all(AppTheme.blue50),
                                             dataRowColor: WidgetStateProperty.all(Colors.white),
                                             columns: const [
