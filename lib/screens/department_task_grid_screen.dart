@@ -177,8 +177,6 @@ class _DepartmentTaskGridScreenState extends State<DepartmentTaskGridScreen> {
       backgroundColor: AppTheme.gray50,
       appBar: AppBar(
         title: const Text('Department Tasks'),
-        backgroundColor: AppTheme.primary,
-        foregroundColor: Colors.white,
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddEditTaskDialog(),

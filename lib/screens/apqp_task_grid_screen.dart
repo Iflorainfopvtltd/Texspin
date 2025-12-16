@@ -606,8 +606,6 @@ class _ApqpTaskGridScreenState extends State<ApqpTaskGridScreen> {
       backgroundColor: AppTheme.gray50,
       appBar: AppBar(
         title: const Text('APQP Tasks'),
-        backgroundColor: AppTheme.primary,
-        foregroundColor: Colors.white,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())

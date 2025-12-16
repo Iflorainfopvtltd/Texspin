@@ -234,8 +234,6 @@ class _IndividualTaskGridScreenState extends State<IndividualTaskGridScreen> {
       backgroundColor: AppTheme.gray50,
       appBar: AppBar(
         title: const Text('Individual Tasks'),
-        backgroundColor: AppTheme.primary,
-        foregroundColor: Colors.white,
         // actions: [
         //   IconButton(
         //     icon: const Icon(Icons.add),
