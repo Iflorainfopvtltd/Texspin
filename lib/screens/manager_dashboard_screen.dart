@@ -133,16 +133,7 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
       userName: widget.userName ?? 'Manager',
       navigationItems: [
         NavigationItem(icon: Icons.dashboard, label: 'Dashboard', onTap: () {}),
-        NavigationItem(
-          icon: Icons.check_circle_outline,
-          label: 'Audit Tasks',
-          onTap: () {},
-        ),
-        NavigationItem(
-          icon: Icons.help_outline,
-          label: 'Task Help',
-          onTap: () {},
-        ),
+      
         NavigationItem(
           icon: Icons.task_alt,
           label: 'APQP Task',
@@ -205,6 +196,16 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
               );
             }
           },
+        ),
+         NavigationItem(
+          icon: Icons.check_circle_outline,
+          label: 'Audit Tasks',
+          onTap: () {},
+        ),
+        NavigationItem(
+          icon: Icons.help_outline,
+          label: 'Task Help',
+          onTap: () {},
         ),
         NavigationItem(
           icon: Icons.notifications_outlined,

@@ -410,7 +410,7 @@ class _TaskManagementScreenState extends State<TaskManagementScreen> {
                   return [
                     // Reassign button
                     IconButton(
-                      icon: const Icon(Icons.group, color: AppTheme.blue600),
+                      icon: const Icon(Icons.person_add, color: AppTheme.blue600),
                       onPressed: () => _showReassignDialog(task),
                       tooltip: 'Reassign',
                     ),

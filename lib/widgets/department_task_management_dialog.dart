@@ -703,50 +703,51 @@ class _DepartmentTaskManagementDialogState extends State<DepartmentTaskManagemen
           children: [
             Column(
               children: [
-                // Header
-                Container(
-                  padding: EdgeInsets.all(isMobile ? 16 : 24),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppTheme.primary,
-                        AppTheme.primary.withOpacity(0.8),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(isMobile ? 16 : 20),
-                      topRight: Radius.circular(isMobile ? 16 : 20),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.business,
-                        color: Colors.white,
-                        size: isMobile ? 24 : 28,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Department Tasks',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: isMobile ? 20 : 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close, color: Colors.white),
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                    ],
-                  ),
-                ),
+                _buildHeader(context),
+                // // Header
+                // Container(
+                //   padding: EdgeInsets.all(isMobile ? 16 : 24),
+                //   decoration: BoxDecoration(
+                //     gradient: LinearGradient(
+                //       colors: [
+                //         AppTheme.primary,
+                //         AppTheme.primary.withOpacity(0.8),
+                //       ],
+                //       begin: Alignment.topLeft,
+                //       end: Alignment.bottomRight,
+                //     ),
+                //     borderRadius: BorderRadius.only(
+                //       topLeft: Radius.circular(isMobile ? 16 : 20),
+                //       topRight: Radius.circular(isMobile ? 16 : 20),
+                //     ),
+                //   ),
+                //   child: Row(
+                //     children: [
+                //       Icon(
+                //         Icons.business,
+                //         color: Colors.white,
+                //         size: isMobile ? 24 : 28,
+                //       ),
+                //       const SizedBox(width: 12),
+                //       Expanded(
+                //         child: Text(
+                //           'Department Tasks',
+                //           style: TextStyle(
+                //             color: Colors.white,
+                //             fontSize: isMobile ? 20 : 24,
+                //             fontWeight: FontWeight.bold,
+                //           ),
+                //         ),
+                //       ),
+                //       IconButton(
+                //         icon: const Icon(Icons.close, color: Colors.white),
+                //         onPressed: () => Navigator.of(context).pop(),
+                //       ),
+                //     ],
+                //   ),
+                // ),
 
-                // Content
+                // // Content
                 Expanded(
                   child: _isLoading
                       ? const Center(child: CircularProgressIndicator())
@@ -1511,3 +1512,32 @@ class _ReassignDepartmentTaskDialogState extends State<ReassignDepartmentTaskDia
     );
   }
 }
+
+ Widget _buildHeader(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: AppTheme.border)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.business, color: AppTheme.gray600, size: 24),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Text(
+              'Department Tasks',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w500,
+                color: AppTheme.gray900,
+              ),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close, color: AppTheme.gray600),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
+    );
+  }

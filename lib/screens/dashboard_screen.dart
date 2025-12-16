@@ -810,9 +810,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      _filterText.isEmpty
-                          ? 'Get started by creating your first APQP project'
-                          : 'Try adjusting your search terms.',
+                      _filterText.isEmpty ? 'Get started by creating your first APQP project' : 'Try adjusting your search terms.',
                       style: TextStyle(
                         fontSize: isMobile ? 13 : 14,
                         color: AppTheme.gray600,
