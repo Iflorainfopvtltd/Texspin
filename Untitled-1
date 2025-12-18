@@ -1,0 +1,103 @@
+post	/texspin/api/audit-template	"{
+  ""name"": ""Fire Safety Audit"",
+  ""auditSegment"": ""69438d878019a2b7b10488b2"", id or text
+  ""auditType"": ""69438a398019a2b7b10488a0"", id or text
+  ""auditQuestions"": [
+    ""6943ddce45026f66ab389053"",
+    ""6943a3fbde5aa272e5265115""
+  ]
+}
+
+
+Authorization: Bearer <token> manger or admin"	"{
+    ""message"": ""Audit Template created successfully"",
+    ""auditTemplate"": {
+        ""_id"": ""6943ddea45026f66ab38905a"",
+        ""name"": ""Fire Safety Audit"",
+        ""auditSegment"": {
+            ""_id"": ""69438d878019a2b7b10488b2"",
+            ""name"": ""Supplier""
+        },
+        ""auditType"": {
+            ""_id"": ""69438a398019a2b7b10488a0"",
+            ""name"": ""System""
+        },
+        ""auditQuestions"": [
+            {
+                ""_id"": ""6943ddce45026f66ab389053"",
+                ""question"": ""Is fire extinguisher available?"",
+                ""answer"": ""Yes""
+            },
+            {
+                ""_id"": ""6943a3fbde5aa272e5265115"",
+                ""question"": ""Is fire extinguisher available and functional?"",
+                ""answer"": ""Yes, available near main entrance""
+            }
+        ],
+        ""status"": ""active"",
+        ""createdBy"": ""691dac1022af03f34d15d47d"",
+        ""createdAt"": ""2025-12-18T10:56:42.152Z"",
+        ""updatedAt"": ""2025-12-18T10:56:42.152Z"",
+        ""__v"": 0
+    }
+}"
+put	/texspin/api/audit-template/:id	"{
+    ""name"":""asdfgh""
+}
+
+Authorization: Bearer <token> manger or admin"	"{
+    ""message"": ""Audit Template updated successfully"",
+    ""auditTemplate"": {
+        ""_id"": ""6943ddea45026f66ab38905a"",
+        ""name"": ""asdfgh"",
+        ""auditSegment"": {
+            ""_id"": ""69438d878019a2b7b10488b2"",
+            ""name"": ""Supplier""
+        },
+        ""auditType"": {
+            ""_id"": ""69438a398019a2b7b10488a0"",
+            ""name"": ""System""
+        },
+        ""auditQuestions"": [
+            {
+                ""_id"": ""6943ddce45026f66ab389053"",
+                ""question"": ""Is fire extinguisher available?"",
+                ""answer"": ""Yes""
+            },
+            {
+                ""_id"": ""6943a3fbde5aa272e5265115"",
+                ""question"": ""Is fire extinguisher available and functional?"",
+                ""answer"": ""Yes, available near main entrance""
+            }
+        ],
+        ""status"": ""active"",
+        ""createdBy"": ""691dac1022af03f34d15d47d"",
+        ""createdAt"": ""2025-12-18T10:56:42.152Z"",
+        ""updatedAt"": ""2025-12-18T10:58:29.489Z"",
+        ""__v"": 0
+    }
+}"
+patch	/texspin/api/audit-template/:id/status	"{
+    ""status"":""inactive""
+}
+
+Authorization: Bearer <token> manger or admin"	"{
+    ""message"": ""Audit Template status updated successfully"",
+    ""auditTemplate"": {
+        ""id"": ""6943ddea45026f66ab38905a"",
+        ""name"": ""asdfgh"",
+        ""status"": ""inactive""
+    }
+}"
+delete	/texspin/api/audit-template/:id	Authorization: Bearer <token> manger or admin	"{
+    ""message"": ""Audit Template deleted successfully"",
+    ""deletedAuditTemplate"": {
+        ""id"": ""6943dbda5b262e708b5c0375"",
+        ""name"": ""Fire Safety Audit""
+    }
+}"
+
+
+intigrate this api inside audit management --> create audit template ---> then this apis 
+we need to open dialog thair display all template list and with floting btn and like same we have done for 
+others adn floting btn or edit btn click open another dialog intigrate thsi dialogs

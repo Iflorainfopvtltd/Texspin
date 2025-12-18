@@ -740,3 +740,64 @@ class AuditQuestion {
     };
   }
 }
+class AuditTemplate {
+  final String id;
+  final String name;
+  final AuditSegment auditSegment;
+  final AuditType auditType;
+  final List<AuditQuestion> auditQuestions;
+  final String status;
+  final String? createdBy;
+  final String? createdAt;
+  final String? updatedAt;
+
+  AuditTemplate({
+    required this.id,
+    required this.name,
+    required this.auditSegment,
+    required this.auditType,
+    required this.auditQuestions,
+    required this.status,
+    this.createdBy,
+    this.createdAt,
+    this.updatedAt,
+  });
+
+  factory AuditTemplate.fromJson(Map<String, dynamic> json) {
+    return AuditTemplate(
+      id: json['id'] ?? json['_id'] ?? '',
+      name: json['name'] ?? '',
+      auditSegment: AuditSegment.fromJson({
+        'id': json['auditSegment']['_id'] ?? json['auditSegment']['id'] ?? '',
+        'name': json['auditSegment']['name'] ?? '',
+        'status': 'active', // Default status for nested objects
+      }),
+      auditType: AuditType.fromJson({
+        'id': json['auditType']['_id'] ?? json['auditType']['id'] ?? '',
+        'name': json['auditType']['name'] ?? '',
+        'status': 'active', // Default status for nested objects
+      }),
+      auditQuestions: (json['auditQuestions'] as List? ?? [])
+          .map((q) => AuditQuestion.fromJson({
+                'id': q['_id'] ?? q['id'] ?? '',
+                'question': q['question'] ?? '',
+                'answer': q['answer'],
+                'status': 'active', // Default status for nested objects
+              }))
+          .toList(),
+      status: json['status'] ?? 'active',
+      createdBy: json['createdBy']?.toString(),
+      createdAt: json['createdAt'],
+      updatedAt: json['updatedAt'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'auditSegment': auditSegment.id,
+      'auditType': auditType.id,
+      'auditQuestions': auditQuestions.map((q) => q.id).toList(),
+    };
+  }
+}

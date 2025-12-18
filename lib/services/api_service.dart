@@ -2198,4 +2198,95 @@ class ApiService {
       throw _handleError(e);
     }
   }
+
+  // Audit Template APIs
+  Future<Map<String, dynamic>> getAuditTemplates({String? bearerToken}) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      final response = await _dio.get(
+        '/texspin/api/audit-template',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> createAuditTemplate({
+    required String name,
+    required String auditSegment,
+    required String auditType,
+    required List<String> auditQuestions,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      final response = await _dio.post(
+        '/texspin/api/audit-template',
+        data: {
+          'name': name,
+          'auditSegment': auditSegment,
+          'auditType': auditType,
+          'auditQuestions': auditQuestions,
+        },
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> updateAuditTemplate({
+    required String id,
+    required String name,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      final response = await _dio.put(
+        '/texspin/api/audit-template/$id',
+        data: {'name': name},
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> updateAuditTemplateStatus({
+    required String id,
+    required String status,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      final response = await _dio.patch(
+        '/texspin/api/audit-template/$id/status',
+        data: {'status': status},
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> deleteAuditTemplate({
+    required String id,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      final response = await _dio.delete(
+        '/texspin/api/audit-template/$id',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
 }
