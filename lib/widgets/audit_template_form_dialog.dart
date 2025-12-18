@@ -132,9 +132,12 @@ class _AuditTemplateFormDialogState extends State<AuditTemplateFormDialog> {
 
     try {
       if (_isEditing) {
-        await _apiService.updateAuditTemplate(
+        await _apiService.updateFullAuditTemplate(
           id: widget.auditTemplate!.id,
           name: _nameController.text.trim(),
+          auditSegment: _selectedAuditSegment!.id,
+          auditType: _selectedAuditType!.id,
+          auditQuestions: _selectedQuestionIds,
         );
       } else {
         await _apiService.createAuditTemplate(
@@ -242,10 +245,10 @@ class _AuditTemplateFormDialogState extends State<AuditTemplateFormDialog> {
                               child: Text(segment.name),
                             ))
                         .toList(),
-                    onChanged: _isEditing ? null : (value) {
+                    onChanged: (value) {
                       setState(() => _selectedAuditSegment = value);
                     },
-                    enabled: !_isEditing,
+                    enabled: true,
                   ),
                   const SizedBox(height: 16),
 
@@ -262,45 +265,30 @@ class _AuditTemplateFormDialogState extends State<AuditTemplateFormDialog> {
                               child: Text(type.name),
                             ))
                         .toList(),
-                    onChanged: _isEditing ? null : (value) {
+                    onChanged: (value) {
                       setState(() => _selectedAuditType = value);
                     },
-                    enabled: !_isEditing,
+                    enabled: true,
                   ),
                   const SizedBox(height: 16),
 
                   // Audit Questions Multi-Select
-                  if (!_isEditing) ...[
-                    MultiSelectDropdown<AuditQuestion>(
-                      label: 'Audit Questions',
-                      isRequired: true,
-                      options: _auditQuestions.where((q) => q.status == 'active').toList(),
-                      selectedIds: _selectedQuestionIds,
-                      onSelectionChanged: (selectedIds) {
-                        setState(() {
-                          _selectedQuestionIds = selectedIds;
-                        });
-                      },
-                      getDisplayText: (question) => question.question,
-                      getSubText: (question) => question.answer != null ? 'Answer: ${question.answer}' : null,
-                      getId: (question) => question.id,
-                      hintText: 'Select audit questions',
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-
-                  // Selected Questions Count (for editing mode)
-                  if (_isEditing && _selectedQuestionIds.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: Text(
-                        '${_selectedQuestionIds.length} question(s) selected',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppTheme.gray600,
-                        ),
-                      ),
-                    ),
+                  MultiSelectDropdown<AuditQuestion>(
+                    label: 'Audit Questions',
+                    isRequired: true,
+                    options: _auditQuestions.where((q) => q.status == 'active').toList(),
+                    selectedIds: _selectedQuestionIds,
+                    onSelectionChanged: (selectedIds) {
+                      setState(() {
+                        _selectedQuestionIds = selectedIds;
+                      });
+                    },
+                    getDisplayText: (question) => question.question,
+                    getSubText: (question) => question.answer != null ? 'Answer: ${question.answer}' : null,
+                    getId: (question) => question.id,
+                    hintText: 'Select audit questions',
+                  ),
+                  const SizedBox(height: 16),
 
                   const SizedBox(height: 8),
                   

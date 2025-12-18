@@ -2256,6 +2256,32 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> updateFullAuditTemplate({
+    required String id,
+    required String name,
+    required String auditSegment,
+    required String auditType,
+    required List<String> auditQuestions,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      final response = await _dio.put(
+        '/texspin/api/audit-template/$id',
+        data: {
+          'name': name,
+          'auditSegment': auditSegment,
+          'auditType': auditType,
+          'auditQuestions': auditQuestions,
+        },
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
   Future<Map<String, dynamic>> updateAuditTemplateStatus({
     required String id,
     required String status,
