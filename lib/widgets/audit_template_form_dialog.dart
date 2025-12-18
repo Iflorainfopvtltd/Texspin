@@ -4,6 +4,8 @@ import '../services/api_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_input.dart';
+import '../widgets/custom_dropdown.dart';
+import '../widgets/multi_select_dropdown.dart';
 
 
 class AuditTemplateFormDialog extends StatefulWidget {
@@ -33,18 +35,15 @@ class _AuditTemplateFormDialogState extends State<AuditTemplateFormDialog> {
   
   AuditSegment? _selectedAuditSegment;
   AuditType? _selectedAuditType;
-  List<AuditQuestion> _selectedAuditQuestions = [];
+  List<String> _selectedQuestionIds = [];
 
   @override
   void initState() {
     super.initState();
-    _loadInitialData();
     if (widget.auditTemplate != null) {
       _nameController.text = widget.auditTemplate!.name;
-      _selectedAuditSegment = widget.auditTemplate!.auditSegment;
-      _selectedAuditType = widget.auditTemplate!.auditType;
-      _selectedAuditQuestions = List.from(widget.auditTemplate!.auditQuestions);
     }
+    _loadInitialData();
   }
 
   @override
@@ -79,6 +78,33 @@ class _AuditTemplateFormDialogState extends State<AuditTemplateFormDialog> {
         _auditQuestions = (questionsResponse['auditQuestions'] as List)
             .map((json) => AuditQuestion.fromJson(json))
             .toList();
+        
+        // If editing, match the selected values with the loaded data
+        if (_isEditing && widget.auditTemplate != null) {
+          // Find matching audit segment
+          try {
+            _selectedAuditSegment = _auditSegments.firstWhere(
+              (segment) => segment.id == widget.auditTemplate!.auditSegment.id,
+            );
+          } catch (e) {
+            _selectedAuditSegment = _auditSegments.isNotEmpty ? _auditSegments.first : null;
+          }
+          
+          // Find matching audit type
+          try {
+            _selectedAuditType = _auditTypes.firstWhere(
+              (type) => type.id == widget.auditTemplate!.auditType.id,
+            );
+          } catch (e) {
+            _selectedAuditType = _auditTypes.isNotEmpty ? _auditTypes.first : null;
+          }
+          
+          // Set selected question IDs
+          _selectedQuestionIds = widget.auditTemplate!.auditQuestions
+              .map((question) => question.id)
+              .toList();
+        }
+        
         _isLoadingData = false;
       });
     } catch (e) {
@@ -95,7 +121,7 @@ class _AuditTemplateFormDialogState extends State<AuditTemplateFormDialog> {
     if (_nameController.text.trim().isEmpty ||
         _selectedAuditSegment == null ||
         _selectedAuditType == null ||
-        _selectedAuditQuestions.isEmpty) {
+        _selectedQuestionIds.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill all required fields')),
       );
@@ -115,7 +141,7 @@ class _AuditTemplateFormDialogState extends State<AuditTemplateFormDialog> {
           name: _nameController.text.trim(),
           auditSegment: _selectedAuditSegment!.id,
           auditType: _selectedAuditType!.id,
-          auditQuestions: _selectedAuditQuestions.map((q) => q.id).toList(),
+          auditQuestions: _selectedQuestionIds,
         );
       }
 
@@ -152,7 +178,6 @@ class _AuditTemplateFormDialogState extends State<AuditTemplateFormDialog> {
       ),
       child: Container(
         constraints: const BoxConstraints.tightFor(width: 700),
-        padding: const EdgeInsets.all(24),
         child: _isLoadingData
             ? const Center(
                 child: Column(
@@ -164,10 +189,12 @@ class _AuditTemplateFormDialogState extends State<AuditTemplateFormDialog> {
                   ],
                 ),
               )
-            : Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+            : SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                   Row(
                     children: [
                       Icon(
@@ -203,154 +230,71 @@ class _AuditTemplateFormDialogState extends State<AuditTemplateFormDialog> {
                   const SizedBox(height: 16),
 
                   // Audit Segment Dropdown
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Audit Segment *',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: AppTheme.gray900,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      DropdownButtonFormField<AuditSegment>(
-                        value: _selectedAuditSegment,
-                        hint: const Text('Select audit segment'),
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: AppTheme.border),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: AppTheme.border),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: AppTheme.blue600),
-                          ),
-                        ),
-                        items: _auditSegments
-                            .where((segment) => segment.status == 'active')
-                            .map((segment) => DropdownMenuItem(
-                                  value: segment,
-                                  child: Text(segment.name),
-                                ))
-                            .toList(),
-                        onChanged: _isEditing ? null : (value) {
-                          setState(() => _selectedAuditSegment = value);
-                        },
-                      ),
-                    ],
+                  CustomDropdownButtonFormField<AuditSegment>(
+                    label: 'Audit Segment *',
+                    hint: 'Select audit segment',
+                    value: _auditSegments.contains(_selectedAuditSegment) ? _selectedAuditSegment : null,
+                    items: _auditSegments
+                        .where((segment) => segment.status == 'active')
+                        .toSet() // Remove duplicates
+                        .map((segment) => DropdownMenuItem(
+                              value: segment,
+                              child: Text(segment.name),
+                            ))
+                        .toList(),
+                    onChanged: _isEditing ? null : (value) {
+                      setState(() => _selectedAuditSegment = value);
+                    },
+                    enabled: !_isEditing,
                   ),
                   const SizedBox(height: 16),
 
                   // Audit Type Dropdown
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Audit Type *',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: AppTheme.gray900,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      DropdownButtonFormField<AuditType>(
-                        value: _selectedAuditType,
-                        hint: const Text('Select audit type'),
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: AppTheme.border),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: AppTheme.border),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: AppTheme.blue600),
-                          ),
-                        ),
-                        items: _auditTypes
-                            .where((type) => type.status == 'active')
-                            .map((type) => DropdownMenuItem(
-                                  value: type,
-                                  child: Text(type.name),
-                                ))
-                            .toList(),
-                        onChanged: _isEditing ? null : (value) {
-                          setState(() => _selectedAuditType = value);
-                        },
-                      ),
-                    ],
+                  CustomDropdownButtonFormField<AuditType>(
+                    label: 'Audit Type *',
+                    hint: 'Select audit type',
+                    value: _auditTypes.contains(_selectedAuditType) ? _selectedAuditType : null,
+                    items: _auditTypes
+                        .where((type) => type.status == 'active')
+                        .toSet() // Remove duplicates
+                        .map((type) => DropdownMenuItem(
+                              value: type,
+                              child: Text(type.name),
+                            ))
+                        .toList(),
+                    onChanged: _isEditing ? null : (value) {
+                      setState(() => _selectedAuditType = value);
+                    },
+                    enabled: !_isEditing,
                   ),
                   const SizedBox(height: 16),
 
-                  // Audit Questions Selection
+                  // Audit Questions Multi-Select
                   if (!_isEditing) ...[
-                    const Text(
-                      'Audit Questions *',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: AppTheme.gray900,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      height: 200,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: AppTheme.border),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: _auditQuestions.isEmpty
-                          ? const Center(child: Text('No questions available'))
-                          : ListView.builder(
-                              itemCount: _auditQuestions.length,
-                              itemBuilder: (context, index) {
-                                final question = _auditQuestions[index];
-                                final isSelected = _selectedAuditQuestions.contains(question);
-                                
-                                return CheckboxListTile(
-                                  title: Text(
-                                    question.question,
-                                    style: const TextStyle(fontSize: 14),
-                                  ),
-                                  subtitle: question.answer != null
-                                      ? Text(
-                                          'Answer: ${question.answer}',
-                                          style: const TextStyle(fontSize: 12, color: AppTheme.gray600),
-                                        )
-                                      : null,
-                                  value: isSelected,
-                                  onChanged: (bool? value) {
-                                    setState(() {
-                                      if (value == true) {
-                                        _selectedAuditQuestions.add(question);
-                                      } else {
-                                        _selectedAuditQuestions.remove(question);
-                                      }
-                                    });
-                                  },
-                                );
-                              },
-                            ),
+                    MultiSelectDropdown<AuditQuestion>(
+                      label: 'Audit Questions',
+                      isRequired: true,
+                      options: _auditQuestions.where((q) => q.status == 'active').toList(),
+                      selectedIds: _selectedQuestionIds,
+                      onSelectionChanged: (selectedIds) {
+                        setState(() {
+                          _selectedQuestionIds = selectedIds;
+                        });
+                      },
+                      getDisplayText: (question) => question.question,
+                      getSubText: (question) => question.answer != null ? 'Answer: ${question.answer}' : null,
+                      getId: (question) => question.id,
+                      hintText: 'Select audit questions',
                     ),
                     const SizedBox(height: 16),
                   ],
 
-                  // Selected Questions Count
-                  if (_selectedAuditQuestions.isNotEmpty)
+                  // Selected Questions Count (for editing mode)
+                  if (_isEditing && _selectedQuestionIds.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 16),
                       child: Text(
-                        '${_selectedAuditQuestions.length} question(s) selected',
+                        '${_selectedQuestionIds.length} question(s) selected',
                         style: const TextStyle(
                           fontSize: 12,
                           color: AppTheme.gray600,
@@ -382,6 +326,7 @@ class _AuditTemplateFormDialogState extends State<AuditTemplateFormDialog> {
                   ),
                 ],
               ),
+            ),
       ),
     );
   }

@@ -663,6 +663,16 @@ class AuditType {
       'status': status,
     };
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AuditType &&
+          runtimeType == other.runtimeType &&
+          id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class AuditSegment {
@@ -699,6 +709,16 @@ class AuditSegment {
       'status': status,
     };
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AuditSegment &&
+          runtimeType == other.runtimeType &&
+          id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class AuditQuestion {
@@ -739,6 +759,16 @@ class AuditQuestion {
       'status': status,
     };
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AuditQuestion &&
+          runtimeType == other.runtimeType &&
+          id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
 }
 class AuditTemplate {
   final String id;
