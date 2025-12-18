@@ -20,6 +20,11 @@ import 'audit_segment_management_screen.dart';
 import 'audit_questions_management_screen.dart';
 import 'all_audits_screen.dart';
 import 'create_audit_template_screen.dart';
+import '../widgets/audit_type_management_dialog.dart';
+import '../widgets/audit_segment_management_dialog.dart';
+import '../widgets/audit_questions_management_dialog.dart';
+import '../widgets/all_audits_dialog.dart';
+import '../widgets/create_audit_template_dialog.dart';
 
 class DashboardScreen extends StatefulWidget {
   final List<Project> projects;
@@ -144,58 +149,77 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _handleAudit(BuildContext context) async {
+    final auditOption = await showDialog<AuditOption>(
+      context: context,
+      builder: (dialogContext) => AuditDialog(
+        onAuditSelected: (auditOption) {
+          Navigator.of(dialogContext).pop(auditOption);
+        },
+      ),
+    );
+    
+    if (auditOption != null) {
+      await _showAuditManagement(context, auditOption);
+    }
+  }
+
+  Future<void> _showAuditManagement(BuildContext context, AuditOption auditOption) async {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
     if (isMobile) {
-      // Mobile: Show audit dialog first, then navigate to full screen
-      await showDialog(
-        context: context,
-        builder: (dialogContext) => AuditDialog(
-          onAuditSelected: (auditOption) {
-            Navigator.of(context).pop(); // Close dialog first
-            _navigateToAuditScreen(context, auditOption);
-          },
-        ),
+      // Mobile: Navigate to full screen
+      Widget screen;
+      
+      switch (auditOption) {
+        case AuditOption.createTemplate:
+          screen = const CreateAuditTemplateScreen();
+          break;
+        case AuditOption.auditSegment:
+          screen = const AuditSegmentManagementScreen();
+          break;
+        case AuditOption.auditType:
+          screen = const AuditTypeManagementScreen();
+          break;
+        case AuditOption.auditQuestions:
+          screen = const AuditQuestionsManagementScreen();
+          break;
+        case AuditOption.getAllAudits:
+          screen = const AllAuditsScreen();
+          break;
+      }
+
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => screen),
       );
     } else {
-      // Web/Desktop: Show audit dialog
+      // Web/Desktop: Show dialog
+      Widget dialog;
+      
+      switch (auditOption) {
+        case AuditOption.createTemplate:
+          dialog = const CreateAuditTemplateDialog();
+          break;
+        case AuditOption.auditSegment:
+          dialog = const AuditSegmentManagementDialog();
+          break;
+        case AuditOption.auditType:
+          dialog = const AuditTypeManagementDialog();
+          break;
+        case AuditOption.auditQuestions:
+          dialog = const AuditQuestionsManagementDialog();
+          break;
+        case AuditOption.getAllAudits:
+          dialog = const AllAuditsDialog();
+          break;
+      }
+
       await showDialog(
         context: context,
-        builder: (dialogContext) => AuditDialog(
-          onAuditSelected: (auditOption) {
-            Navigator.of(context).pop(); // Close dialog first
-            _navigateToAuditScreen(context, auditOption);
-          },
-        ),
+        barrierDismissible: true,
+        builder: (_) => dialog,
       );
     }
-  }
-
-  void _navigateToAuditScreen(BuildContext context, AuditOption auditOption) {
-    Widget screen;
-    
-    switch (auditOption) {
-      case AuditOption.createTemplate:
-        screen = const CreateAuditTemplateScreen();
-        break;
-      case AuditOption.auditSegment:
-        screen = const AuditSegmentManagementScreen();
-        break;
-      case AuditOption.auditType:
-        screen = const AuditTypeManagementScreen();
-        break;
-      case AuditOption.auditQuestions:
-        screen = const AuditQuestionsManagementScreen();
-        break;
-      case AuditOption.getAllAudits:
-        screen = const AllAuditsScreen();
-        break;
-    }
-
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => screen),
-    );
   }
 
   Color _getProgressColor(int progress) {
@@ -1306,3 +1330,6 @@ extension ListExtension<T> on List<T> {
     if (condition) add(item);
   }
 }
+
+
+  

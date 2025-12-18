@@ -81,7 +81,10 @@ class _AuditDialogState extends State<AuditDialog> {
 
     return Dialog(
       insetPadding: const EdgeInsets.all(16),
-      backgroundColor: Colors.transparent,
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -94,10 +97,6 @@ class _AuditDialogState extends State<AuditDialog> {
                 child: Padding(
                   padding: EdgeInsets.only(bottom: keyboard),
                   child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -210,7 +209,6 @@ class _AuditDialogState extends State<AuditDialog> {
                     icon: option['icon'] as IconData,
                     color: option['color'] as Color,
                     onTap: () {
-                      Navigator.of(context).pop();
                       widget.onAuditSelected(option['type'] as AuditOption);
                     },
                   );

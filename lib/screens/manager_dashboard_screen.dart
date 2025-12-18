@@ -19,6 +19,7 @@ import '../widgets/department_task_management_dialog.dart';
 import '../widgets/apqp_task_management_dialog.dart';
 import '../screens/apqp_task_grid_screen.dart';
 import 'all_audits_screen.dart';
+import '../widgets/all_audits_dialog.dart';
 
 
 class ManagerDashboardScreen extends StatefulWidget {
@@ -908,10 +909,21 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
   }
 
   void _handleAudit(BuildContext context) {
-    // For managers, only show "Get All Audits" screen
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const AllAuditsScreen()),
-    );
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
+    if (isMobile) {
+      // Mobile: Navigate to full screen
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const AllAuditsScreen()),
+      );
+    } else {
+      // Web/Desktop: Show dialog
+      showDialog(
+        context: context,
+        builder: (_) => const AllAuditsDialog(),
+      );
+    }
   }
 
 }
