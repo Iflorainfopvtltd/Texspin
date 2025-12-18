@@ -6,6 +6,7 @@ import '../widgets/custom_button.dart';
 import '../widgets/custom_card.dart';
 import '../widgets/custom_text_input.dart';
 import '../widgets/custom_badge.dart';
+import '../widgets/audit_type_form_dialog.dart';
 
 class AuditTypeManagementDialog extends StatefulWidget {
   const AuditTypeManagementDialog({super.key});
@@ -16,14 +17,12 @@ class AuditTypeManagementDialog extends StatefulWidget {
 
 class _AuditTypeManagementDialogState extends State<AuditTypeManagementDialog> {
   final ApiService _apiService = ApiService();
-  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
   
   List<AuditType> _auditTypes = [];
   bool _isLoading = false;
   String? _error;
   String _searchQuery = '';
-  AuditType? _editingAuditType;
 
   @override
   void initState() {
@@ -33,7 +32,6 @@ class _AuditTypeManagementDialogState extends State<AuditTypeManagementDialog> {
 
   @override
   void dispose() {
-    _nameController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -62,56 +60,23 @@ class _AuditTypeManagementDialogState extends State<AuditTypeManagementDialog> {
     }
   }
 
-  Future<void> _createAuditType() async {
-    if (_nameController.text.trim().isEmpty) return;
-
-    setState(() => _isLoading = true);
-
-    try {
-      await _apiService.createAuditType(name: _nameController.text.trim());
-      _nameController.clear();
-      await _fetchAuditTypes();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Audit type created successfully')),
-        );
-      }
-    } catch (e) {
-      setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
-    }
+  void _openCreateDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AuditTypeFormDialog(
+        onSuccess: _fetchAuditTypes,
+      ),
+    );
   }
 
-  Future<void> _updateAuditType() async {
-    if (_editingAuditType == null || _nameController.text.trim().isEmpty) return;
-
-    setState(() => _isLoading = true);
-
-    try {
-      await _apiService.updateAuditType(
-        id: _editingAuditType!.id,
-        name: _nameController.text.trim(),
-      );
-      _nameController.clear();
-      _editingAuditType = null;
-      await _fetchAuditTypes();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Audit type updated successfully')),
-        );
-      }
-    } catch (e) {
-      setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
-    }
+  void _openEditDialog(AuditType auditType) {
+    showDialog(
+      context: context,
+      builder: (context) => AuditTypeFormDialog(
+        auditType: auditType,
+        onSuccess: _fetchAuditTypes,
+      ),
+    );
   }
 
   Future<void> _toggleStatus(AuditType auditType) async {
@@ -175,19 +140,7 @@ class _AuditTypeManagementDialogState extends State<AuditTypeManagementDialog> {
     }
   }
 
-  void _startEditing(AuditType auditType) {
-    setState(() {
-      _editingAuditType = auditType;
-      _nameController.text = auditType.name;
-    });
-  }
 
-  void _cancelEditing() {
-    setState(() {
-      _editingAuditType = null;
-      _nameController.clear();
-    });
-  }
 
   List<AuditType> get _filteredAuditTypes {
     if (_searchQuery.isEmpty) return _auditTypes;
@@ -206,11 +159,24 @@ class _AuditTypeManagementDialogState extends State<AuditTypeManagementDialog> {
       ),
       child: Container(
         constraints: const BoxConstraints.tightFor(width: 800, height: 600),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        child: Stack(
           children: [
-            _buildHeader(context),
-            Expanded(child: _buildContent()),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildHeader(context),
+                Expanded(child: _buildContent()),
+              ],
+            ),
+            Positioned(
+              bottom: 20,
+              right: 20,
+              child: FloatingActionButton(
+                onPressed: _openCreateDialog,
+                backgroundColor: AppTheme.blue600,
+                child: const Icon(Icons.add, color: Colors.white),
+              ),
+            ),
           ],
         ),
       ),
@@ -252,161 +218,113 @@ class _AuditTypeManagementDialogState extends State<AuditTypeManagementDialog> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-            // Create/Edit Form
-            CustomCard(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _editingAuditType == null ? 'Create Audit Type' : 'Edit Audit Type',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: AppTheme.gray900,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  CustomTextInput(
-                    controller: _nameController,
-                    hint: 'Enter audit type name',
-                    label: 'Name',
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: CustomButton(
-                          text: _editingAuditType == null ? 'Create' : 'Update',
-                          onPressed: _editingAuditType == null ? _createAuditType : _updateAuditType,
-                          isLoading: _isLoading,
-                        ),
-                      ),
-                      if (_editingAuditType != null) ...[
-                        const SizedBox(width: 12),
-                        CustomButton(
-                          text: 'Cancel',
-                          onPressed: _cancelEditing,
-                          variant: ButtonVariant.outline,
-                        ),
-                      ],
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
+          // Search
+          CustomTextInput(
+            controller: _searchController,
+            hint: 'Search audit types...',
+            onChanged: (value) => setState(() => _searchQuery = value),
+            suffixIcon: _searchQuery.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(Icons.clear, size: 20),
+                    onPressed: () {
+                      _searchController.clear();
+                      setState(() => _searchQuery = '');
+                    },
+                  )
+                : const Icon(Icons.search, size: 20),
+          ),
+          const SizedBox(height: 16),
 
-            // Search
-            CustomTextInput(
-              controller: _searchController,
-              hint: 'Search audit types...',
-              onChanged: (value) => setState(() => _searchQuery = value),
-              suffixIcon: _searchQuery.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear, size: 20),
-                      onPressed: () {
-                        _searchController.clear();
-                        setState(() => _searchQuery = '');
-                      },
-                    )
-                  : const Icon(Icons.search, size: 20),
-            ),
-            const SizedBox(height: 16),
-
-            // List
-            Expanded(
-              child: SizedBox(
-                height: 400,
-              child: _isLoading && _auditTypes.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
-                  : _error != null && _auditTypes.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.error_outline, size: 48, color: AppTheme.red500),
-                              const SizedBox(height: 16),
-                              Text('Error: $_error'),
-                              const SizedBox(height: 16),
-                              CustomButton(
-                                text: 'Retry',
-                                onPressed: _fetchAuditTypes,
-                              ),
-                            ],
-                          ),
-                        )
-                      : _filteredAuditTypes.isEmpty
-                          ? const Center(
-                              child: Text('No audit types found'),
-                            )
-                          : ListView.builder(
-                              itemCount: _filteredAuditTypes.length,
-                              itemBuilder: (context, index) {
-                                final auditType = _filteredAuditTypes[index];
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: 8),
-                                  child: CustomCard(
-                                    padding: const EdgeInsets.all(12),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                auditType.name,
-                                                style: const TextStyle(
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.w500,
-                                                  color: AppTheme.gray900,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 4),
-                                              CustomBadge(
-                                                text: auditType.status.toUpperCase(),
-                                                variant: auditType.status == 'active'
-                                                    ? BadgeVariant.default_
-                                                    : BadgeVariant.secondary,
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        Row(
-                                          mainAxisSize: MainAxisSize.min,
+          // List
+          Expanded(
+            child: _isLoading && _auditTypes.isEmpty
+                ? const Center(child: CircularProgressIndicator())
+                : _error != null && _auditTypes.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.error_outline, size: 48, color: AppTheme.red500),
+                            const SizedBox(height: 16),
+                            Text('Error: $_error'),
+                            const SizedBox(height: 16),
+                            CustomButton(
+                              text: 'Retry',
+                              onPressed: _fetchAuditTypes,
+                            ),
+                          ],
+                        ),
+                      )
+                    : _filteredAuditTypes.isEmpty
+                        ? const Center(
+                            child: Text('No audit types found'),
+                          )
+                        : ListView.builder(
+                            itemCount: _filteredAuditTypes.length,
+                            itemBuilder: (context, index) {
+                              final auditType = _filteredAuditTypes[index];
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: CustomCard(
+                                  padding: const EdgeInsets.all(12),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            IconButton(
-                                              icon: const Icon(Icons.edit, size: 18),
-                                              onPressed: () => _startEditing(auditType),
-                                              color: AppTheme.blue600,
-                                            ),
-                                            IconButton(
-                                              icon: Icon(
-                                                auditType.status == 'active'
-                                                    ? Icons.toggle_on
-                                                    : Icons.toggle_off,
-                                                size: 20,
+                                            Text(
+                                              auditType.name,
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w500,
+                                                color: AppTheme.gray900,
                                               ),
-                                              onPressed: () => _toggleStatus(auditType),
-                                              color: auditType.status == 'active'
-                                                  ? AppTheme.green600
-                                                  : AppTheme.gray500,
                                             ),
-                                            IconButton(
-                                              icon: const Icon(Icons.delete, size: 18),
-                                              onPressed: () => _deleteAuditType(auditType),
-                                              color: AppTheme.red600,
+                                            const SizedBox(height: 4),
+                                            CustomBadge(
+                                              text: auditType.status.toUpperCase(),
+                                              variant: auditType.status == 'active'
+                                                  ? BadgeVariant.default_
+                                                  : BadgeVariant.secondary,
                                             ),
                                           ],
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          IconButton(
+                                            icon: const Icon(Icons.edit, size: 18),
+                                            onPressed: () => _openEditDialog(auditType),
+                                            color: AppTheme.blue600,
+                                          ),
+                                          IconButton(
+                                            icon: Icon(
+                                              auditType.status == 'active'
+                                                  ? Icons.toggle_on
+                                                  : Icons.toggle_off,
+                                              size: 20,
+                                            ),
+                                            onPressed: () => _toggleStatus(auditType),
+                                            color: auditType.status == 'active'
+                                                ? AppTheme.green600
+                                                : AppTheme.gray500,
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(Icons.delete, size: 18),
+                                            onPressed: () => _deleteAuditType(auditType),
+                                            color: AppTheme.red600,
+                                          ),
+                                        ],
+                                      ),
+                                    ],
                                   ),
-                                );
-                              },
-                            ),
-              ),
-            ),
+                                ),
+                              );
+                            },
+                          ),
+          ),
         ],
       ),
     );
