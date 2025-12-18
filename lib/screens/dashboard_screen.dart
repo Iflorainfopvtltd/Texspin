@@ -14,6 +14,12 @@ import '../utils/project_converter.dart';
 import 'search_dialog.dart';
 import 'entity_detail_dialog.dart';
 import 'inquiry_screen.dart';
+import 'audit_dialog.dart';
+import 'audit_type_management_screen.dart';
+import 'audit_segment_management_screen.dart';
+import 'audit_questions_management_screen.dart';
+import 'all_audits_screen.dart';
+import 'create_audit_template_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   final List<Project> projects;
@@ -137,6 +143,61 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  Future<void> _handleAudit(BuildContext context) async {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
+    if (isMobile) {
+      // Mobile: Show audit dialog first, then navigate to full screen
+      await showDialog(
+        context: context,
+        builder: (dialogContext) => AuditDialog(
+          onAuditSelected: (auditOption) {
+            Navigator.of(context).pop(); // Close dialog first
+            _navigateToAuditScreen(context, auditOption);
+          },
+        ),
+      );
+    } else {
+      // Web/Desktop: Show audit dialog
+      await showDialog(
+        context: context,
+        builder: (dialogContext) => AuditDialog(
+          onAuditSelected: (auditOption) {
+            Navigator.of(context).pop(); // Close dialog first
+            _navigateToAuditScreen(context, auditOption);
+          },
+        ),
+      );
+    }
+  }
+
+  void _navigateToAuditScreen(BuildContext context, AuditOption auditOption) {
+    Widget screen;
+    
+    switch (auditOption) {
+      case AuditOption.createTemplate:
+        screen = const CreateAuditTemplateScreen();
+        break;
+      case AuditOption.auditSegment:
+        screen = const AuditSegmentManagementScreen();
+        break;
+      case AuditOption.auditType:
+        screen = const AuditTypeManagementScreen();
+        break;
+      case AuditOption.auditQuestions:
+        screen = const AuditQuestionsManagementScreen();
+        break;
+      case AuditOption.getAllAudits:
+        screen = const AllAuditsScreen();
+        break;
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => screen),
+    );
+  }
+
   Color _getProgressColor(int progress) {
     if (progress == 0) return AppTheme.red500;
     if (progress < 100) return AppTheme.yellow500;
@@ -185,7 +246,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           label: 'Create Project',
           onTap: widget.onCreateProject,
         ),
-
+        NavigationItem(
+          icon: Icons.assignment_outlined,
+          label: 'Audit',
+          onTap: () => _handleAudit(context),
+        ),
         NavigationItem(
           icon: Icons.notifications_outlined,
           label: 'Notifications',

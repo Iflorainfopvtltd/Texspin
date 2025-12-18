@@ -627,3 +627,116 @@ class DepartmentTask {
     };
   }
 }
+
+// Audit Models
+class AuditType {
+  final String id;
+  final String name;
+  final String status;
+  final String? createdBy;
+  final String? createdAt;
+  final String? updatedAt;
+
+  AuditType({
+    required this.id,
+    required this.name,
+    required this.status,
+    this.createdBy,
+    this.createdAt,
+    this.updatedAt,
+  });
+
+  factory AuditType.fromJson(Map<String, dynamic> json) {
+    return AuditType(
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      status: json['status'] ?? 'active',
+      createdBy: json['createdBy'],
+      createdAt: json['createdAt'],
+      updatedAt: json['updatedAt'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'status': status,
+    };
+  }
+}
+
+class AuditSegment {
+  final String id;
+  final String name;
+  final String status;
+  final String? createdBy;
+  final String? createdAt;
+  final String? updatedAt;
+
+  AuditSegment({
+    required this.id,
+    required this.name,
+    required this.status,
+    this.createdBy,
+    this.createdAt,
+    this.updatedAt,
+  });
+
+  factory AuditSegment.fromJson(Map<String, dynamic> json) {
+    return AuditSegment(
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      status: json['status'] ?? 'active',
+      createdBy: json['createdBy'],
+      createdAt: json['createdAt'],
+      updatedAt: json['updatedAt'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'status': status,
+    };
+  }
+}
+
+class AuditQuestion {
+  final String id;
+  final String question;
+  final String? answer;
+  final String status;
+  final String? createdBy;
+  final String? createdAt;
+  final String? updatedAt;
+
+  AuditQuestion({
+    required this.id,
+    required this.question,
+    this.answer,
+    required this.status,
+    this.createdBy,
+    this.createdAt,
+    this.updatedAt,
+  });
+
+  factory AuditQuestion.fromJson(Map<String, dynamic> json) {
+    return AuditQuestion(
+      id: json['id'] ?? '',
+      question: json['question'] ?? '',
+      answer: json['answer'],
+      status: json['status'] ?? 'active',
+      createdBy: json['createdBy'],
+      createdAt: json['createdAt'],
+      updatedAt: json['updatedAt'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'question': question,
+      if (answer != null) 'answer': answer,
+      'status': status,
+    };
+  }
+}

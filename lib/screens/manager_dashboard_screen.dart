@@ -18,6 +18,7 @@ import '../screens/department_task_grid_screen.dart';
 import '../widgets/department_task_management_dialog.dart';
 import '../widgets/apqp_task_management_dialog.dart';
 import '../screens/apqp_task_grid_screen.dart';
+import 'all_audits_screen.dart';
 
 
 class ManagerDashboardScreen extends StatefulWidget {
@@ -200,7 +201,7 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
          NavigationItem(
           icon: Icons.check_circle_outline,
           label: 'Audit Tasks',
-          onTap: () {},
+          onTap: () => _handleAudit(context),
         ),
         NavigationItem(
           icon: Icons.help_outline,
@@ -906,5 +907,11 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
     }
   }
 
+  void _handleAudit(BuildContext context) {
+    // For managers, only show "Get All Audits" screen
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const AllAuditsScreen()),
+    );
+  }
 
 }
