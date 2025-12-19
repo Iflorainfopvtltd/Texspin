@@ -21,6 +21,16 @@ class _AllAuditsScreenState extends State<AllAuditsScreen> {
         backgroundColor: AppTheme.primary,
         foregroundColor: Colors.white,
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // TODO: Add functionality to create new audit
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Create audit functionality coming soon!')),
+          );
+        },
+        backgroundColor: AppTheme.primary,
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
       body: Padding(
         padding: EdgeInsets.all(isMobile ? 16 : 24),
         child: Center(

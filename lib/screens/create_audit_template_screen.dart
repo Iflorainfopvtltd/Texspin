@@ -21,6 +21,16 @@ class _CreateAuditTemplateScreenState extends State<CreateAuditTemplateScreen> {
         backgroundColor: AppTheme.primary,
         foregroundColor: Colors.white,
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // TODO: Add functionality to create new audit template
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Create template functionality coming soon!')),
+          );
+        },
+        backgroundColor: AppTheme.primary,
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
       body: Padding(
         padding: EdgeInsets.all(isMobile ? 16 : 24),
         child: Center(

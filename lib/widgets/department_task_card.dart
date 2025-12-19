@@ -804,8 +804,10 @@ class _ReassignTaskDialogState extends State<ReassignTaskDialog> {
                     'Reassign Task: ${widget.task.name}',
                     style: const TextStyle(
                       fontSize: 20,
+                      overflow: TextOverflow.ellipsis,
                       fontWeight: FontWeight.bold,
                     ),
+                    maxLines: 1,
                   ),
                 ),
                 IconButton(

@@ -218,6 +218,18 @@ class _AuditQuestionsManagementScreenState extends State<AuditQuestionsManagemen
         backgroundColor: AppTheme.primary,
         foregroundColor: Colors.white,
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Scroll to top and focus on the create form
+          setState(() {
+            _editingAuditQuestion = null;
+            _questionController.clear();
+            _answerController.clear();
+          });
+        },
+        backgroundColor: AppTheme.primary,
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
       body: Padding(
         padding: EdgeInsets.all(isMobile ? 16 : 24),
         child: Column(

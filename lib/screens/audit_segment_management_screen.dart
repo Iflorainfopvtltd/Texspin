@@ -207,6 +207,17 @@ class _AuditSegmentManagementScreenState extends State<AuditSegmentManagementScr
         backgroundColor: AppTheme.primary,
         foregroundColor: Colors.white,
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Scroll to top and focus on the create form
+          setState(() {
+            _editingAuditSegment = null;
+            _nameController.clear();
+          });
+        },
+        backgroundColor: AppTheme.primary,
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
       body: Padding(
         padding: EdgeInsets.all(isMobile ? 16 : 24),
         child: Column(

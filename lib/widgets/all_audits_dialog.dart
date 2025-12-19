@@ -20,11 +20,29 @@ class _AllAuditsDialogState extends State<AllAuditsDialog> {
       ),
       child: Container(
         constraints: const BoxConstraints.tightFor(width: 800, height: 600),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        child: Stack(
           children: [
-            _buildHeader(context),
-            Expanded(child: _buildContent()),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildHeader(context),
+                Expanded(child: _buildContent()),
+              ],
+            ),
+            Positioned(
+              bottom: 20,
+              right: 20,
+              child: FloatingActionButton(
+                onPressed: () {
+                  // TODO: Add functionality to create new audit
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Create audit functionality coming soon!')),
+                  );
+                },
+                backgroundColor: AppTheme.primary,
+                child: const Icon(Icons.add, color: Colors.white),
+              ),
+            ),
           ],
         ),
       ),
