@@ -173,7 +173,7 @@ class _AuditTypeManagementDialogState extends State<AuditTypeManagementDialog> {
               right: 20,
               child: FloatingActionButton(
                 onPressed: _openCreateDialog,
-                backgroundColor: AppTheme.accentForeground,
+                backgroundColor: AppTheme.primary,
                 child: const Icon(Icons.add, color: Colors.white),
               ),
             ),

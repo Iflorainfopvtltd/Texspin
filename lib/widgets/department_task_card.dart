@@ -367,13 +367,12 @@ class DepartmentTaskCard extends StatelessWidget {
 
   Widget _buildMobileActions(BuildContext context) {
     final status = task.status.toLowerCase();
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
     
     if (status == 'submitted') {
       return Padding(
         padding: const EdgeInsets.only(top: 8),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             // First row: Download (if available)
             if (task.downloadUrl != null && task.downloadUrl!.isNotEmpty)
@@ -387,6 +386,7 @@ class DepartmentTaskCard extends StatelessWidget {
                     variant: ButtonVariant.outline,
                     size: ButtonSize.sm,
                     icon: const Icon(Icons.download, size: 16),
+                    isFullWidth: true,
                   ),
                 ),
               ),
@@ -400,6 +400,7 @@ class DepartmentTaskCard extends StatelessWidget {
                     variant: ButtonVariant.default_,
                     size: ButtonSize.sm,
                     icon: const Icon(Icons.check, size: 16),
+                    isFullWidth: true,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -410,6 +411,7 @@ class DepartmentTaskCard extends StatelessWidget {
                     variant: ButtonVariant.destructive,
                     size: ButtonSize.sm,
                     icon: const Icon(Icons.close, size: 16),
+                    isFullWidth: true,
                   ),
                 ),
               ],
@@ -429,6 +431,7 @@ class DepartmentTaskCard extends StatelessWidget {
                 variant: ButtonVariant.outline,
                 size: ButtonSize.sm,
                 icon: const Icon(Icons.person_add, size: 16),
+                isFullWidth: true,
               ),
             ),
             const SizedBox(width: 8),
@@ -439,6 +442,7 @@ class DepartmentTaskCard extends StatelessWidget {
                 variant: ButtonVariant.destructive,
                 size: ButtonSize.sm,
                 icon: const Icon(Icons.delete, size: 16),
+                isFullWidth: true,
               ),
             ),
           ],
@@ -447,7 +451,8 @@ class DepartmentTaskCard extends StatelessWidget {
     } else if (status == 'pending') {
       return Padding(
         padding: const EdgeInsets.only(top: 8),
-        child: isMobile ? Column(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             // First row: Download (if available) and Reminder
             if ((task.downloadUrl != null && task.downloadUrl!.isNotEmpty) ||
@@ -463,6 +468,7 @@ class DepartmentTaskCard extends StatelessWidget {
                         variant: ButtonVariant.outline,
                         size: ButtonSize.sm,
                         icon: const Icon(Icons.download, size: 16),
+                        isFullWidth: true,
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -473,6 +479,7 @@ class DepartmentTaskCard extends StatelessWidget {
                         variant: ButtonVariant.outline,
                         size: ButtonSize.sm,
                         icon: const Icon(Icons.send, size: 16),
+                        isFullWidth: true,
                       ),
                     ),
                   ],
@@ -488,6 +495,7 @@ class DepartmentTaskCard extends StatelessWidget {
                     variant: ButtonVariant.outline,
                     size: ButtonSize.sm,
                     icon: const Icon(Icons.edit, size: 16),
+                    isFullWidth: true,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -498,56 +506,10 @@ class DepartmentTaskCard extends StatelessWidget {
                     variant: ButtonVariant.destructive,
                     size: ButtonSize.sm,
                     icon: const Icon(Icons.delete, size: 16),
+                    isFullWidth: true,
                   ),
                 ),
               ],
-            ),
-          ],
-        ) : Row(
-          children: [
-            // Desktop layout - single row
-            if ((task.downloadUrl != null && task.downloadUrl!.isNotEmpty) ||
-                (task.attachments != null && task.attachments!.isNotEmpty))
-              Expanded(
-                child: CustomButton(
-                  text: 'Download',
-                  onPressed: () => _downloadTaskFile(context),
-                  variant: ButtonVariant.outline,
-                  size: ButtonSize.sm,
-                  icon: const Icon(Icons.download, size: 16),
-                ),
-              ),
-            if ((task.downloadUrl != null && task.downloadUrl!.isNotEmpty) ||
-                (task.attachments != null && task.attachments!.isNotEmpty))
-              const SizedBox(width: 8),
-            Expanded(
-              child: CustomButton(
-                text: 'Remind',
-                onPressed: () => _sendReminder(context),
-                variant: ButtonVariant.outline,
-                size: ButtonSize.sm,
-                icon: const Icon(Icons.send, size: 16),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: CustomButton(
-                text: 'Edit',
-                onPressed: onEdit,
-                variant: ButtonVariant.outline,
-                size: ButtonSize.sm,
-                icon: const Icon(Icons.edit, size: 16),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: CustomButton(
-                text: 'Delete',
-                onPressed: onDelete,
-                variant: ButtonVariant.destructive,
-                size: ButtonSize.sm,
-                icon: const Icon(Icons.delete, size: 16),
-              ),
             ),
           ],
         ),
@@ -567,6 +529,7 @@ class DepartmentTaskCard extends StatelessWidget {
                   variant: ButtonVariant.outline,
                   size: ButtonSize.sm,
                   icon: const Icon(Icons.download, size: 16),
+                  isFullWidth: true,
                 ),
               ),
           ],
@@ -582,8 +545,8 @@ class DepartmentTaskCard extends StatelessWidget {
     return Card(
       elevation: 2,
       margin: EdgeInsets.symmetric(
-        horizontal: isCompact ? 8 : 16,
-        vertical: isCompact ? 4 : 8,
+        horizontal: isCompact ? 8 : 0,
+        vertical: isCompact ? 4 : 0,
       ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
@@ -697,9 +660,8 @@ class DepartmentTaskCard extends StatelessWidget {
             if (showActions) ...[
               const SizedBox(height: 12),
               const Divider(height: 1),
-              const SizedBox(height: 8),
               
-              // Actions Row - Mobile Optimized
+              // Actions Section with proper spacing
               _buildMobileActions(context),
             ],
           ],

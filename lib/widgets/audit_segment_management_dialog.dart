@@ -173,7 +173,7 @@ class _AuditSegmentManagementDialogState extends State<AuditSegmentManagementDia
               right: 20,
               child: FloatingActionButton(
                 onPressed: _openCreateDialog,
-                backgroundColor: AppTheme.blue600,
+                backgroundColor: AppTheme.primary,
                 child: const Icon(Icons.add, color: Colors.white),
               ),
             ),

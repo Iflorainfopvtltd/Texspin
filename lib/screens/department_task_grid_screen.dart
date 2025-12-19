@@ -299,39 +299,22 @@ class _DepartmentTaskGridScreenState extends State<DepartmentTaskGridScreen> {
                         )
                       : RefreshIndicator(
                           onRefresh: _loadTasks,
-                          child: LayoutBuilder(
-                            builder: (context, constraints) {
-                              // Calculate number of columns based on screen width
-                              int crossAxisCount = 1;
-                              if (constraints.maxWidth > 1200) {
-                                crossAxisCount = 3;
-                              } else if (constraints.maxWidth > 800) {
-                                crossAxisCount = 2;
-                              }
-                              
-                              return GridView.builder(
+                          child: ListView.builder(
                                 padding: const EdgeInsets.all(16),
-                                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: crossAxisCount,
-                                  childAspectRatio: crossAxisCount == 1 
-                                    ? (MediaQuery.of(context).size.width < 600 ? 2.2 : 3.5)
-                                    : 1.2,
-                                  crossAxisSpacing: 16,
-                                  mainAxisSpacing: 16,
-                                ),
                                 itemCount: _filteredTasks.length,
                                 itemBuilder: (context, index) {
                                   final task = _filteredTasks[index];
-                                  return DepartmentTaskCard(
-                                    task: task,
-                                    isCompact: crossAxisCount > 1,
-                                    onEdit: () => _showAddEditTaskDialog(task: task),
-                                    onDelete: () => _deleteTask(task.id),
-                                    onRefresh: _loadTasks,
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 16),
+                                    child: DepartmentTaskCard(
+                                      task: task,
+                                      isCompact: false,
+                                      onEdit: () => _showAddEditTaskDialog(task: task),
+                                      onDelete: () => _deleteTask(task.id),
+                                      onRefresh: _loadTasks,
+                                    ),
                                   );
                                 },
-                              );
-                            },
                           ),
                         ),
                 ),
@@ -532,8 +515,10 @@ class _AddEditDepartmentTaskDialogState extends State<AddEditDepartmentTaskDialo
                         widget.task == null ? 'Add Department Task' : 'Edit Department Task',
                         style: const TextStyle(
                           fontSize: 20,
+                          overflow: TextOverflow.ellipsis,
                           fontWeight: FontWeight.bold,
                         ),
+                        maxLines: 1,
                       ),
                     ),
                     IconButton(

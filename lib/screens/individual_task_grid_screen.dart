@@ -324,7 +324,7 @@ class _IndividualTaskGridScreenState extends State<IndividualTaskGridScreen> {
                     ],
                   ),
                 ),
-                // Task Grid
+                // Task List with Dynamic Heights
                 Expanded(
                   child: _filteredTasks.isEmpty
                       ? Center(
@@ -359,25 +359,22 @@ class _IndividualTaskGridScreenState extends State<IndividualTaskGridScreen> {
                         )
                       : RefreshIndicator(
                           onRefresh: _loadTasks,
-                          child: GridView.builder(
+                          child: ListView.builder(
                             padding: const EdgeInsets.all(16),
-                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 1,
-                              childAspectRatio: MediaQuery.of(context).size.width < 600 ? 1.8 : 2.5,
-                              crossAxisSpacing: 16,
-                              mainAxisSpacing: 16,
-                            ),
                             itemCount: _filteredTasks.length,
                             itemBuilder: (context, index) {
                               final task = _filteredTasks[index];
-                              return TaskCard(
-                                task: task,
-                                onEdit: () => _showAddEditTaskDialog(task: task),
-                                onDelete: () => _deleteTask(task.id),
-                                onRefresh: _loadTasks,
-                                onReminder: () => _sendReminder(task.id),
-                                showActions: true,
-                                isCompact: false,
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 16),
+                                child: TaskCard(
+                                  task: task,
+                                  onEdit: () => _showAddEditTaskDialog(task: task),
+                                  onDelete: () => _deleteTask(task.id),
+                                  onRefresh: _loadTasks,
+                                  onReminder: () => _sendReminder(task.id),
+                                  showActions: true,
+                                  isCompact: false,
+                                ),
                               );
                             },
                           ),
