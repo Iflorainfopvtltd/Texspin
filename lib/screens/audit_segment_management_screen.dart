@@ -6,6 +6,7 @@ import '../widgets/custom_button.dart';
 import '../widgets/custom_card.dart';
 import '../widgets/custom_text_input.dart';
 import '../widgets/custom_badge.dart';
+import '../widgets/audit_segment_form_dialog.dart';
 
 class AuditSegmentManagementScreen extends StatefulWidget {
   const AuditSegmentManagementScreen({super.key});
@@ -16,14 +17,12 @@ class AuditSegmentManagementScreen extends StatefulWidget {
 
 class _AuditSegmentManagementScreenState extends State<AuditSegmentManagementScreen> {
   final ApiService _apiService = ApiService();
-  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
   
   List<AuditSegment> _auditSegments = [];
   bool _isLoading = false;
   String? _error;
   String _searchQuery = '';
-  AuditSegment? _editingAuditSegment;
 
   @override
   void initState() {
@@ -33,7 +32,6 @@ class _AuditSegmentManagementScreenState extends State<AuditSegmentManagementScr
 
   @override
   void dispose() {
-    _nameController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -62,57 +60,7 @@ class _AuditSegmentManagementScreenState extends State<AuditSegmentManagementScr
     }
   }
 
-  Future<void> _createAuditSegment() async {
-    if (_nameController.text.trim().isEmpty) return;
 
-    setState(() => _isLoading = true);
-
-    try {
-      await _apiService.createAuditSegment(name: _nameController.text.trim());
-      _nameController.clear();
-      await _fetchAuditSegments();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Audit segment created successfully')),
-        );
-      }
-    } catch (e) {
-      setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
-    }
-  }
-
-  Future<void> _updateAuditSegment() async {
-    if (_editingAuditSegment == null || _nameController.text.trim().isEmpty) return;
-
-    setState(() => _isLoading = true);
-
-    try {
-      await _apiService.updateAuditSegment(
-        id: _editingAuditSegment!.id,
-        name: _nameController.text.trim(),
-      );
-      _nameController.clear();
-      _editingAuditSegment = null;
-      await _fetchAuditSegments();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Audit segment updated successfully')),
-        );
-      }
-    } catch (e) {
-      setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
-    }
-  }
 
   Future<void> _toggleStatus(AuditSegment auditSegment) async {
     final newStatus = auditSegment.status == 'active' ? 'inactive' : 'active';
@@ -176,18 +124,16 @@ class _AuditSegmentManagementScreenState extends State<AuditSegmentManagementScr
   }
 
   void _startEditing(AuditSegment auditSegment) {
-    setState(() {
-      _editingAuditSegment = auditSegment;
-      _nameController.text = auditSegment.name;
-    });
+    showDialog(
+      context: context,
+      builder: (context) => AuditSegmentFormDialog(
+        auditSegment: auditSegment,
+        onSuccess: _fetchAuditSegments,
+      ),
+    );
   }
 
-  void _cancelEditing() {
-    setState(() {
-      _editingAuditSegment = null;
-      _nameController.clear();
-    });
-  }
+
 
   List<AuditSegment> get _filteredAuditSegments {
     if (_searchQuery.isEmpty) return _auditSegments;
@@ -209,11 +155,12 @@ class _AuditSegmentManagementScreenState extends State<AuditSegmentManagementScr
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Scroll to top and focus on the create form
-          setState(() {
-            _editingAuditSegment = null;
-            _nameController.clear();
-          });
+          showDialog(
+            context: context,
+            builder: (context) => AuditSegmentFormDialog(
+              onSuccess: _fetchAuditSegments,
+            ),
+          );
         },
         backgroundColor: AppTheme.primary,
         child: const Icon(Icons.add, color: Colors.white),
@@ -223,51 +170,6 @@ class _AuditSegmentManagementScreenState extends State<AuditSegmentManagementScr
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Create/Edit Form
-            CustomCard(
-              padding: EdgeInsets.all(isMobile ? 16 : 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _editingAuditSegment == null ? 'Create Audit Segment' : 'Edit Audit Segment',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                      color: AppTheme.gray900,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  CustomTextInput(
-                    controller: _nameController,
-                    hint: 'Enter audit segment name',
-                    label: 'Name',
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: CustomButton(
-                          text: _editingAuditSegment == null ? 'Create' : 'Update',
-                          onPressed: _editingAuditSegment == null ? _createAuditSegment : _updateAuditSegment,
-                          isLoading: _isLoading,
-                        ),
-                      ),
-                      if (_editingAuditSegment != null) ...[
-                        const SizedBox(width: 12),
-                        CustomButton(
-                          text: 'Cancel',
-                          onPressed: _cancelEditing,
-                          variant: ButtonVariant.outline,
-                        ),
-                      ],
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-
             // Search
             CustomTextInput(
               controller: _searchController,

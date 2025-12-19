@@ -6,6 +6,7 @@ import '../widgets/custom_button.dart';
 import '../widgets/custom_card.dart';
 import '../widgets/custom_text_input.dart';
 import '../widgets/custom_badge.dart';
+import '../widgets/audit_type_form_dialog.dart';
 
 class AuditTypeManagementScreen extends StatefulWidget {
   const AuditTypeManagementScreen({super.key});
@@ -16,14 +17,12 @@ class AuditTypeManagementScreen extends StatefulWidget {
 
 class _AuditTypeManagementScreenState extends State<AuditTypeManagementScreen> {
   final ApiService _apiService = ApiService();
-  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
   
   List<AuditType> _auditTypes = [];
   bool _isLoading = false;
   String? _error;
   String _searchQuery = '';
-  AuditType? _editingAuditType;
 
   @override
   void initState() {
@@ -33,7 +32,6 @@ class _AuditTypeManagementScreenState extends State<AuditTypeManagementScreen> {
 
   @override
   void dispose() {
-    _nameController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -62,57 +60,7 @@ class _AuditTypeManagementScreenState extends State<AuditTypeManagementScreen> {
     }
   }
 
-  Future<void> _createAuditType() async {
-    if (_nameController.text.trim().isEmpty) return;
 
-    setState(() => _isLoading = true);
-
-    try {
-      await _apiService.createAuditType(name: _nameController.text.trim());
-      _nameController.clear();
-      await _fetchAuditTypes();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Audit type created successfully')),
-        );
-      }
-    } catch (e) {
-      setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
-    }
-  }
-
-  Future<void> _updateAuditType() async {
-    if (_editingAuditType == null || _nameController.text.trim().isEmpty) return;
-
-    setState(() => _isLoading = true);
-
-    try {
-      await _apiService.updateAuditType(
-        id: _editingAuditType!.id,
-        name: _nameController.text.trim(),
-      );
-      _nameController.clear();
-      _editingAuditType = null;
-      await _fetchAuditTypes();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Audit type updated successfully')),
-        );
-      }
-    } catch (e) {
-      setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
-    }
-  }
 
   Future<void> _toggleStatus(AuditType auditType) async {
     final newStatus = auditType.status == 'active' ? 'inactive' : 'active';
@@ -176,18 +124,16 @@ class _AuditTypeManagementScreenState extends State<AuditTypeManagementScreen> {
   }
 
   void _startEditing(AuditType auditType) {
-    setState(() {
-      _editingAuditType = auditType;
-      _nameController.text = auditType.name;
-    });
+    showDialog(
+      context: context,
+      builder: (context) => AuditTypeFormDialog(
+        auditType: auditType,
+        onSuccess: _fetchAuditTypes,
+      ),
+    );
   }
 
-  void _cancelEditing() {
-    setState(() {
-      _editingAuditType = null;
-      _nameController.clear();
-    });
-  }
+
 
   List<AuditType> get _filteredAuditTypes {
     if (_searchQuery.isEmpty) return _auditTypes;
@@ -209,11 +155,12 @@ class _AuditTypeManagementScreenState extends State<AuditTypeManagementScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Scroll to top and focus on the create form
-          setState(() {
-            _editingAuditType = null;
-            _nameController.clear();
-          });
+          showDialog(
+            context: context,
+            builder: (context) => AuditTypeFormDialog(
+              onSuccess: _fetchAuditTypes,
+            ),
+          );
         },
         backgroundColor: AppTheme.primary,
         child: const Icon(Icons.add, color: Colors.white),
@@ -223,51 +170,6 @@ class _AuditTypeManagementScreenState extends State<AuditTypeManagementScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Create/Edit Form
-            CustomCard(
-              padding: EdgeInsets.all(isMobile ? 16 : 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _editingAuditType == null ? 'Create Audit Type' : 'Edit Audit Type',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                      color: AppTheme.gray900,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  CustomTextInput(
-                    controller: _nameController,
-                    hint: 'Enter audit type name',
-                    label: 'Name',
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: CustomButton(
-                          text: _editingAuditType == null ? 'Create' : 'Update',
-                          onPressed: _editingAuditType == null ? _createAuditType : _updateAuditType,
-                          isLoading: _isLoading,
-                        ),
-                      ),
-                      if (_editingAuditType != null) ...[
-                        const SizedBox(width: 12),
-                        CustomButton(
-                          text: 'Cancel',
-                          onPressed: _cancelEditing,
-                          variant: ButtonVariant.outline,
-                        ),
-                      ],
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-
             // Search
             CustomTextInput(
               controller: _searchController,

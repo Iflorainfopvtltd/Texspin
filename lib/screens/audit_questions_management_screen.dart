@@ -6,6 +6,7 @@ import '../widgets/custom_button.dart';
 import '../widgets/custom_card.dart';
 import '../widgets/custom_text_input.dart';
 import '../widgets/custom_badge.dart';
+import '../widgets/audit_question_form_dialog.dart';
 
 class AuditQuestionsManagementScreen extends StatefulWidget {
   const AuditQuestionsManagementScreen({super.key});
@@ -16,15 +17,12 @@ class AuditQuestionsManagementScreen extends StatefulWidget {
 
 class _AuditQuestionsManagementScreenState extends State<AuditQuestionsManagementScreen> {
   final ApiService _apiService = ApiService();
-  final TextEditingController _questionController = TextEditingController();
-  final TextEditingController _answerController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
   
   List<AuditQuestion> _auditQuestions = [];
   bool _isLoading = false;
   String? _error;
   String _searchQuery = '';
-  AuditQuestion? _editingAuditQuestion;
 
   @override
   void initState() {
@@ -34,8 +32,6 @@ class _AuditQuestionsManagementScreenState extends State<AuditQuestionsManagemen
 
   @override
   void dispose() {
-    _questionController.dispose();
-    _answerController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -64,63 +60,7 @@ class _AuditQuestionsManagementScreenState extends State<AuditQuestionsManagemen
     }
   }
 
-  Future<void> _createAuditQuestion() async {
-    if (_questionController.text.trim().isEmpty) return;
 
-    setState(() => _isLoading = true);
-
-    try {
-      await _apiService.createAuditQuestion(
-        question: _questionController.text.trim(),
-        answer: _answerController.text.trim().isNotEmpty ? _answerController.text.trim() : null,
-      );
-      _questionController.clear();
-      _answerController.clear();
-      await _fetchAuditQuestions();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Audit question created successfully')),
-        );
-      }
-    } catch (e) {
-      setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
-    }
-  }
-
-  Future<void> _updateAuditQuestion() async {
-    if (_editingAuditQuestion == null || _questionController.text.trim().isEmpty) return;
-
-    setState(() => _isLoading = true);
-
-    try {
-      await _apiService.updateAuditQuestion(
-        id: _editingAuditQuestion!.id,
-        question: _questionController.text.trim(),
-        answer: _answerController.text.trim().isNotEmpty ? _answerController.text.trim() : null,
-      );
-      _questionController.clear();
-      _answerController.clear();
-      _editingAuditQuestion = null;
-      await _fetchAuditQuestions();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Audit question updated successfully')),
-        );
-      }
-    } catch (e) {
-      setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
-    }
-  }
 
   Future<void> _toggleStatus(AuditQuestion auditQuestion) async {
     final newStatus = auditQuestion.status == 'active' ? 'inactive' : 'active';
@@ -184,20 +124,16 @@ class _AuditQuestionsManagementScreenState extends State<AuditQuestionsManagemen
   }
 
   void _startEditing(AuditQuestion auditQuestion) {
-    setState(() {
-      _editingAuditQuestion = auditQuestion;
-      _questionController.text = auditQuestion.question;
-      _answerController.text = auditQuestion.answer ?? '';
-    });
+    showDialog(
+      context: context,
+      builder: (context) => AuditQuestionFormDialog(
+        auditQuestion: auditQuestion,
+        onSuccess: _fetchAuditQuestions,
+      ),
+    );
   }
 
-  void _cancelEditing() {
-    setState(() {
-      _editingAuditQuestion = null;
-      _questionController.clear();
-      _answerController.clear();
-    });
-  }
+
 
   List<AuditQuestion> get _filteredAuditQuestions {
     if (_searchQuery.isEmpty) return _auditQuestions;
@@ -220,12 +156,12 @@ class _AuditQuestionsManagementScreenState extends State<AuditQuestionsManagemen
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Scroll to top and focus on the create form
-          setState(() {
-            _editingAuditQuestion = null;
-            _questionController.clear();
-            _answerController.clear();
-          });
+          showDialog(
+            context: context,
+            builder: (context) => AuditQuestionFormDialog(
+              onSuccess: _fetchAuditQuestions,
+            ),
+          );
         },
         backgroundColor: AppTheme.primary,
         child: const Icon(Icons.add, color: Colors.white),
@@ -235,59 +171,6 @@ class _AuditQuestionsManagementScreenState extends State<AuditQuestionsManagemen
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Create/Edit Form
-            CustomCard(
-              padding: EdgeInsets.all(isMobile ? 16 : 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _editingAuditQuestion == null ? 'Create Audit Question' : 'Edit Audit Question',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                      color: AppTheme.gray900,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  CustomTextInput(
-                    controller: _questionController,
-                    hint: 'Enter audit question',
-                    label: 'Question',
-                    maxLines: 3,
-                  ),
-                  const SizedBox(height: 16),
-                  CustomTextInput(
-                    controller: _answerController,
-                    hint: 'Enter answer (optional)',
-                    label: 'Answer',
-                    maxLines: 2,
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: CustomButton(
-                          text: _editingAuditQuestion == null ? 'Create' : 'Update',
-                          onPressed: _editingAuditQuestion == null ? _createAuditQuestion : _updateAuditQuestion,
-                          isLoading: _isLoading,
-                        ),
-                      ),
-                      if (_editingAuditQuestion != null) ...[
-                        const SizedBox(width: 12),
-                        CustomButton(
-                          text: 'Cancel',
-                          onPressed: _cancelEditing,
-                          variant: ButtonVariant.outline,
-                        ),
-                      ],
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-
             // Search
             CustomTextInput(
               controller: _searchController,

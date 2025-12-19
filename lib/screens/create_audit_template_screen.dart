@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_card.dart';
+import '../widgets/audit_template_form_dialog.dart';
 
 class CreateAuditTemplateScreen extends StatefulWidget {
   const CreateAuditTemplateScreen({super.key});
@@ -23,9 +24,9 @@ class _CreateAuditTemplateScreenState extends State<CreateAuditTemplateScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // TODO: Add functionality to create new audit template
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Create template functionality coming soon!')),
+          showDialog(
+            context: context,
+            builder: (context) => const AuditTemplateFormDialog(),
           );
         },
         backgroundColor: AppTheme.primary,
