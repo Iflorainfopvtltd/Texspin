@@ -79,14 +79,16 @@ class _AssignStaffDialogState extends State<AssignStaffDialog> {
       _endDate = _parseDate(widget.currentEndDate!);
     }
     
-    // Prefill weeks if provided
-    _startWeek = widget.currentStartWeek;
-    _endWeek = widget.currentEndWeek;
-    if (_startWeek != null) {
-      _startWeekController.text = _startWeek.toString();
-    }
-    if (_endWeek != null) {
-      _endWeekController.text = _endWeek.toString();
+    // Prefill weeks if provided (only for reassignment)
+    if (widget.isReassignment) {
+      _startWeek = widget.currentStartWeek;
+      _endWeek = widget.currentEndWeek;
+      if (_startWeek != null) {
+        _startWeekController.text = _startWeek.toString();
+      }
+      if (_endWeek != null) {
+        _endWeekController.text = _endWeek.toString();
+      }
     }
     
     _fetchStaff();
