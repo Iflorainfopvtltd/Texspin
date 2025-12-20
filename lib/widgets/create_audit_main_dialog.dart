@@ -42,6 +42,11 @@ class _CreateAuditMainDialogState extends State<CreateAuditMainDialog> {
   final TextEditingController _createdByController = TextEditingController();
   final TextEditingController _newVisitorController = TextEditingController();
   
+  // Template Info Controllers
+  final TextEditingController _templateNameController = TextEditingController();
+  final TextEditingController _templateSegmentController = TextEditingController();
+  final TextEditingController _templateTypeController = TextEditingController();
+  
   // Phase 2 - Basic Info State
   DateTime _selectedDate = DateTime.now();
   List<Map<String, dynamic>> _auditSegments = [];
@@ -74,6 +79,10 @@ class _CreateAuditMainDialogState extends State<CreateAuditMainDialog> {
   @override
   void initState() {
     super.initState();
+    // Initialize template controllers with default values
+    _templateNameController.text = 'No template selected';
+    _templateSegmentController.text = 'No segment available';
+    _templateTypeController.text = 'No type available';
     _initializeData();
   }
 
@@ -215,19 +224,72 @@ class _CreateAuditMainDialogState extends State<CreateAuditMainDialog> {
 
   Future<void> _fetchTemplateDetails(String templateId) async {
     try {
+      developer.log('Fetching template details for ID: $templateId', name: 'CreateAuditMainDialog');
       final response = await _apiService.getAuditTemplateById(id: templateId);
+      developer.log('Template response: $response', name: 'CreateAuditMainDialog');
+      
       if (response['auditTemplate'] != null) {
         final template = response['auditTemplate'];
+        developer.log('Template data: $template', name: 'CreateAuditMainDialog');
+        
         setState(() {
           _selectedTemplate = template;
-          _auditSegments = List<Map<String, dynamic>>.from(template['segments'] ?? []);
           
-          // Get template question IDs and filter from all questions
-          final templateQuestionIds = List<String>.from(template['auditQuestions'] ?? []);
-          _templateQuestions = _allAuditQuestions.where((question) {
-            final questionId = question['id'] ?? question['_id'];
-            return templateQuestionIds.contains(questionId);
-          }).toList();
+          // Update template name controller
+          _templateNameController.text = template['name'] ?? 'Unknown Template';
+          
+          // Handle audit segments - can be single object or array
+          if (template['auditSegment'] != null) {
+            _auditSegments = [template['auditSegment']];
+            _templateSegmentController.text = template['auditSegment']['name'] ?? 'Unknown Segment';
+            developer.log('Found audit segment: ${template['auditSegment']}', name: 'CreateAuditMainDialog');
+          } else if (template['segments'] != null) {
+            _auditSegments = List<Map<String, dynamic>>.from(template['segments']);
+            _templateSegmentController.text = _auditSegments.map((segment) => segment['name'] ?? 'Unknown Segment').join(', ');
+            developer.log('Found segments: ${template['segments']}', name: 'CreateAuditMainDialog');
+          } else {
+            _auditSegments = [];
+            _templateSegmentController.text = 'No segment available';
+            developer.log('No segments found', name: 'CreateAuditMainDialog');
+          }
+          
+          // Handle audit type - extract from template
+          if (template['auditType'] != null) {
+            final templateAuditType = template['auditType'];
+            _selectedAuditTypeId = templateAuditType['_id'] ?? templateAuditType['id'];
+            _selectedAuditTypeName = templateAuditType['name'];
+            _templateTypeController.text = _selectedAuditTypeName ?? 'Unknown Type';
+            developer.log('Found audit type: $_selectedAuditTypeName', name: 'CreateAuditMainDialog');
+            
+            // Auto-fill company name and location for internal audits
+            if (_selectedAuditTypeName?.toLowerCase() == 'internal') {
+              _companyNameController.text = 'Texspin';
+              _locationController.text = 'Ahmedabad';
+            }
+          } else {
+            _templateTypeController.text = 'No type available';
+            developer.log('No audit type found in template', name: 'CreateAuditMainDialog');
+          }
+          
+          // Get template questions - handle both formats
+          if (template['auditQuestions'] != null) {
+            final templateQuestions = template['auditQuestions'] as List;
+            
+            // If questions are objects with _id, extract the _id
+            final templateQuestionIds = templateQuestions.map((q) {
+              if (q is Map<String, dynamic>) {
+                return q['_id'] ?? q['id'] ?? '';
+              }
+              return q.toString();
+            }).where((id) => id.isNotEmpty).toList();
+            
+            _templateQuestions = _allAuditQuestions.where((question) {
+              final questionId = question['id'] ?? question['_id'];
+              return templateQuestionIds.contains(questionId);
+            }).toList();
+          } else {
+            _templateQuestions = [];
+          }
           
           // Initialize answers map
           _questionAnswers.clear();
@@ -235,13 +297,28 @@ class _CreateAuditMainDialogState extends State<CreateAuditMainDialog> {
             _questionAnswers[question['id'] ?? question['_id']] = '';
           }
         });
+      } else {
+        developer.log('No auditTemplate found in response', name: 'CreateAuditMainDialog');
+        // Set default values when no template is found
+        setState(() {
+          _templateNameController.text = 'No template selected';
+          _templateSegmentController.text = 'No segment available';
+          _templateTypeController.text = 'No type available';
+        });
       }
     } catch (e) {
       developer.log('Error fetching template details: $e', name: 'CreateAuditMainDialog');
+      // Set error values
+      setState(() {
+        _templateNameController.text = 'Error loading template';
+        _templateSegmentController.text = 'Error loading segment';
+        _templateTypeController.text = 'Error loading type';
+      });
     }
   }
 
   void _onTemplateSelected(String templateId) {
+    developer.log('Template selected: $templateId', name: 'CreateAuditMainDialog');
     setState(() {
       _selectedTemplateId = templateId;
     });
@@ -407,6 +484,9 @@ class _CreateAuditMainDialogState extends State<CreateAuditMainDialog> {
     _createdByController.dispose();
     _auditScoreController.dispose();
     _newVisitorController.dispose();
+    _templateNameController.dispose();
+    _templateSegmentController.dispose();
+    _templateTypeController.dispose();
     super.dispose();
   }
 
@@ -875,24 +955,36 @@ class _CreateAuditMainDialogState extends State<CreateAuditMainDialog> {
           ),
           const SizedBox(height: 24),
 
-          // Template Info (Read-only)
-          if (_selectedTemplate != null) ...[
-            _buildReadOnlyField('Audit Template', _selectedTemplate!['name'] ?? 'Unknown'),
-            const SizedBox(height: 16),
-            
-            // Audit Segments with Add button
+          // Template Info (Always show, disabled CustomTextInput fields)
+          CustomTextInput(
+            label: 'Audit Template Name',
+            controller: _templateNameController,
+            hint: 'Selected template name',
+            enabled: false,
+          ),
+          const SizedBox(height: 16),
+          
+          CustomTextInput(
+            label: 'Audit Segment',
+            controller: _templateSegmentController,
+            hint: 'Template segment',
+            enabled: false,
+          ),
+          const SizedBox(height: 16),
+          
+          CustomTextInput(
+            label: 'Audit Type',
+            controller: _templateTypeController,
+            hint: 'Template audit type',
+            enabled: false,
+          ),
+          const SizedBox(height: 16),
+          
+          // Add Segment button (only show if template is selected)
+          if (_selectedTemplate != null)
             Row(
               children: [
-                const Expanded(
-                  child: Text(
-                    'Audit Segments',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: AppTheme.foreground,
-                    ),
-                  ),
-                ),
+                const Spacer(),
                 CustomButton(
                   text: 'Add Segment',
                   onPressed: () => _showAddSegmentDialog(),
@@ -902,47 +994,6 @@ class _CreateAuditMainDialogState extends State<CreateAuditMainDialog> {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                border: Border.all(color: AppTheme.border),
-                borderRadius: BorderRadius.circular(6),
-                color: AppTheme.gray50,
-              ),
-              child: _auditSegments.isEmpty
-                  ? const Text(
-                      'No segments available',
-                      style: TextStyle(color: AppTheme.mutedForeground),
-                    )
-                  : Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: _auditSegments.map((segment) {
-                        return Chip(
-                          label: Text(segment['name'] ?? 'Unknown Segment'),
-                          backgroundColor: AppTheme.blue100,
-                          labelStyle: const TextStyle(color: AppTheme.blue600),
-                        );
-                      }).toList(),
-                    ),
-            ),
-            const SizedBox(height: 24),
-          ],
-
-          // Audit Type Dropdown
-          CustomDropdownButtonFormField<String>(
-            label: 'Audit Type',
-            hint: 'Select audit type',
-            value: _selectedAuditTypeId,
-            items: _auditTypes.map((type) {
-              return DropdownMenuItem<String>(
-                value: type['id'] ?? type['_id'],
-                child: Text(type['name'] ?? 'Unknown Type'),
-              );
-            }).toList(),
-            onChanged: _onAuditTypeChanged,
-          ),
           const SizedBox(height: 24),
 
           // Company Name and Location
