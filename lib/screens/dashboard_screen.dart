@@ -25,6 +25,7 @@ import '../widgets/audit_segment_management_dialog.dart';
 import '../widgets/audit_questions_management_dialog.dart';
 import '../widgets/all_audits_dialog.dart';
 import '../widgets/create_audit_template_dialog.dart';
+import '../widgets/create_audit_main_dialog.dart';
 
 class DashboardScreen extends StatefulWidget {
   final List<Project> projects;
@@ -187,6 +188,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
         case AuditOption.getAllAudits:
           screen = const AllAuditsScreen();
           break;
+        case AuditOption.createAudit:
+          // For mobile, we'll show the dialog in a full screen
+          await showDialog(
+            context: context,
+            builder: (context) => CreateAuditMainDialog(
+              onAuditCreated: () {
+                if (widget.onRefresh != null) {
+                  widget.onRefresh!();
+                }
+              },
+            ),
+          );
+          return; // Don't navigate to a screen
       }
 
       Navigator.of(context).push(
@@ -211,6 +225,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
           break;
         case AuditOption.getAllAudits:
           dialog = const AllAuditsDialog();
+          break;
+        case AuditOption.createAudit:
+          dialog = CreateAuditMainDialog(
+            onAuditCreated: () {
+              if (widget.onRefresh != null) {
+                widget.onRefresh!();
+              }
+            },
+          );
           break;
       }
 

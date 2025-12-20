@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_card.dart';
+import '../widgets/create_audit_main_dialog.dart';
 
 class AllAuditsDialog extends StatefulWidget {
   const AllAuditsDialog({super.key});
@@ -34,9 +35,14 @@ class _AllAuditsDialogState extends State<AllAuditsDialog> {
               right: 20,
               child: FloatingActionButton(
                 onPressed: () {
-                  // TODO: Add functionality to create new audit
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Create audit functionality coming soon!')),
+                  showDialog(
+                    context: context,
+                    builder: (context) => CreateAuditMainDialog(
+                      onAuditCreated: () {
+                        // Refresh audits list or handle success
+                        setState(() {});
+                      },
+                    ),
                   );
                 },
                 backgroundColor: AppTheme.primary,

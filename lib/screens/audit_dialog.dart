@@ -9,6 +9,7 @@ enum AuditOption {
   auditType,
   auditQuestions,
   getAllAudits,
+  createAudit,
 }
 
 class AuditDialog extends StatefulWidget {
@@ -60,6 +61,12 @@ class _AuditDialogState extends State<AuditDialog> {
       'title': 'Get All Audits',
       'icon': Icons.list_alt_outlined,
       'color': AppTheme.red600,
+    },
+    {
+      'type': AuditOption.createAudit,
+      'title': 'Create New Audit',
+      'icon': Icons.add_task_outlined,
+      'color': AppTheme.blue500,
     },
   ];
 
