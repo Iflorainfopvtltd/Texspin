@@ -5,7 +5,6 @@ import '../widgets/custom_button.dart';
 import '../widgets/custom_text_input.dart';
 import '../widgets/custom_dropdown.dart';
 import '../widgets/multi_select_dropdown.dart';
-import '../widgets/add_audit_segment_dialog.dart';
 import '../services/api_service.dart';
 import '../utils/shared_preferences_manager.dart';
 import 'dart:developer' as developer;
@@ -978,22 +977,6 @@ class _CreateAuditMainDialogState extends State<CreateAuditMainDialog> {
             hint: 'Template audit type',
             enabled: false,
           ),
-          const SizedBox(height: 16),
-          
-          // Add Segment button (only show if template is selected)
-          if (_selectedTemplate != null)
-            Row(
-              children: [
-                const Spacer(),
-                CustomButton(
-                  text: 'Add Segment',
-                  onPressed: () => _showAddSegmentDialog(),
-                  size: ButtonSize.sm,
-                  variant: ButtonVariant.outline,
-                  icon: const Icon(Icons.add, size: 16),
-                ),
-              ],
-            ),
           const SizedBox(height: 24),
 
           // Company Name and Location
@@ -1018,14 +1001,6 @@ class _CreateAuditMainDialogState extends State<CreateAuditMainDialog> {
               ),
             ],
           ),
-          const SizedBox(height: 24),
-          CustomTextInput(
-            label: 'Created By',
-            controller: _createdByController,
-            hint: 'Current user',
-            enabled: false,
-          ),
-         
           const SizedBox(height: 24),
 
           // Team Members Selection with MultiSelectDropdown
@@ -1100,6 +1075,15 @@ class _CreateAuditMainDialogState extends State<CreateAuditMainDialog> {
 
           // Attachments
           _buildDocumentSection('Attachments', _attachmentFiles, isMobile),
+          const SizedBox(height: 24),
+
+          // Created By (at the end of Phase 2)
+          CustomTextInput(
+            label: 'Created By',
+            controller: _createdByController,
+            hint: 'Current user',
+            enabled: false,
+          ),
         ],
       ),
     );
@@ -1340,17 +1324,4 @@ class _CreateAuditMainDialogState extends State<CreateAuditMainDialog> {
     );
   }
 
-  void _showAddSegmentDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AddAuditSegmentDialog(
-        onSegmentAdded: () {
-          // Refresh the template details to get updated segments
-          if (_selectedTemplateId != null) {
-            _fetchTemplateDetails(_selectedTemplateId!);
-          }
-        },
-      ),
-    );
-  }
 }
