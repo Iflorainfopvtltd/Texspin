@@ -203,7 +203,6 @@ class _GanttChartWidgetState extends State<GanttChartWidget> {
               const SizedBox(height: 20),
               const Divider(),
               const SizedBox(height: 20),
-
               // Start Date
               _DateInfoRow(
                 icon: Icons.play_circle_outline,
@@ -280,7 +279,7 @@ class _GanttChartWidgetState extends State<GanttChartWidget> {
     );
   }
 
-  String _formatDateLong(String dateStr) {
+String _formatDateLong(String dateStr) {
     try {
       final date = DateTime.parse(dateStr);
       final months = [
@@ -290,8 +289,8 @@ class _GanttChartWidgetState extends State<GanttChartWidget> {
       return '${months[date.month - 1]} ${date.day}, ${date.year}';
     } catch (e) {
       return dateStr;
-    }
   }
+}
 
   bool _isPreviousPhaseUnlocked(int currentPhaseIndex) {
     if (currentPhaseIndex == 0) {
