@@ -1042,6 +1042,10 @@ class _CreateAuditMainDialogState extends State<CreateAuditMainDialog> {
           ),
           const SizedBox(height: 24),
 
+          Visibility(
+ visible: _selectedAuditTypeName?.toLowerCase() != 'internal',
+          child: Column(
+          children: [
           // Visitor Company Team with MultiSelectDropdown
           MultiSelectDropdown<Map<String, dynamic>>(
             label: 'Visitor Company Team',
@@ -1094,7 +1098,7 @@ class _CreateAuditMainDialogState extends State<CreateAuditMainDialog> {
             ),
           ],
           const SizedBox(height: 24),
-
+ ],)),
           // Attachments
           _buildDocumentSection('Attachments', _attachmentFiles, isMobile),
           const SizedBox(height: 24),
