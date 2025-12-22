@@ -264,6 +264,19 @@ class _CreateAuditMainDialogState extends State<CreateAuditMainDialog> {
             if (_selectedAuditTypeName?.toLowerCase() == 'internal') {
               _companyNameController.text = 'Texspin';
               _locationController.text = 'Ahmedabad';
+              developer.log('Auto-filled for internal audit: Company=Texspin, Location=Ahmedabad', name: 'CreateAuditMainDialog');
+              
+              // Force UI update to ensure the values are displayed
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  setState(() {});
+                }
+              });
+            } else {
+              // Clear fields for non-internal audits
+              _companyNameController.clear();
+              _locationController.clear();
+              developer.log('Cleared fields for non-internal audit type: $_selectedAuditTypeName', name: 'CreateAuditMainDialog');
             }
           } else {
             _templateTypeController.text = 'No type available';
@@ -335,9 +348,18 @@ class _CreateAuditMainDialogState extends State<CreateAuditMainDialog> {
         if (_selectedAuditTypeName?.toLowerCase() == 'internal') {
           _companyNameController.text = 'Texspin';
           _locationController.text = 'Ahmedabad';
+          developer.log('Auto-filled for internal audit type change: Company=Texspin, Location=Ahmedabad', name: 'CreateAuditMainDialog');
+          
+          // Force UI update to ensure the values are displayed
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              setState(() {});
+            }
+          });
         } else {
           _companyNameController.clear();
           _locationController.clear();
+          developer.log('Cleared fields for audit type change: $_selectedAuditTypeName', name: 'CreateAuditMainDialog');
         }
       });
     }
@@ -986,7 +1008,7 @@ class _CreateAuditMainDialogState extends State<CreateAuditMainDialog> {
                 child: CustomTextInput(
                   label: 'Company Name',
                   controller: _companyNameController,
-                  hint: 'Enter company name',
+                  hint: _selectedAuditTypeName?.toLowerCase() == 'internal' ? 'Auto-filled for internal audit' : 'Enter company name',
                   enabled: _selectedAuditTypeName?.toLowerCase() != 'internal',
                 ),
               ),
@@ -995,7 +1017,7 @@ class _CreateAuditMainDialogState extends State<CreateAuditMainDialog> {
                 child: CustomTextInput(
                   label: 'Location',
                   controller: _locationController,
-                  hint: 'Enter location',
+                  hint: _selectedAuditTypeName?.toLowerCase() == 'internal' ? 'Auto-filled for internal audit' : 'Enter location',
                   enabled: _selectedAuditTypeName?.toLowerCase() != 'internal',
                 ),
               ),
