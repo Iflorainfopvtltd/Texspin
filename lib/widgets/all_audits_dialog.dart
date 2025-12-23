@@ -1052,11 +1052,20 @@ class _AuditQuestionsDialogState extends State<_AuditQuestionsDialog> {
   final ApiService _apiService = ApiService();
   bool _isClosingAudit = false;
 
-  // Check if all questions are approved
-  bool _areAllQuestionsApproved() {
+  // Check if all questions are approved and audit is not already closed
+  bool _shouldShowCloseButton() {
     final questions = widget.audit['auditQuestions'] as List? ?? [];
+    final auditStatus = widget.audit['auditStatus']?.toString().toLowerCase() ?? 'open';
+    
+    // Don't show if audit is already closed
+    if (auditStatus == 'close' || auditStatus == 'closed') {
+      return false;
+    }
+    
+    // Don't show if no questions
     if (questions.isEmpty) return false;
     
+    // Only show if all questions are approved
     return questions.every((question) => 
         question['status']?.toString().toLowerCase() == 'approved');
   }
@@ -1100,7 +1109,7 @@ class _AuditQuestionsDialogState extends State<_AuditQuestionsDialog> {
     final questions = widget.audit['auditQuestions'] as List? ?? [];
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
-    final allApproved = _areAllQuestionsApproved();
+    final shouldShowCloseButton = _shouldShowCloseButton();
 
     return Dialog(
       insetPadding: EdgeInsets.all(isMobile ? 8 : 16),
@@ -1117,8 +1126,8 @@ class _AuditQuestionsDialogState extends State<_AuditQuestionsDialog> {
                 Expanded(child: _buildQuestionsList(questions, isMobile)),
               ],
             ),
-            // Floating Action Button - only show if all questions are approved
-            if (allApproved)
+            // Floating Action Button - only show if all questions are approved and audit is not closed
+            if (shouldShowCloseButton)
               Positioned(
                 bottom: 20,
                 right: 20,
