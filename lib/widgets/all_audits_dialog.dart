@@ -1049,11 +1049,58 @@ class _AuditQuestionsDialog extends StatefulWidget {
 }
 
 class _AuditQuestionsDialogState extends State<_AuditQuestionsDialog> {
+  final ApiService _apiService = ApiService();
+  bool _isClosingAudit = false;
+
+  // Check if all questions are approved
+  bool _areAllQuestionsApproved() {
+    final questions = widget.audit['auditQuestions'] as List? ?? [];
+    if (questions.isEmpty) return false;
+    
+    return questions.every((question) => 
+        question['status']?.toString().toLowerCase() == 'approved');
+  }
+
+  // Close audit method
+  Future<void> _closeAudit() async {
+    setState(() => _isClosingAudit = true);
+
+    try {
+      final auditId = widget.audit['_id'] ?? widget.audit['id'];
+      await _apiService.closeAuditMain(id: auditId);
+
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Audit closed successfully!'),
+            backgroundColor: AppTheme.green500,
+          ),
+        );
+      }
+    } catch (e) {
+      developer.log('Error closing audit: $e', name: 'AuditQuestionsDialog');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error closing audit: $e'),
+            backgroundColor: AppTheme.red500,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isClosingAudit = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final questions = widget.audit['auditQuestions'] as List? ?? [];
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
+    final allApproved = _areAllQuestionsApproved();
 
     return Dialog(
       insetPadding: EdgeInsets.all(isMobile ? 8 : 16),
@@ -1062,10 +1109,36 @@ class _AuditQuestionsDialogState extends State<_AuditQuestionsDialog> {
           maxWidth: isMobile ? screenWidth : 900,
           maxHeight: MediaQuery.of(context).size.height * 0.8,
         ),
-        child: Column(
+        child: Stack(
           children: [
-            _buildHeader(isMobile),
-            Expanded(child: _buildQuestionsList(questions, isMobile)),
+            Column(
+              children: [
+                _buildHeader(isMobile),
+                Expanded(child: _buildQuestionsList(questions, isMobile)),
+              ],
+            ),
+            // Floating Action Button - only show if all questions are approved
+            if (allApproved)
+              Positioned(
+                bottom: 20,
+                right: 20,
+                child: FloatingActionButton.extended(
+                  onPressed: _isClosingAudit ? null : _closeAudit,
+                  backgroundColor: AppTheme.green600,
+                  foregroundColor: Colors.white,
+                  icon: _isClosingAudit
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Icon(Icons.check_circle),
+                  label: Text(_isClosingAudit ? 'Closing...' : 'Close Audit'),
+                ),
+              ),
           ],
         ),
       ),
