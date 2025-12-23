@@ -2434,4 +2434,30 @@ class ApiService {
       throw _handleError(e);
     }
   }
+
+  // Review Question (Approve/Reject)
+  Future<Map<String, dynamic>> reviewQuestion({
+    required String auditId,
+    required String questionId,
+    required String action, // "approve" or "reject"
+    String? reason, // Required for reject action
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      final data = {'action': action};
+      if (action == 'reject' && reason != null) {
+        data['reason'] = reason;
+      }
+      
+      final response = await _dio.patch(
+        '/texspin/api/audit-main/$auditId/review-question/$questionId',
+        data: data,
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
 }

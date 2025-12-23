@@ -3,6 +3,7 @@ import '../theme/app_theme.dart';
 import '../widgets/custom_card.dart';
 import '../widgets/create_audit_main_dialog.dart';
 import '../widgets/assign_question_dialog.dart';
+import '../widgets/review_question_dialog.dart';
 import '../services/api_service.dart';
 import 'dart:developer' as developer;
 
@@ -1466,14 +1467,32 @@ class _AuditQuestionsDialogState extends State<_AuditQuestionsDialog> {
   }
 
   void _approveSubmission(Map<String, dynamic> question) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Submission approved!')),
+    showDialog(
+      context: context,
+      builder: (context) => ReviewQuestionDialog(
+        audit: widget.audit,
+        question: question,
+        action: 'approve',
+        onReviewCompleted: () {
+          // Refresh the questions list
+          setState(() {});
+        },
+      ),
     );
   }
 
   void _rejectSubmission(Map<String, dynamic> question) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Submission rejected - moved to Revision')),
+    showDialog(
+      context: context,
+      builder: (context) => ReviewQuestionDialog(
+        audit: widget.audit,
+        question: question,
+        action: 'reject',
+        onReviewCompleted: () {
+          // Refresh the questions list
+          setState(() {});
+        },
+      ),
     );
   }
 
