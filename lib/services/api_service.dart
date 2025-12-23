@@ -2410,4 +2410,28 @@ class ApiService {
       throw _handleError(e);
     }
   }
+
+  // Assign Question to Staff
+  Future<Map<String, dynamic>> assignQuestionToStaff({
+    required String auditId,
+    required String questionId,
+    required String assignedTo,
+    required String deadline,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      final response = await _dio.patch(
+        '/texspin/api/audit-main/$auditId/assign-question/$questionId',
+        data: {
+          'assignedTo': assignedTo,
+          'deadline': deadline,
+        },
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
 }

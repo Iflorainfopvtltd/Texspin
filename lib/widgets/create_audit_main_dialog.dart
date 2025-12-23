@@ -436,6 +436,7 @@ class _CreateAuditMainDialogState extends State<CreateAuditMainDialog> {
         width: dialogWidth,
         height: dialogHeight,
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             _buildHeader(isMobile),
             _buildPhaseIndicator(isMobile),
