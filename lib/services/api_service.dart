@@ -2460,4 +2460,21 @@ class ApiService {
       throw _handleError(e);
     }
   }
+
+  // Delete Audit Main
+  Future<Map<String, dynamic>> deleteAuditMain({
+    required String auditId,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      final response = await _dio.delete(
+        '/texspin/api/audit-main/$auditId',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
 }

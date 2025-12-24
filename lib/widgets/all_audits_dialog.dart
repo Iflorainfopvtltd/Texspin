@@ -295,6 +295,12 @@ class _AllAuditsDialogState extends State<AllAuditsDialog> {
           tooltip: 'View Details',
           color: AppTheme.blue600,
         ),
+        IconButton(
+          icon: const Icon(Icons.delete, size: 18),
+          onPressed: () => _deleteAudit(audit),
+          tooltip: 'Delete',
+          color: AppTheme.red500,
+        ),
       ],
     );
   }
@@ -363,6 +369,15 @@ class _AllAuditsDialogState extends State<AllAuditsDialog> {
                     icon: const Icon(Icons.list, size: 16),
                     label: const Text('Questions'),
                   ),
+                  const SizedBox(width: 8),
+                  TextButton.icon(
+                    onPressed: () => _deleteAudit(audit),
+                    icon: const Icon(Icons.delete, size: 16),
+                    label: const Text('Delete'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppTheme.red500,
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -402,6 +417,110 @@ class _AllAuditsDialogState extends State<AllAuditsDialog> {
       context: context,
       builder: (context) => _AuditDetailsDialog(audit: audit),
     );
+  }
+
+  void _deleteAudit(Map<String, dynamic> audit) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Audit'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Are you sure you want to delete this audit?'),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.red50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppTheme.red200),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Audit: ${audit['auditNumber'] ?? 'N/A'}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.gray900,
+                    ),
+                  ),
+                  Text(
+                    'Company: ${audit['companyName'] ?? 'N/A'}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: AppTheme.gray700,
+                    ),
+                  ),
+                  Text(
+                    'Location: ${audit['location'] ?? 'N/A'}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: AppTheme.gray700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'This action cannot be undone.',
+              style: TextStyle(
+                fontSize: 14,
+                color: AppTheme.red600,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _performDeleteAudit(audit);
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: AppTheme.red600,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _performDeleteAudit(Map<String, dynamic> audit) async {
+    try {
+      final auditId = audit['_id'] ?? audit['id'];
+      await _apiService.deleteAuditMain(auditId: auditId);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Audit deleted successfully!'),
+            backgroundColor: AppTheme.green500,
+          ),
+        );
+        // Refresh the audits list
+        _fetchAudits();
+      }
+    } catch (e) {
+      developer.log('Error deleting audit: $e', name: 'AllAuditsDialog');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error deleting audit: $e'),
+            backgroundColor: AppTheme.red500,
+          ),
+        );
+      }
+    }
   }
 }
 
