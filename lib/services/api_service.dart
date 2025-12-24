@@ -2551,6 +2551,26 @@ class ApiService {
     }
   }
 
+  // Update Audit Main (for editing audit basic info)
+  Future<Map<String, dynamic>> updateAuditBasicInfo({
+    required String auditId,
+    required Map<String, dynamic> auditData,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      
+      final response = await _dio.put(
+        '/texspin/api/audit-main/$auditId',
+        data: auditData,
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
   // Upload file (generic file upload method)
   Future<Map<String, dynamic>> uploadFile({
     String? filePath,

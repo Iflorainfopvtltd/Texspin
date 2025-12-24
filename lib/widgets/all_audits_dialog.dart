@@ -427,6 +427,12 @@ class _AllAuditsDialogState extends State<AllAuditsDialog> {
           color: AppTheme.blue600,
         ),
         IconButton(
+          icon: const Icon(Icons.edit, size: 18),
+          onPressed: () => _editAudit(audit),
+          tooltip: 'Edit',
+          color: AppTheme.green600,
+        ),
+        IconButton(
           icon: const Icon(Icons.delete, size: 18),
           onPressed: () => _deleteAudit(audit),
           tooltip: 'Delete',
@@ -502,6 +508,15 @@ class _AllAuditsDialogState extends State<AllAuditsDialog> {
                   ),
                   const SizedBox(width: 8),
                   TextButton.icon(
+                    onPressed: () => _editAudit(audit),
+                    icon: const Icon(Icons.edit, size: 16),
+                    label: const Text('Edit'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppTheme.green600,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  TextButton.icon(
                     onPressed: () => _deleteAudit(audit),
                     icon: const Icon(Icons.delete, size: 16),
                     label: const Text('Delete'),
@@ -547,6 +562,20 @@ class _AllAuditsDialogState extends State<AllAuditsDialog> {
     showDialog(
       context: context,
       builder: (context) => _AuditDetailsDialog(audit: audit),
+    );
+  }
+
+  void _editAudit(Map<String, dynamic> audit) {
+    showDialog(
+      context: context,
+      builder: (context) => CreateAuditMainDialog(
+        onAuditCreated: () {
+          // Refresh the audits list
+          _fetchAudits();
+        },
+        isEditing: true,
+        auditData: audit,
+      ),
     );
   }
 

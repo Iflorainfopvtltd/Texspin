@@ -9,10 +9,14 @@ import 'dart:developer' as developer;
 
 class CreateAuditMainDialog extends StatefulWidget {
   final VoidCallback onAuditCreated;
+  final bool isEditing;
+  final Map<String, dynamic>? auditData;
 
   const CreateAuditMainDialog({
     super.key,
     required this.onAuditCreated,
+    this.isEditing = false,
+    this.auditData,
   });
 
   @override
@@ -65,7 +69,170 @@ class _CreateAuditMainDialogState extends State<CreateAuditMainDialog> {
     _templateNameController.text = 'No template selected';
     _templateSegmentController.text = 'No segment available';
     _templateTypeController.text = 'No type available';
+    
+    // If editing, pre-fill basic form data first
+    if (widget.isEditing && widget.auditData != null) {
+      _preFillBasicData();
+    }
+    
     _initializeData();
+  }
+
+  void _preFillBasicData() {
+    final audit = widget.auditData!;
+    
+    // Pre-fill basic information with proper type checking
+    _auditNumberController.text = audit['auditNumber']?.toString() ?? '';
+    _companyNameController.text = audit['companyName']?.toString() ?? '';
+    _locationController.text = audit['location']?.toString() ?? '';
+    
+    // Pre-fill date
+    if (audit['date'] != null) {
+      try {
+        _selectedDate = DateTime.parse(audit['date'].toString());
+      } catch (e) {
+        developer.log('Error parsing date: $e', name: 'CreateAuditMainDialog');
+        _selectedDate = DateTime.now();
+      }
+    }
+    
+    // Skip to phase 2 for editing
+    _currentPhase = 2;
+  }
+
+  void _preFillFormDataAfterLoad() {
+    final audit = widget.auditData!;
+    
+    developer.log('Starting pre-fill with audit data: $audit', name: 'CreateAuditMainDialog');
+    
+    // Pre-fill template selection
+    if (audit['auditTemplate'] != null) {
+      if (audit['auditTemplate'] is String) {
+        _selectedTemplateId = audit['auditTemplate'];
+      } else if (audit['auditTemplate'] is Map) {
+        final template = audit['auditTemplate'] as Map<String, dynamic>;
+        _selectedTemplateId = template['_id']?.toString() ?? template['id']?.toString();
+        
+        // Also pre-fill template info
+        _templateNameController.text = template['name']?.toString() ?? 'Unknown Template';
+        
+        if (template['auditSegment'] != null) {
+          final segment = template['auditSegment'] as Map<String, dynamic>;
+          _templateSegmentController.text = segment['name']?.toString() ?? 'Unknown Segment';
+        }
+        
+        if (template['auditType'] != null) {
+          final type = template['auditType'] as Map<String, dynamic>;
+          _templateTypeController.text = type['name']?.toString() ?? 'Unknown Type';
+          _selectedAuditTypeName = type['name']?.toString();
+          _selectedAuditTypeId = type['_id']?.toString() ?? type['id']?.toString();
+        }
+      }
+    }
+    
+    // Pre-fill staff selections with detailed debugging
+    if (audit['texspinStaffMember'] != null && audit['texspinStaffMember'] is List) {
+      final auditStaffList = audit['texspinStaffMember'] as List;
+      developer.log('Audit staff list: $auditStaffList', name: 'CreateAuditMainDialog');
+      developer.log('Available staff: ${_staff.map((s) => {'id': s['_id'] ?? s['id'], 'name': s['fullName'] ?? s['firstName']})}', name: 'CreateAuditMainDialog');
+      
+      _selectedTexspinStaff.clear(); // Clear existing selections
+      
+      for (var auditStaff in auditStaffList) {
+        String? staffId;
+        
+        if (auditStaff is String) {
+          staffId = auditStaff;
+        } else if (auditStaff is Map) {
+          final staffMap = auditStaff as Map<String, dynamic>;
+          staffId = staffMap['_id']?.toString() ?? staffMap['id']?.toString();
+        }
+        
+        if (staffId != null) {
+          // Check if this staff ID exists in our loaded staff list
+          final staffExists = _staff.any((staff) {
+            final loadedStaffId = staff['_id']?.toString() ?? staff['id']?.toString();
+            return loadedStaffId == staffId;
+          });
+          
+          if (staffExists) {
+            _selectedTexspinStaff.add(staffId);
+            developer.log('Added staff ID: $staffId', name: 'CreateAuditMainDialog');
+          } else {
+            developer.log('Staff ID not found in list: $staffId', name: 'CreateAuditMainDialog');
+          }
+        }
+      }
+      
+      developer.log('Final selected staff: $_selectedTexspinStaff', name: 'CreateAuditMainDialog');
+    }
+    
+    // Pre-fill visitor members from existing visitor names
+    if (audit['visitCompanyMemberName'] != null && audit['visitCompanyMemberName'] is List) {
+      final visitors = audit['visitCompanyMemberName'] as List;
+      developer.log('Audit visitors: $visitors', name: 'CreateAuditMainDialog');
+      developer.log('Available visitor names: ${_visitorNames.map((v) => {'id': v['_id'] ?? v['id'], 'name': v['name']})}', name: 'CreateAuditMainDialog');
+      
+      _selectedVisitorMembers.clear(); // Clear existing selections
+      _newVisitorNames.clear(); // Clear existing custom names
+      
+      for (var visitor in visitors) {
+        String? visitorId;
+        String? visitorName;
+        
+        if (visitor is String) {
+          // Check if it's an ID that exists in our visitor names list
+          final existingVisitor = _visitorNames.firstWhere(
+            (v) => (v['_id']?.toString() == visitor || v['id']?.toString() == visitor),
+            orElse: () => <String, dynamic>{},
+          );
+          
+          if (existingVisitor.isNotEmpty) {
+            visitorId = visitor;
+            visitorName = existingVisitor['name']?.toString();
+            developer.log('Found existing visitor: $visitorId -> $visitorName', name: 'CreateAuditMainDialog');
+          } else {
+            // It's a custom name, add to new visitor names
+            visitorName = visitor;
+            developer.log('Adding custom visitor name: $visitorName', name: 'CreateAuditMainDialog');
+          }
+        } else if (visitor is Map) {
+          final visitorMap = visitor as Map<String, dynamic>;
+          visitorId = visitorMap['_id']?.toString() ?? visitorMap['id']?.toString();
+          visitorName = visitorMap['name']?.toString();
+          developer.log('Processing visitor map: $visitorId -> $visitorName', name: 'CreateAuditMainDialog');
+        }
+        
+        if (visitorId != null && _visitorNames.any((v) => (v['_id']?.toString() == visitorId || v['id']?.toString() == visitorId))) {
+          // Add to selected visitor members if it exists in the list
+          if (!_selectedVisitorMembers.contains(visitorId)) {
+            _selectedVisitorMembers.add(visitorId);
+            developer.log('Added visitor member: $visitorId', name: 'CreateAuditMainDialog');
+          }
+        } else if (visitorName != null && visitorName.isNotEmpty) {
+          // Add to new visitor names if it's a custom name
+          if (!_newVisitorNames.contains(visitorName)) {
+            _newVisitorNames.add(visitorName);
+            developer.log('Added new visitor name: $visitorName', name: 'CreateAuditMainDialog');
+          }
+        }
+      }
+      
+      developer.log('Final selected visitor members: $_selectedVisitorMembers', name: 'CreateAuditMainDialog');
+      developer.log('Final new visitor names: $_newVisitorNames', name: 'CreateAuditMainDialog');
+    }
+    
+    // Trigger a rebuild to update the UI
+    setState(() {});
+    developer.log('Pre-fill completed, UI updated', name: 'CreateAuditMainDialog');
+    
+    // Force another update after a brief delay to ensure dropdowns refresh
+    Future.delayed(const Duration(milliseconds: 50), () {
+      if (mounted) {
+        setState(() {});
+        developer.log('Secondary UI update completed', name: 'CreateAuditMainDialog');
+      }
+    });
   }
 
   Future<void> _initializeData() async {
@@ -78,6 +245,13 @@ class _CreateAuditMainDialogState extends State<CreateAuditMainDialog> {
         _fetchVisitorNames(),
         _setCurrentUserName(),
       ]);
+      
+      // After all data is loaded, pre-fill the form if editing
+      if (widget.isEditing && widget.auditData != null) {
+        // Add a small delay to ensure UI is ready
+        await Future.delayed(const Duration(milliseconds: 100));
+        _preFillFormDataAfterLoad();
+      }
       
     } catch (e) {
       developer.log('Error initializing data: $e', name: 'CreateAuditMainDialog');
@@ -345,24 +519,45 @@ class _CreateAuditMainDialogState extends State<CreateAuditMainDialog> {
         'visitCompanyMemberName': allVisitorMembers,
       };
 
-      await _apiService.createAuditMain(auditData: auditData);
-      
-      if (mounted) {
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Audit created successfully!'),
-            backgroundColor: AppTheme.green500,
-          ),
+      if (widget.isEditing && widget.auditData != null) {
+        // Update existing audit
+        final auditId = widget.auditData!['_id'] ?? widget.auditData!['id'];
+        await _apiService.updateAuditBasicInfo(
+          auditId: auditId,
+          auditData: auditData,
         );
-        widget.onAuditCreated();
+        
+        if (mounted) {
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Audit updated successfully!'),
+              backgroundColor: AppTheme.green500,
+            ),
+          );
+          widget.onAuditCreated(); // This will refresh the list
+        }
+      } else {
+        // Create new audit
+        await _apiService.createAuditMain(auditData: auditData);
+        
+        if (mounted) {
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Audit created successfully!'),
+              backgroundColor: AppTheme.green500,
+            ),
+          );
+          widget.onAuditCreated();
+        }
       }
     } catch (e) {
-      developer.log('Error creating audit: $e', name: 'CreateAuditMainDialog');
+      developer.log('Error ${widget.isEditing ? 'updating' : 'creating'} audit: $e', name: 'CreateAuditMainDialog');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error creating audit: $e'),
+            content: Text('Error ${widget.isEditing ? 'updating' : 'creating'} audit: $e'),
             backgroundColor: AppTheme.red500,
           ),
         );
@@ -436,7 +631,6 @@ class _CreateAuditMainDialogState extends State<CreateAuditMainDialog> {
         width: dialogWidth,
         height: dialogHeight,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             _buildHeader(isMobile),
             _buildPhaseIndicator(isMobile),
@@ -467,7 +661,7 @@ class _CreateAuditMainDialogState extends State<CreateAuditMainDialog> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Create New Audit',
+                  widget.isEditing ? 'Edit Audit' : 'Create New Audit',
                   style: TextStyle(
                     fontSize: isMobile ? 18 : 22,
                     fontWeight: FontWeight.w600,
@@ -605,7 +799,9 @@ class _CreateAuditMainDialogState extends State<CreateAuditMainDialog> {
               const SizedBox(width: 12),
               CustomButton(
                 text: _currentPhase == 2
-                    ? (_isSubmitting ? 'Creating...' : 'Create Audit')
+                    ? (_isSubmitting 
+                        ? (widget.isEditing ? 'Updating...' : 'Creating...') 
+                        : (widget.isEditing ? 'Update Audit' : 'Create Audit'))
                     : 'Next',
                 onPressed: _isSubmitting || !_isPhaseValid()
                     ? null
@@ -921,9 +1117,9 @@ class _CreateAuditMainDialogState extends State<CreateAuditMainDialog> {
                 _selectedTexspinStaff = selectedIds;
               });
             },
-            getDisplayText: (staff) => '${staff['firstName'] ?? ''} ${staff['lastName'] ?? ''}'.trim(),
+            getDisplayText: (staff) => staff['fullName']?.toString() ?? '${staff['firstName'] ?? ''} ${staff['lastName'] ?? ''}'.trim(),
             getSubText: (staff) => staff['email']?.toString(),
-            getId: (staff) => staff['id']?.toString() ?? staff['_id']?.toString() ?? '',
+            getId: (staff) => staff['_id']?.toString() ?? staff['id']?.toString() ?? '',
             hintText: 'Select team members',
           ),
           const SizedBox(height: 24),
