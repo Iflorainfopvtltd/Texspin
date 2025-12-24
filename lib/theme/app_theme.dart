@@ -41,12 +41,20 @@ class AppTheme {
   static const Color gray600 = Color(0xFF525252);
   static const Color gray700 = Color(0xFF404040);
   static const Color gray900 = Color(0xFF171717);
+  static const Color green50 = Color(0xFFF0FDF4);
   static const Color green100 = Color(0xFFD1FAE5);
+  static const Color green200 = Color(0xFFA7F3D0);
   static const Color green500 = Color(0xFF10B981);
   static const Color green600 = Color(0xFF059669);
+  static const Color green700 = Color(0xFF047857);
   static const Color yellow400 = Color(0xFFFACC15);
   static const Color yellow500 = Color(0xFFEAB308);
   static const Color yellow600 = Color(0xFFCA8A04);
+  static const Color yellow100 = Color(0xFFFEF3C7);
+  static const Color orange100 = Color(0xFFFFEDD5);
+  static const Color orange600 = Color(0xFFEA580C);
+  static const Color red50 = Color(0xFFFEF2F2);
+  static const Color red200 = Color(0xFFFECACA);
   static const Color red500 = Color(0xFFEF4444);
   static const Color red600 = Color(0xFFDC2626);
 

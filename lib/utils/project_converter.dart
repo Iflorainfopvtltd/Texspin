@@ -30,7 +30,7 @@ class ProjectConverter {
         final activity = activityObj['activity'] as Map<String, dynamic>?;
         final activityId = activity?['_id'] ?? '';
         final activityName = activity?['name'] ?? '';
-        final statusStr = activityObj['status'] as String? ?? 'pending';
+        final statusStr = activityObj['activityStatus'] as String? ?? activityObj['status'] as String? ?? 'pending';
         final staffObj = activityObj['staff'] as Map<String, dynamic>?;
         final responsiblePerson = staffObj != null
             ? '${staffObj['firstName'] ?? ''} ${staffObj['lastName'] ?? ''}'.trim()
@@ -44,7 +44,7 @@ class ProjectConverter {
 
         // Get technical remarks and approval status
         final technicalRemarks = activityObj['technicalRemarks'] as String?;
-        final approvalStatus = activityObj['approvalStatus'] as String?;
+        final approvalStatus = activityObj['activityApprovalStatus'] as String? ?? activityObj['approvalStatus'] as String?;
         
         // Get start and end weeks from API
         final startWeek = activityObj['startWeek'] as int? ?? 1;

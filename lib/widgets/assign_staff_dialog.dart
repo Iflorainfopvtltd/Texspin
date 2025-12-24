@@ -1,11 +1,8 @@
-import 'package:convert2dart/screens/manager_dashboard_screen.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_button.dart';
-import '../widgets/custom_card.dart';
 import '../services/api_service.dart';
 import 'dart:developer' as developer;
-import 'package:flutter/foundation.dart';
 
 class AssignStaffDialog extends StatefulWidget {
   final String projectId;
@@ -82,14 +79,16 @@ class _AssignStaffDialogState extends State<AssignStaffDialog> {
       _endDate = _parseDate(widget.currentEndDate!);
     }
     
-    // Prefill weeks if provided
-    _startWeek = widget.currentStartWeek;
-    _endWeek = widget.currentEndWeek;
-    if (_startWeek != null) {
-      _startWeekController.text = _startWeek.toString();
-    }
-    if (_endWeek != null) {
-      _endWeekController.text = _endWeek.toString();
+    // Prefill weeks if provided (only for reassignment)
+    if (widget.isReassignment) {
+      _startWeek = widget.currentStartWeek;
+      _endWeek = widget.currentEndWeek;
+      if (_startWeek != null) {
+        _startWeekController.text = _startWeek.toString();
+      }
+      if (_endWeek != null) {
+        _endWeekController.text = _endWeek.toString();
+      }
     }
     
     _fetchStaff();
@@ -227,6 +226,26 @@ class _AssignStaffDialogState extends State<AssignStaffDialog> {
       return;
     }
 
+    if (_startDate == null || _endDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select start and end dates'),
+          backgroundColor: AppTheme.red500,
+        ),
+      );
+      return;
+    }
+
+    if (_startWeek == null || _endWeek == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter start and end weeks'),
+          backgroundColor: AppTheme.red500,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isAssigning = true);
 
     try {
@@ -234,32 +253,32 @@ class _AssignStaffDialogState extends State<AssignStaffDialog> {
       final isCurrentlyUnassigned =
           widget.currentStaffId == null || widget.currentStaffId!.isEmpty;
 
-      // Prepare assignment data with dates and weeks
-      final assignmentData = {
-        'phase': widget.phaseId,
-        'activity': widget.activityId,
-        'template': widget.templateId,
-        'staff': _selectedStaffId,
-        if (_startDate != null) 'startDate': _formatDate(_startDate!),
-        if (_endDate != null) 'endDate': _formatDate(_endDate!),
-        if (_startWeek != null) 'startWeek': _startWeek,
-        if (_endWeek != null) 'endWeek': _endWeek,
-      };
-
-      developer.log(
-        'Assignment data: $assignmentData',
-        name: 'AssignStaffDialog',
-      );
+      final startDateStr = _formatDate(_startDate!);
+      final endDateStr = _formatDate(_endDate!);
 
       if (isCurrentlyUnassigned) {
-        await _apiService.reassignProjectActivityStaffWithDates(
+        // Use PATCH for new assignment
+        await _apiService.assignActivityStaff(
           projectId: widget.projectId,
-          data: assignmentData,
+          phase: widget.phaseId,
+          activity: widget.activityId,
+          staff: _selectedStaffId!,
+          startDate: startDateStr,
+          endDate: endDateStr,
+          startWeek: _startWeek!,
+          endWeek: _endWeek!,
         );
       } else {
-        await _apiService.reassignProjectActivityStaffWithDates(
+        // Use PUT for reassignment
+        await _apiService.reassignActivityStaff(
           projectId: widget.projectId,
-          data: assignmentData,
+          phaseId: widget.phaseId,
+          activityId: widget.activityId,
+          staffId: _selectedStaffId!,
+          startDate: startDateStr,
+          endDate: endDateStr,
+          startWeek: _startWeek!,
+          endWeek: _endWeek!,
         );
       }
 
@@ -847,7 +866,6 @@ class _AssignStaffDialogState extends State<AssignStaffDialog> {
         vertical: 24,
       ),
       child: Container(
-        width: dialogWidth,
         constraints: BoxConstraints(  
           maxHeight: MediaQuery.of(context).size.height * 0.85,
           maxWidth: dialogWidth,

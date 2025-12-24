@@ -410,3 +410,424 @@ class WorkCategory {
     };
   }
 }
+
+class Staff {
+  final String id;
+  final String staffId;
+  final String fullName;
+  final String email;
+  final String? mobile;
+  final String? designation;
+  final String? department;
+  final String? zone;
+  final String? workCategory;
+  final String role;
+  final String status;
+  final String? createdAt;
+  final String? updatedAt;
+
+  Staff({
+    required this.id,
+    required this.staffId,
+    required this.fullName,
+    required this.email,
+    this.mobile,
+    this.designation,
+    this.department,
+    this.zone,
+    this.workCategory,
+    required this.role,
+    required this.status,
+    this.createdAt,
+    this.updatedAt,
+  });
+
+  factory Staff.fromJson(Map<String, dynamic> json) {
+    return Staff(
+      id: json['_id'] ?? json['id'] ?? '',
+      staffId: json['staffId'] ?? '',
+      fullName: json['fullName'] ?? '',
+      email: json['email'] ?? '',
+      mobile: json['mobile'],
+      designation: json['designation'],
+      department: json['department'],
+      zone: json['zone'],
+      workCategory: json['workCategory'],
+      role: json['role'] ?? 'staff',
+      status: json['status'] ?? 'active',
+      createdAt: json['createdAt'],
+      updatedAt: json['updatedAt'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'staffId': staffId,
+      'fullName': fullName,
+      'email': email,
+      'mobile': mobile,
+      'designation': designation,
+      'department': department,
+      'zone': zone,
+      'workCategory': workCategory,
+      'role': role,
+      'status': status,
+      'createdAt': createdAt,
+      'updatedAt': updatedAt,
+    };
+  }
+}
+
+
+class Task {
+  final String id;
+  final String name;
+  final String description;
+  final String deadline;
+  final Map<String, dynamic> assignedStaff;
+  final Map<String, dynamic> createdBy;
+  final String status;
+  final String createdAt;
+  final String updatedAt;
+  final String? fileName;
+  final String? fileUrl;
+  final String? viewUrl;
+  final String? downloadUrl;
+  final List<Map<String, dynamic>>? attachments;
+
+  Task({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.deadline,
+    required this.assignedStaff,
+    required this.createdBy,
+    required this.status,
+    required this.createdAt,
+    required this.updatedAt,
+    this.fileName,
+    this.fileUrl,
+    this.viewUrl,
+    this.downloadUrl,
+    this.attachments,
+  });
+
+  factory Task.fromJson(Map<String, dynamic> json) {
+    return Task(
+      id: json['_id'] ?? json['id'] ?? '',
+      name: json['name'] ?? '',
+      description: json['description'] ?? '',
+      deadline: json['deadline'] ?? '',
+      assignedStaff: json['assignedStaff'] ?? {},
+      createdBy: json['createdBy'] ?? {},
+      status: json['status'] ?? 'pending',
+      createdAt: json['createdAt'] ?? '',
+      updatedAt: json['updatedAt'] ?? '',
+      fileName: json['fileName'],
+      fileUrl: json['fileUrl'],
+      viewUrl: json['viewUrl'],
+      downloadUrl: json['downloadUrl'],
+      attachments: json['attachments'] != null 
+          ? List<Map<String, dynamic>>.from(json['attachments'])
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'description': description,
+      'deadline': deadline,
+      'assignedStaff': assignedStaff,
+      'createdBy': createdBy,
+      'status': status,
+      'createdAt': createdAt,
+      'updatedAt': updatedAt,
+      if (fileName != null) 'fileName': fileName,
+      if (fileUrl != null) 'fileUrl': fileUrl,
+      if (viewUrl != null) 'viewUrl': viewUrl,
+      if (downloadUrl != null) 'downloadUrl': downloadUrl,
+      if (attachments != null) 'attachments': attachments,
+    };
+  }
+}
+
+class DepartmentTask {
+  final String id;
+  final String name;
+  final String description;
+  final String deadline;
+  final Map<String, dynamic> assignedStaff;
+  final Map<String, dynamic> createdBy;
+  final String status;
+  final String createdAt;
+  final String updatedAt;
+  final String? fileName;
+  final String? fileUrl;
+  final String? viewUrl;
+  final String? downloadUrl;
+  final List<Map<String, dynamic>>? attachments;
+
+  DepartmentTask({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.deadline,
+    required this.assignedStaff,
+    required this.createdBy,
+    required this.status,
+    required this.createdAt,
+    required this.updatedAt,
+    this.fileName,
+    this.fileUrl,
+    this.viewUrl,
+    this.downloadUrl,
+    this.attachments,
+  });
+
+  factory DepartmentTask.fromJson(Map<String, dynamic> json) {
+    return DepartmentTask(
+      id: json['_id'] ?? json['id'] ?? '',
+      name: json['name'] ?? '',
+      description: json['description'] ?? '',
+      deadline: json['deadline'] ?? '',
+      assignedStaff: json['assignedStaff'] ?? {},
+      createdBy: json['createdBy'] ?? {},
+      status: json['status'] ?? 'pending',
+      createdAt: json['createdAt'] ?? '',
+      updatedAt: json['updatedAt'] ?? '',
+      fileName: json['fileName'],
+      fileUrl: json['fileUrl'],
+      viewUrl: json['viewUrl'],
+      downloadUrl: json['downloadUrl'],
+      attachments: json['attachments'] != null 
+          ? List<Map<String, dynamic>>.from(json['attachments'])
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'description': description,
+      'deadline': deadline,
+      'assignedStaff': assignedStaff,
+      'createdBy': createdBy,
+      'status': status,
+      'createdAt': createdAt,
+      'updatedAt': updatedAt,
+      if (fileName != null) 'fileName': fileName,
+      if (fileUrl != null) 'fileUrl': fileUrl,
+      if (viewUrl != null) 'viewUrl': viewUrl,
+      if (downloadUrl != null) 'downloadUrl': downloadUrl,
+      if (attachments != null) 'attachments': attachments,
+    };
+  }
+}
+
+// Audit Models
+class AuditType {
+  final String id;
+  final String name;
+  final String status;
+  final String? createdBy;
+  final String? createdAt;
+  final String? updatedAt;
+
+  AuditType({
+    required this.id,
+    required this.name,
+    required this.status,
+    this.createdBy,
+    this.createdAt,
+    this.updatedAt,
+  });
+
+  factory AuditType.fromJson(Map<String, dynamic> json) {
+    return AuditType(
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      status: json['status'] ?? 'active',
+      createdBy: json['createdBy'],
+      createdAt: json['createdAt'],
+      updatedAt: json['updatedAt'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'status': status,
+    };
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AuditType &&
+          runtimeType == other.runtimeType &&
+          id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
+}
+
+class AuditSegment {
+  final String id;
+  final String name;
+  final String status;
+  final String? createdBy;
+  final String? createdAt;
+  final String? updatedAt;
+
+  AuditSegment({
+    required this.id,
+    required this.name,
+    required this.status,
+    this.createdBy,
+    this.createdAt,
+    this.updatedAt,
+  });
+
+  factory AuditSegment.fromJson(Map<String, dynamic> json) {
+    return AuditSegment(
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      status: json['status'] ?? 'active',
+      createdBy: json['createdBy'],
+      createdAt: json['createdAt'],
+      updatedAt: json['updatedAt'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'status': status,
+    };
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AuditSegment &&
+          runtimeType == other.runtimeType &&
+          id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
+}
+
+class AuditQuestion {
+  final String id;
+  final String question;
+  final String? answer;
+  final String status;
+  final String? createdBy;
+  final String? createdAt;
+  final String? updatedAt;
+
+  AuditQuestion({
+    required this.id,
+    required this.question,
+    this.answer,
+    required this.status,
+    this.createdBy,
+    this.createdAt,
+    this.updatedAt,
+  });
+
+  factory AuditQuestion.fromJson(Map<String, dynamic> json) {
+    return AuditQuestion(
+      id: json['id'] ?? '',
+      question: json['question'] ?? '',
+      answer: json['answer'],
+      status: json['status'] ?? 'active',
+      createdBy: json['createdBy'],
+      createdAt: json['createdAt'],
+      updatedAt: json['updatedAt'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'question': question,
+      if (answer != null) 'answer': answer,
+      'status': status,
+    };
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AuditQuestion &&
+          runtimeType == other.runtimeType &&
+          id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
+}
+class AuditTemplate {
+  final String id;
+  final String name;
+  final AuditSegment auditSegment;
+  final AuditType auditType;
+  final List<AuditQuestion> auditQuestions;
+  final String status;
+  final String? createdBy;
+  final String? createdAt;
+  final String? updatedAt;
+
+  AuditTemplate({
+    required this.id,
+    required this.name,
+    required this.auditSegment,
+    required this.auditType,
+    required this.auditQuestions,
+    required this.status,
+    this.createdBy,
+    this.createdAt,
+    this.updatedAt,
+  });
+
+  factory AuditTemplate.fromJson(Map<String, dynamic> json) {
+    return AuditTemplate(
+      id: json['id'] ?? json['_id'] ?? '',
+      name: json['name'] ?? '',
+      auditSegment: AuditSegment.fromJson({
+        'id': json['auditSegment']['_id'] ?? json['auditSegment']['id'] ?? '',
+        'name': json['auditSegment']['name'] ?? '',
+        'status': 'active', // Default status for nested objects
+      }),
+      auditType: AuditType.fromJson({
+        'id': json['auditType']['_id'] ?? json['auditType']['id'] ?? '',
+        'name': json['auditType']['name'] ?? '',
+        'status': 'active', // Default status for nested objects
+      }),
+      auditQuestions: (json['auditQuestions'] as List? ?? [])
+          .map((q) => AuditQuestion.fromJson({
+                'id': q['_id'] ?? q['id'] ?? '',
+                'question': q['question'] ?? '',
+                'answer': q['answer'],
+                'status': 'active', // Default status for nested objects
+              }))
+          .toList(),
+      status: json['status'] ?? 'active',
+      createdBy: json['createdBy']?.toString(),
+      createdAt: json['createdAt'],
+      updatedAt: json['updatedAt'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'auditSegment': auditSegment.id,
+      'auditType': auditType.id,
+      'auditQuestions': auditQuestions.map((q) => q.id).toList(),
+    };
+  }
+}

@@ -6,6 +6,7 @@ import '../widgets/custom_button.dart';
 import '../widgets/custom_card.dart';
 import '../widgets/custom_badge.dart';
 import '../widgets/custom_progress.dart';
+import '../widgets/dashboard_layout.dart';
 import '../theme/app_theme.dart';
 import '../bloc/entity/entity_bloc.dart';
 import '../services/api_service.dart';
@@ -13,10 +14,23 @@ import '../utils/project_converter.dart';
 import 'search_dialog.dart';
 import 'entity_detail_dialog.dart';
 import 'inquiry_screen.dart';
+import 'audit_dialog.dart';
+import 'audit_type_management_screen.dart';
+import 'audit_segment_management_screen.dart';
+import 'audit_questions_management_screen.dart';
+import 'all_audits_screen.dart';
+import 'create_audit_template_screen.dart';
+import '../widgets/audit_type_management_dialog.dart';
+import '../widgets/audit_segment_management_dialog.dart';
+import '../widgets/audit_questions_management_dialog.dart';
+import '../widgets/all_audits_dialog.dart';
+import '../widgets/create_audit_template_dialog.dart';
+import '../widgets/create_audit_main_dialog.dart';
 
 class DashboardScreen extends StatefulWidget {
   final List<Project> projects;
   final VoidCallback onCreateProject;
+  final VoidCallback onInquiry;
   final Function(Project project) onViewProject;
   final VoidCallback? onLogout;
   final String? userName;
@@ -26,6 +40,7 @@ class DashboardScreen extends StatefulWidget {
     super.key,
     required this.projects,
     required this.onCreateProject,
+    required this.onInquiry,
     required this.onViewProject,
     this.onLogout,
     this.userName,
@@ -117,12 +132,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return filtered;
   }
 
-  void _handleSearch(BuildContext context) {
-    showDialog(
+  Future<void> _handleSearch(BuildContext context) async {
+    await showDialog(
       context: context,
       builder: (dialogContext) => SearchDialog(
-        onEntitySelected: (entityType) {
-          showDialog(
+        onEntitySelected: (entityType) async {
+          await showDialog(
             context: context,
             builder: (detailContext) => BlocProvider.value(
               value: context.read<EntityBloc>(),
@@ -132,6 +147,102 @@ class _DashboardScreenState extends State<DashboardScreen> {
         },
       ),
     );
+  }
+
+  Future<void> _handleAudit(BuildContext context) async {
+    final auditOption = await showDialog<AuditOption>(
+      context: context,
+      builder: (dialogContext) => AuditDialog(
+        onAuditSelected: (auditOption) {
+          Navigator.of(dialogContext).pop(auditOption);
+        },
+      ),
+    );
+    
+    if (auditOption != null) {
+      await _showAuditManagement(context, auditOption);
+    }
+  }
+
+  Future<void> _showAuditManagement(BuildContext context, AuditOption auditOption) async {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
+    if (isMobile) {
+      // Mobile: Navigate to full screen
+      Widget screen;
+      
+      switch (auditOption) {
+        case AuditOption.createTemplate:
+          screen = const CreateAuditTemplateScreen();
+          break;
+        case AuditOption.auditSegment:
+          screen = const AuditSegmentManagementScreen();
+          break;
+        case AuditOption.auditType:
+          screen = const AuditTypeManagementScreen();
+          break;
+        case AuditOption.auditQuestions:
+          screen = const AuditQuestionsManagementScreen();
+          break;
+        case AuditOption.getAllAudits:
+          screen = const AllAuditsScreen();
+          break;
+        case AuditOption.createAudit:
+          // For mobile, we'll show the dialog in a full screen
+          await showDialog(
+            context: context,
+            builder: (context) => CreateAuditMainDialog(
+              onAuditCreated: () {
+                if (widget.onRefresh != null) {
+                  widget.onRefresh!();
+                }
+              },
+            ),
+          );
+          return; // Don't navigate to a screen
+      }
+
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => screen),
+      );
+    } else {
+      // Web/Desktop: Show dialog
+      Widget dialog;
+      
+      switch (auditOption) {
+        case AuditOption.createTemplate:
+          dialog = const CreateAuditTemplateDialog();
+          break;
+        case AuditOption.auditSegment:
+          dialog = const AuditSegmentManagementDialog();
+          break;
+        case AuditOption.auditType:
+          dialog = const AuditTypeManagementDialog();
+          break;
+        case AuditOption.auditQuestions:
+          dialog = const AuditQuestionsManagementDialog();
+          break;
+        case AuditOption.getAllAudits:
+          dialog = const AllAuditsDialog();
+          break;
+        case AuditOption.createAudit:
+          dialog = CreateAuditMainDialog(
+            onAuditCreated: () {
+              if (widget.onRefresh != null) {
+                widget.onRefresh!();
+              }
+            },
+          );
+          break;
+      }
+
+      await showDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (_) => dialog,
+      );
+    }
   }
 
   Color _getProgressColor(int progress) {
@@ -164,589 +275,500 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
     final isTablet = screenWidth >= 600 && screenWidth < 1024;
-    final isDesktop = screenWidth >= 1024;
     final filteredProjects = _filteredProjects;
 
-    return Scaffold(
-      backgroundColor: AppTheme.gray50,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(isMobile ? 16 : 24),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxWidth: isDesktop ? 1280 : (isTablet ? 900 : double.infinity),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // Header
-                  isMobile
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+    return DashboardLayout(
+      title: 'Admin Dashboard',
+      subtitle: 'Administrator',
+      userName: widget.userName ?? 'Admin',
+      navigationItems: [
+        NavigationItem(icon: Icons.dashboard, label: 'Dashboard', onTap: () {}),
+        NavigationItem(
+          icon: Icons.search,
+          label: 'Search',
+          onTap: () => _handleSearch(context),
+        ),
+        NavigationItem(
+          icon: Icons.add_circle_outline,
+          label: 'Create Project',
+          onTap: widget.onCreateProject,
+        ),
+        NavigationItem(
+          icon: Icons.assignment_outlined,
+          label: 'Audit',
+          onTap: () => _handleAudit(context),
+        ),
+        NavigationItem(
+          icon: Icons.notifications_outlined,
+          label: 'Notifications',
+        onTap: widget.onInquiry,
+        ),
+      ],
+      onLogout: widget.onLogout,
+      onNotification: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => InquiryScreen(
+              onCancel: () => Navigator.of(context).pop(),
+            ),
+          ),
+        );
+      },
+      child: SingleChildScrollView(
+        padding: EdgeInsets.all(isMobile ? 16 : 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Stats Overview
+            isMobile
+                ? Column(
+                    children: [
+                      GestureDetector(
+                        onTap: () => setState(() => _statusFilter = null),
+                        child: CustomCard(
+                          padding: const EdgeInsets.all(20),
+                          child: Container(
+                            padding: _statusFilter == null
+                                ? const EdgeInsets.all(2)
+                                : null,
+                            child: Row(
                               children: [
-                                const Text(
-                                  'APQP Project Dashboard',
-                                  style: TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.w500,
-                                    color: AppTheme.gray900,
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.blue100,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(
+                                    Icons.inventory_2,
+                                    color: AppTheme.blue600,
+                                    size: 24,
                                   ),
                                 ),
-                                const SizedBox(height: 4),
-                                const Text(
-                                  'Manage your Advanced Product Quality Planning projects',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: AppTheme.gray600,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
+                                const SizedBox(width: 16),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Total Projects',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: AppTheme.gray600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '${_projects.length}',
+                                      style: const TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w500,
+                                        color: AppTheme.gray900,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 16),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      GestureDetector(
+                        onTap: () => setState(() => _statusFilter = 'ongoing'),
+                        child: CustomCard(
+                          padding: const EdgeInsets.all(20),
+                          child: Container(
+                            // decoration: _statusFilter == 'ongoing'
+                            //     ? BoxDecoration(
+                            //         border: Border.all(
+                            //           color: AppTheme.green600,
+                            //           width: 2,
+                            //         ),
+                            //         borderRadius: BorderRadius.circular(8),
+                            //       )
+                            //     : null,
+                            padding: _statusFilter == 'ongoing'
+                                ? const EdgeInsets.all(2)
+                                : null,
+                            child: Row(
                               children: [
-                                SizedBox(
-                                  // width: 56,
-                                  child: CustomButton(
-                                    text: '',
-                                    onPressed: () => _handleSearch(context),
-                                    variant: ButtonVariant.outline,
-                                    size: ButtonSize.lg,
-                                    icon: const Icon(Icons.search, size: 20),
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.green100,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(
+                                    Icons.calendar_today,
+                                    color: AppTheme.green600,
+                                    size: 24,
                                   ),
                                 ),
-                                // const SizedBox(width: 8),
-                                SizedBox(
-                                  // width: 56,
-                                  child: CustomButton(
-                                    text: '',
-                                    onPressed: widget.onCreateProject,
-                                    size: ButtonSize.lg,
-                                    icon: const Icon(
-                                      Icons.add,
-                                      size: 20,
-                                      color: Colors.white,
+                                const SizedBox(width: 16),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Active Projects',  
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: AppTheme.gray600,
+                                      ),
                                     ),
-                                  ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '${_projects.where((p) => p.progress > 0 && p.progress < 100).length}',
+                                      style: const TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w500,
+                                        color: AppTheme.gray900,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                // const SizedBox(width: 8),
-                                SizedBox(
-                                  // width: 56,
-                                  child: CustomButton(
-                                    text: '',
-                                    onPressed: () {
-                                      Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (_) => const InquiryScreen(),
-                                        ),
-                                      );
-                                    },
-                                    size: ButtonSize.lg,
-                                    variant: ButtonVariant.outline,
-                                    icon: const Icon(
-                                      Icons.notifications,
-                                      size: 20,
-                                    ),
-                                  ),
-                                ),
-                                if (widget.onLogout != null) ...[
-                                  // const SizedBox(width: 8),
-                                  SizedBox(
-                                    // width: 56,
-                                    child: CustomButton(
-                                      text: '',
-                                      onPressed: widget.onLogout,
-                                      variant: ButtonVariant.outline,
-                                      size: ButtonSize.lg,
-                                      icon: const Icon(Icons.logout, size: 20),
-                                    ),
-                                  ),
-                                ],
                               ],
                             ),
-                          ],
-                        )
-                      : Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      GestureDetector(
+                        onTap: () =>
+                            setState(() => _statusFilter = 'completed'),
+                        child: CustomCard(
+                          padding: const EdgeInsets.all(20),
+                          child: Container(
+                            // decoration: _statusFilter == 'completed'
+                            //     ? BoxDecoration(
+                            //         border: Border.all(
+                            //           color: AppTheme.purple600,
+                            //           width: 2,
+                            //         ),
+                            //         borderRadius: BorderRadius.circular(8),
+                            //       )
+                            //     : null,
+                            padding: _statusFilter == 'completed'
+                                ? const EdgeInsets.all(2)
+                                : null,
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.purple100,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(
+                                    Icons.people,
+                                    color: AppTheme.purple600,
+                                    size: 24,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Completed Projects',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: AppTheme.gray600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '${_projects.where((p) => p.progress == 100).length}',
+                                      style: const TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w500,
+                                        color: AppTheme.gray900,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                : Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setState(() => _statusFilter = null),
+                          child: CustomCard(
+                            padding: EdgeInsets.all(isTablet ? 20 : 24),
+                            child: Container(
+                              // decoration: _statusFilter == null
+                              //     ? BoxDecoration(
+                              //         border: Border.all(
+                              //           color: AppTheme.blue600,
+                              //           width: 2,
+                              //         ),
+                              //         borderRadius: BorderRadius.circular(
+                              //           8,
+                              //         ),
+                              //       )
+                              //     : null,
+                              padding: _statusFilter == null
+                                  ? const EdgeInsets.all(2)
+                                  : null,
+                              child: Row(
                                 children: [
-                                  Text(
-                                    'APQP Project Dashboard',
-                                    style: TextStyle(
-                                      fontSize: isTablet ? 26 : 28,
-                                      fontWeight: FontWeight.w500,
-                                      color: AppTheme.gray900,
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.blue100,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(
+                                      Icons.inventory_2,
+                                      color: AppTheme.blue600,
+                                      size: 24,
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
-                                  const Text(
-                                    'Manage your Advanced Product Quality Planning projects',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: AppTheme.gray600,
-                                    ),
+                                  const SizedBox(width: 16),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Total Projects',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: AppTheme.gray600,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${_projects.length}',
+                                        style: const TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w500,
+                                          color: AppTheme.gray900,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
                             ),
-                            const SizedBox(width: 16),
-                            CustomButton(
-                              text: 'Search',
-                              onPressed: () => _handleSearch(context),
-                              variant: ButtonVariant.outline,
-                              size: ButtonSize.lg,
-                              icon: const Icon(Icons.search, size: 20),
-                            ),
-                            const SizedBox(width: 8),
-                            CustomButton(
-                              text: 'Create New Project',
-                              onPressed: widget.onCreateProject,
-                              size: ButtonSize.lg,
-                              icon: const Icon(
-                                Icons.add,
-                                size: 20,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            CustomButton(
-                              text: '',
-                              onPressed: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) => const InquiryScreen(),
-                                  ),
-                                );
-                              },
-                              size: ButtonSize.lg,
-                              variant: ButtonVariant.outline,
-                              icon: const Icon(Icons.notifications, size: 20),
-                            ),
-                            if (widget.onLogout != null) ...[
-                              const SizedBox(width: 8),
-                              CustomButton(
-                                text: 'Logout',
-                                onPressed: widget.onLogout,
-                                variant: ButtonVariant.outline,
-                                size: ButtonSize.lg,
-                                icon: const Icon(Icons.logout, size: 20),
-                              ),
-                            ],
-                          ],
+                          ),
                         ),
-                  SizedBox(height: isMobile ? 24 : 32),
-
-                  // Stats Overview
-                  isMobile
-                      ? Column(
-                          children: [
-                            GestureDetector(
-                              onTap: () => setState(() => _statusFilter = null),
-                              child: CustomCard(
-                                padding: const EdgeInsets.all(20),
-                                child: Container(
-                                  // decoration: _statusFilter == null
-                                  //     ? BoxDecoration(
-                                  //         border: Border.all(
-                                  //           color: AppTheme.blue600,
-                                  //           width: 2,
-                                  //         ),
-                                  //         borderRadius: BorderRadius.circular(8),
-                                  //       )
-                                  //     : null,
-                                  padding: _statusFilter == null
-                                      ? const EdgeInsets.all(2)
-                                      : null,
-                                  child: Row(
+                      ),
+                      SizedBox(width: isTablet ? 12 : 16),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () =>
+                              setState(() => _statusFilter = 'ongoing'),
+                          child: CustomCard(
+                            padding: EdgeInsets.all(isTablet ? 20 : 24),
+                            child: Container(
+                              // decoration: _statusFilter == 'ongoing'
+                              //     ? BoxDecoration(
+                              //         border: Border.all(
+                              //           color: AppTheme.green600,
+                              //           width: 2,
+                              //         ),
+                              //         borderRadius: BorderRadius.circular(
+                              //           8,
+                              //         ),
+                              //       )
+                              //     : null,
+                              padding: _statusFilter == 'ongoing'
+                                  ? const EdgeInsets.all(2)
+                                  : null,
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.green100,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(
+                                      Icons.calendar_today,
+                                      color: AppTheme.green600,
+                                      size: 24,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(12),
-                                        decoration: BoxDecoration(
-                                          color: AppTheme.blue100,
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                        child: const Icon(
-                                          Icons.inventory_2,
-                                          color: AppTheme.blue600,
-                                          size: 24,
+                                      const Text(
+                                        'Active Projects',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: AppTheme.gray600,
                                         ),
                                       ),
-                                      const SizedBox(width: 16),
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          const Text(
-                                            'Total Projects',
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              color: AppTheme.gray600,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            '${_projects.length}',
-                                            style: const TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.w500,
-                                              color: AppTheme.gray900,
-                                            ),
-                                          ),
-                                        ],
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${_projects.where((p) => p.progress > 0 && p.progress < 100).length}',
+                                        style: const TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w500,
+                                          color: AppTheme.gray900,
+                                        ),
                                       ),
                                     ],
                                   ),
-                                ),
+                                ],
                               ),
                             ),
-                            const SizedBox(height: 12),
-                            GestureDetector(
-                              onTap: () =>
-                                  setState(() => _statusFilter = 'ongoing'),
-                              child: CustomCard(
-                                padding: const EdgeInsets.all(20),
-                                child: Container(
-                                  // decoration: _statusFilter == 'ongoing'
-                                  //     ? BoxDecoration(
-                                  //         border: Border.all(
-                                  //           color: AppTheme.green600,
-                                  //           width: 2,
-                                  //         ),
-                                  //         borderRadius: BorderRadius.circular(8),
-                                  //       )
-                                  //     : null,
-                                  padding: _statusFilter == 'ongoing'
-                                      ? const EdgeInsets.all(2)
-                                      : null,
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(12),
-                                        decoration: BoxDecoration(
-                                          color: AppTheme.green100,
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                        child: const Icon(
-                                          Icons.calendar_today,
-                                          color: AppTheme.green600,
-                                          size: 24,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          const Text(
-                                            'Active Projects',
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              color: AppTheme.gray600,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            '${_projects.where((p) => p.progress > 0 && p.progress < 100).length}',
-                                            style: const TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.w500,
-                                              color: AppTheme.gray900,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            GestureDetector(
-                              onTap: () =>
-                                  setState(() => _statusFilter = 'completed'),
-                              child: CustomCard(
-                                padding: const EdgeInsets.all(20),
-                                child: Container(
-                                  // decoration: _statusFilter == 'completed'
-                                  //     ? BoxDecoration(
-                                  //         border: Border.all(
-                                  //           color: AppTheme.purple600,
-                                  //           width: 2,
-                                  //         ),
-                                  //         borderRadius: BorderRadius.circular(8),
-                                  //       )
-                                  //     : null,
-                                  padding: _statusFilter == 'completed'
-                                      ? const EdgeInsets.all(2)
-                                      : null,
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(12),
-                                        decoration: BoxDecoration(
-                                          color: AppTheme.purple100,
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                        child: const Icon(
-                                          Icons.people,
-                                          color: AppTheme.purple600,
-                                          size: 24,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          const Text(
-                                            'Completed Projects',
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              color: AppTheme.gray600,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            '${_projects.where((p) => p.progress == 100).length}',
-                                            style: const TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.w500,
-                                              color: AppTheme.gray900,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        )
-                      : Row(
-                          children: [
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () =>
-                                    setState(() => _statusFilter = null),
-                                child: CustomCard(
-                                  padding: EdgeInsets.all(isTablet ? 20 : 24),
-                                  child: Container(
-                                    // decoration: _statusFilter == null
-                                    //     ? BoxDecoration(
-                                    //         border: Border.all(
-                                    //           color: AppTheme.blue600,
-                                    //           width: 2,
-                                    //         ),
-                                    //         borderRadius: BorderRadius.circular(
-                                    //           8,
-                                    //         ),
-                                    //       )
-                                    //     : null,
-                                    padding: _statusFilter == null
-                                        ? const EdgeInsets.all(2)
-                                        : null,
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.all(12),
-                                          decoration: BoxDecoration(
-                                            color: AppTheme.blue100,
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                          ),
-                                          child: const Icon(
-                                            Icons.inventory_2,
-                                            color: AppTheme.blue600,
-                                            size: 24,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 16),
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            const Text(
-                                              'Total Projects',
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                color: AppTheme.gray600,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              '${_projects.length}',
-                                              style: const TextStyle(
-                                                fontSize: 20,
-                                                fontWeight: FontWeight.w500,
-                                                color: AppTheme.gray900,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: isTablet ? 12 : 16),
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () =>
-                                    setState(() => _statusFilter = 'ongoing'),
-                                child: CustomCard(
-                                  padding: EdgeInsets.all(isTablet ? 20 : 24),
-                                  child: Container(
-                                    // decoration: _statusFilter == 'ongoing'
-                                    //     ? BoxDecoration(
-                                    //         border: Border.all(
-                                    //           color: AppTheme.green600,
-                                    //           width: 2,
-                                    //         ),
-                                    //         borderRadius: BorderRadius.circular(
-                                    //           8,
-                                    //         ),
-                                    //       )
-                                    //     : null,
-                                    padding: _statusFilter == 'ongoing'
-                                        ? const EdgeInsets.all(2)
-                                        : null,
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.all(12),
-                                          decoration: BoxDecoration(
-                                            color: AppTheme.green100,
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                          ),
-                                          child: const Icon(
-                                            Icons.calendar_today,
-                                            color: AppTheme.green600,
-                                            size: 24,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 16),
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            const Text(
-                                              'Active Projects',
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                color: AppTheme.gray600,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              '${_projects.where((p) => p.progress > 0 && p.progress < 100).length}',
-                                              style: const TextStyle(
-                                                fontSize: 20,
-                                                fontWeight: FontWeight.w500,
-                                                color: AppTheme.gray900,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: isTablet ? 12 : 16),
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () =>
-                                    setState(() => _statusFilter = 'completed'),
-                                child: CustomCard(
-                                  padding: EdgeInsets.all(isTablet ? 20 : 24),
-                                  child: Container(
-                                    // decoration: _statusFilter == 'completed'
-                                    //     ? BoxDecoration(
-                                    //         border: Border.all(
-                                    //           color: AppTheme.purple600,
-                                    //           width: 2,
-                                    //         ),
-                                    //         borderRadius: BorderRadius.circular(
-                                    //           8,
-                                    //         ),
-                                    //       )
-                                    //     : null,
-                                    padding: _statusFilter == 'completed'
-                                        ? const EdgeInsets.all(2)
-                                        : null,
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.all(12),
-                                          decoration: BoxDecoration(
-                                            color: AppTheme.purple100,
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                          ),
-                                          child: const Icon(
-                                            Icons.people,
-                                            color: AppTheme.purple600,
-                                            size: 24,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 16),
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            const Text(
-                                              'Completed Projects',
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                color: AppTheme.gray600,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              '${_projects.where((p) => p.progress == 100).length}',
-                                              style: const TextStyle(
-                                                fontSize: 20,
-                                                fontWeight: FontWeight.w500,
-                                                color: AppTheme.gray900,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
-                  SizedBox(height: isMobile ? 24 : 32),
+                      ),
+                      SizedBox(width: isTablet ? 12 : 16),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () =>
+                              setState(() => _statusFilter = 'completed'),
+                          child: CustomCard(
+                            padding: EdgeInsets.all(isTablet ? 20 : 24),
+                            child: Container(
+                              // decoration: _statusFilter == 'completed'
+                              //     ? BoxDecoration(
+                              //         border: Border.all(
+                              //           color: AppTheme.purple600,
+                              //           width: 2,
+                              //         ),
+                              //         borderRadius: BorderRadius.circular(
+                              //           8,
+                              //         ),
+                              //       )
+                              //     : null,
+                              padding: _statusFilter == 'completed'
+                                  ? const EdgeInsets.all(2)
+                                  : null,
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.purple100,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(
+                                      Icons.people,
+                                      color: AppTheme.purple600,
+                                      size: 24,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Completed Projects',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: AppTheme.gray600,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${_projects.where((p) => p.progress == 100).length}',
+                                        style: const TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w500,
+                                          color: AppTheme.gray900,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+            SizedBox(height: isMobile ? 24 : 32),
 
-                  // Filter and View Toggle
-                  isMobile
-                      ? Column(
+            // Filter and View Toggle
+            isMobile
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Filter Projects',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: AppTheme.gray900,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        onChanged: (value) =>
+                            setState(() => _filterText = value),
+                        decoration: InputDecoration(
+                          hintText: 'Search by customer or project name...',
+                          prefixIcon: const Icon(
+                            Icons.search,
+                            color: AppTheme.gray500,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: AppTheme.gray300),
+                          ),
+                          filled: true,
+                          fillColor: AppTheme.gray50,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          CustomButton(
+                            text: 'List',
+                            onPressed: () =>
+                                setState(() => _isTableView = false),
+                            variant: !_isTableView
+                                ? ButtonVariant.default_
+                                : ButtonVariant.outline,
+                            size: ButtonSize.sm,
+                            icon: Icon(
+                              Icons.view_list,
+                              size: 16,
+                              color: !_isTableView
+                                  ? AppTheme.primaryForeground
+                                  : AppTheme.foreground,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          CustomButton(
+                            text: 'Table',
+                            onPressed: () =>
+                                setState(() => _isTableView = true),
+                            variant: _isTableView
+                                ? ButtonVariant.default_
+                                : ButtonVariant.outline,
+                            size: ButtonSize.sm,
+                            icon: Icon(
+                              Icons.table_chart,
+                              size: 16,
+                              color: _isTableView
+                                  ? AppTheme.primaryForeground
+                                  : AppTheme.foreground,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  )
+                : Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(
+                        child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
@@ -778,264 +800,530 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 fillColor: AppTheme.gray50,
                               ),
                             ),
-                            const SizedBox(height: 16),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                CustomButton(
-                                  text: 'List',
-                                  onPressed: () =>
-                                      setState(() => _isTableView = false),
-                                  variant: !_isTableView
-                                      ? ButtonVariant.default_
-                                      : ButtonVariant.outline,
-                                  size: ButtonSize.sm,
-                                  icon: Icon(
-                                    Icons.view_list,
-                                    size: 16,
-                                    color: !_isTableView
-                                        ? AppTheme.primaryForeground
-                                        : AppTheme.foreground,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                CustomButton(
-                                  text: 'Table',
-                                  onPressed: () =>
-                                      setState(() => _isTableView = true),
-                                  variant: _isTableView
-                                      ? ButtonVariant.default_
-                                      : ButtonVariant.outline,
-                                  size: ButtonSize.sm,
-                                  icon: Icon(
-                                    Icons.table_chart,
-                                    size: 16,
-                                    color: _isTableView
-                                        ? AppTheme.primaryForeground
-                                        : AppTheme.foreground,
-                                  ),
-                                ),
-                              ],
-                            ),
                           ],
-                        )
-                      : Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Row(
+                        children: [
+                          CustomButton(
+                            text: 'Table View',
+                            onPressed: () =>
+                                setState(() => _isTableView = true),
+                            variant: _isTableView
+                                ? ButtonVariant.default_
+                                : ButtonVariant.outline,
+                            size: ButtonSize.lg,
+                            icon: Icon(
+                              Icons.table_chart,
+                              size: 16,
+                              color: _isTableView
+                                  ? AppTheme.primaryForeground
+                                  : AppTheme.foreground,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          CustomButton(
+                            text: 'List View',
+                            onPressed: () =>
+                                setState(() => _isTableView = false),
+                            variant: !_isTableView
+                                ? ButtonVariant.default_
+                                : ButtonVariant.outline,
+                            size: ButtonSize.lg,
+                            icon: Icon(
+                              Icons.view_list,
+                              size: 16,
+                              color: !_isTableView
+                                  ? AppTheme.primaryForeground
+                                  : AppTheme.foreground,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+            SizedBox(height: isMobile ? 24 : 32),
+
+            // Projects List or Table
+            if (_isLoading)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(48.0),
+                  child: CircularProgressIndicator(),
+                ),
+              )
+            else if (_error != null && _projects.isEmpty)
+              CustomCard(
+                padding: EdgeInsets.all(isMobile ? 32 : 48),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: isMobile ? 48 : 64,
+                      color: AppTheme.red500,
+                    ),
+                    SizedBox(height: isMobile ? 12 : 16),
+                    Text(
+                      'Error Loading Projects',
+                      style: TextStyle(
+                        fontSize: isMobile ? 18 : 20,
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.gray900,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _error!,
+                      style: TextStyle(
+                        fontSize: isMobile ? 13 : 14,
+                        color: AppTheme.gray600,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: isMobile ? 20 : 24),
+                    CustomButton(
+                      text: 'Retry',
+                      onPressed: _fetchProjects,
+                      icon: const Icon(
+                        Icons.refresh,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                      isFullWidth: isMobile,
+                    ),
+                  ],
+                ),
+              )
+            else if (filteredProjects.isEmpty)
+              CustomCard(
+                padding: EdgeInsets.all(isMobile ? 32 : 48),
+                child: Column(
+                  children: [
+                    Icon(
+                      _filterText.isEmpty
+                          ? Icons.inventory_2
+                          : Icons.search_off,
+                      size: isMobile ? 48 : 64,
+                      color: _filterText.isEmpty
+                          ? AppTheme.gray300
+                          : AppTheme.gray500,
+                    ),
+                    SizedBox(height: isMobile ? 12 : 16),
+                    Text(
+                      _filterText.isEmpty
+                          ? 'No Projects Yet'
+                          : 'No Projects Found',
+                      style: TextStyle(
+                        fontSize: isMobile ? 18 : 20,
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.gray900,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _filterText.isEmpty ? 'Get started by creating your first APQP project' : 'Try adjusting your search terms.',
+                      style: TextStyle(
+                        fontSize: isMobile ? 13 : 14,
+                        color: AppTheme.gray600,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: isMobile ? 20 : 24),
+                    if (_filterText.isEmpty)
+                      CustomButton(
+                        text: 'Create Your First Project',
+                        onPressed: widget.onCreateProject,
+                        icon: const Icon(Icons.add, size: 16),
+                        isFullWidth: isMobile,
+                      )
+                    else
+                      CustomButton(
+                        text: 'Clear Filter',
+                        onPressed: () => setState(() => _filterText = ''),
+                        variant: ButtonVariant.outline,
+                        isFullWidth: isMobile,
+                      ),
+                  ],
+                ),
+              )
+            else if (!_isTableView)
+              // List View (Current)
+              ...filteredProjects.map((project) {
+                final projectId = _getProjectId(project);
+                return Padding(
+                  padding: EdgeInsets.only(bottom: isMobile ? 12 : 16),
+                  child: CustomCard(
+                    padding: EdgeInsets.all(
+                      isMobile ? 16 : (isTablet ? 20 : 24),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Header with title, project ID badge, and View Details button
+                        Row(
                           children: [
                             Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                              child: Text(
+                                project.partName,
+                                style: TextStyle(
+                                  fontSize: isMobile ? 18 : 20,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppTheme.gray900,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            CustomBadge(
+                              text: projectId,
+                              variant: BadgeVariant.outline,
+                            ),
+                            const SizedBox(width: 8),
+                            CustomButton(
+                              text: 'View Details',
+                              onPressed: () => widget.onViewProject(project),
+                              variant: ButtonVariant.outline,
+                              size: ButtonSize.sm,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        // Customer, Location, Team Leader, Team Size in two columns
+                        isMobile
+                            ? Column(
                                 children: [
-                                  const Text(
-                                    'Filter Projects',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
-                                      color: AppTheme.gray900,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  TextField(
-                                    onChanged: (value) =>
-                                        setState(() => _filterText = value),
-                                    decoration: InputDecoration(
-                                      hintText:
-                                          'Search by customer or project name...',
-                                      prefixIcon: const Icon(
-                                        Icons.search,
-                                        color: AppTheme.gray500,
-                                      ),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                        borderSide: BorderSide(
-                                          color: AppTheme.gray300,
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              'Customer',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: AppTheme.gray500,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              project.customerName,
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                color: AppTheme.gray900,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
-                                      filled: true,
-                                      fillColor: AppTheme.gray50,
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              'Location',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: AppTheme.gray500,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              project.location,
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                color: AppTheme.gray900,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              'Team Leader',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: AppTheme.gray500,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              project.teamLeader,
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                color: AppTheme.gray900,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              'Team Size',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: AppTheme.gray500,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              '${project.teamMembers.length} ${project.teamMembers.length == 1 ? 'member' : 'members'}',
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                color: AppTheme.gray900,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              )
+                            : Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          'Customer',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: AppTheme.gray500,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          project.customerName,
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            color: AppTheme.gray900,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          'Location',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: AppTheme.gray500,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          project.location,
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            color: AppTheme.gray900,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          'Team Leader',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: AppTheme.gray500,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          project.teamLeader,
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            color: AppTheme.gray900,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          'Team Size',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: AppTheme.gray500,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          '${project.teamMembers.length} ${project.teamMembers.length == 1 ? 'member' : 'members'}',
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            color: AppTheme.gray900,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],
                               ),
+                        const SizedBox(height: 16),
+                        // Progress section
+                        Row(
+                          children: [
+                            const Text(
+                              'Progress',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: AppTheme.gray600,
+                              ),
                             ),
-                            const SizedBox(width: 16),
-                            Row(
-                              children: [
-                                CustomButton(
-                                  text: 'Table View',
-                                  onPressed: () =>
-                                      setState(() => _isTableView = true),
-                                  variant: _isTableView
-                                      ? ButtonVariant.default_
-                                      : ButtonVariant.outline,
-                                  size: ButtonSize.lg,
-                                  icon: Icon(
-                                    Icons.table_chart,
-                                    size: 16,
-                                    color: _isTableView
-                                        ? AppTheme.primaryForeground
-                                        : AppTheme.foreground,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                CustomButton(
-                                  text: 'List View',
-                                  onPressed: () =>
-                                      setState(() => _isTableView = false),
-                                  variant: !_isTableView
-                                      ? ButtonVariant.default_
-                                      : ButtonVariant.outline,
-                                  size: ButtonSize.lg,
-                                  icon: Icon(
-                                    Icons.view_list,
-                                    size: 16,
-                                    color: !_isTableView
-                                        ? AppTheme.primaryForeground
-                                        : AppTheme.foreground,
-                                  ),
-                                ),
-                              ],
+                            const Spacer(),
+                            Text(
+                              '${project.progress}%',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: _getProgressColor(project.progress),
+                              ),
                             ),
                           ],
                         ),
-                  SizedBox(height: isMobile ? 24 : 32),
-
-                  // Projects List or Table
-                  if (_isLoading)
-                    const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(48.0),
-                        child: CircularProgressIndicator(),
-                      ),
-                    )
-                  else if (_error != null && _projects.isEmpty)
-                    CustomCard(
-                      padding: EdgeInsets.all(isMobile ? 32 : 48),
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            size: isMobile ? 48 : 64,
-                            color: AppTheme.red500,
-                          ),
-                          SizedBox(height: isMobile ? 12 : 16),
-                          Text(
-                            'Error Loading Projects',
-                            style: TextStyle(
-                              fontSize: isMobile ? 18 : 20,
-                              fontWeight: FontWeight.w500,
-                              color: AppTheme.gray900,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            _error!,
-                            style: TextStyle(
-                              fontSize: isMobile ? 13 : 14,
-                              color: AppTheme.gray600,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          SizedBox(height: isMobile ? 20 : 24),
-                          CustomButton(
-                            text: 'Retry',
-                            onPressed: _fetchProjects,
-                            icon: const Icon(
-                              Icons.refresh,
-                              color: Colors.white,
-                              size: 16,
-                            ),
-                            isFullWidth: isMobile,
-                          ),
-                        ],
-                      ),
-                    )
-                  else if (filteredProjects.isEmpty)
-                    CustomCard(
-                      padding: EdgeInsets.all(isMobile ? 32 : 48),
-                      child: Column(
-                        children: [
-                          Icon(
-                            _filterText.isEmpty
-                                ? Icons.inventory_2
-                                : Icons.search_off,
-                            size: isMobile ? 48 : 64,
-                            color: _filterText.isEmpty
-                                ? AppTheme.gray300
-                                : AppTheme.gray500,
-                          ),
-                          SizedBox(height: isMobile ? 12 : 16),
-                          Text(
-                            _filterText.isEmpty
-                                ? 'No Projects Yet'
-                                : 'No Projects Found',
-                            style: TextStyle(
-                              fontSize: isMobile ? 18 : 20,
-                              fontWeight: FontWeight.w500,
-                              color: AppTheme.gray900,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            _filterText.isEmpty
-                                ? 'Get started by creating your first APQP project'
-                                : 'Try adjusting your search terms.',
-                            style: TextStyle(
-                              fontSize: isMobile ? 13 : 14,
-                              color: AppTheme.gray600,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          SizedBox(height: isMobile ? 20 : 24),
-                          if (_filterText.isEmpty)
-                            CustomButton(
-                              text: 'Create Your First Project',
-                              onPressed: widget.onCreateProject,
-                              icon: const Icon(Icons.add, size: 16),
-                              isFullWidth: isMobile,
-                            )
-                          else
-                            CustomButton(
-                              text: 'Clear Filter',
-                              onPressed: () => setState(() => _filterText = ''),
-                              variant: ButtonVariant.outline,
-                              isFullWidth: isMobile,
-                            ),
-                        ],
-                      ),
-                    )
-                  else if (!_isTableView)
-                    // List View (Current)
-                    ...filteredProjects.map((project) {
-                      final projectId = _getProjectId(project);
-                      return Padding(
-                        padding: EdgeInsets.only(bottom: isMobile ? 12 : 16),
-                        child: CustomCard(
-                          padding: EdgeInsets.all(
-                            isMobile ? 16 : (isTablet ? 20 : 24),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Header with title, project ID badge, and View Details button
-                              Row(
+                        const SizedBox(height: 8),
+                        CustomProgress(
+                          value: project.progress.toDouble(),
+                          valueColor: _getProgressColor(project.progress),
+                        ),
+                        const SizedBox(height: 16),
+                        // Phase tags
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            if (project.phases.isNotEmpty)
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
                                 children: [
-                                  Expanded(
-                                    child: Text(
-                                      project.partName,
-                                      style: TextStyle(
-                                        fontSize: isMobile ? 18 : 20,
-                                        fontWeight: FontWeight.w500,
-                                        color: AppTheme.gray900,
-                                      ),
+                                  ...project.phases.take(3).map((phase) {
+                                    // Extract phase number or name
+                                    final phaseName = phase.name.contains(':')
+                                        ? phase.name.split(':')[0].trim()
+                                        : phase.name.split('–')[0].trim();
+                                    return CustomBadge(
+                                      text: phaseName,
+                                      variant: BadgeVariant.secondary,
+                                    );
+                                  }),
+                                  if (project.phases.length > 3)
+                                    CustomBadge(
+                                      text:
+                                          '+${project.phases.length - 3} more',
+                                      variant: BadgeVariant.secondary,
                                     ),
-                                  ),
-                                  const SizedBox(width: 8),
+                                ],
+                              ),
+                            CustomBadge(
+                              text: project.projectStatus.toUpperCase(),
+                              variant: BadgeVariant.secondary,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList()
+            else
+              // Table View
+              CustomCard(
+                padding: EdgeInsets.all(isMobile ? 16 : (isTablet ? 20 : 24)),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minWidth: constraints.maxWidth,
+                        ),
+                        child: DataTable(
+                          columnSpacing: isMobile ? 16 : 24,
+                          headingRowColor: MaterialStateProperty.all(
+                            AppTheme.gray100,
+                          ),
+                          dataRowColor: MaterialStateProperty.all(
+                            AppTheme.card,
+                          ),
+                          columns: const [
+                            DataColumn(
+                              label: Text(
+                                'Plan Number',
+                                style: TextStyle(fontWeight: FontWeight.w500),
+                              ),
+                            ),
+                            DataColumn(
+                              label: Text(
+                                'Product Name',
+                                style: TextStyle(fontWeight: FontWeight.w500),
+                              ),
+                            ),
+                            DataColumn(
+                              label: Text(
+                                'Customer Name',
+                                style: TextStyle(fontWeight: FontWeight.w500),
+                              ),
+                            ),
+                            DataColumn(
+                              label: Text(
+                                'Status',
+                                style: TextStyle(fontWeight: FontWeight.w500),
+                              ),
+                            ),
+                            DataColumn(
+                              label: Text(
+                                'Actions',
+                                style: TextStyle(fontWeight: FontWeight.w500),
+                              ),
+                            ),
+                          ],
+                          rows: filteredProjects.map((project) {
+                            final projectId = _getProjectId(project);
+                            final statusText = _getStatusText(project);
+                            return DataRow(
+                              cells: [
+                                DataCell(Text(projectId)),
+                                DataCell(Text(project.partName)),
+                                DataCell(Text(project.customerName)),
+                                DataCell(
                                   CustomBadge(
-                                    text: projectId,
-                                    variant: BadgeVariant.outline,
+                                    text: statusText,
+                                    variant: BadgeVariant.secondary,
                                   ),
-                                  const SizedBox(width: 8),
+                                ),
+                                DataCell(
                                   CustomButton(
                                     text: 'View Details',
                                     onPressed: () =>
@@ -1043,382 +1331,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     variant: ButtonVariant.outline,
                                     size: ButtonSize.sm,
                                   ),
-                                ],
-                              ),
-                              const SizedBox(height: 16),
-                              // Customer, Location, Team Leader, Team Size in two columns
-                              isMobile
-                                  ? Column(
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  const Text(
-                                                    'Customer',
-                                                    style: TextStyle(
-                                                      fontSize: 12,
-                                                      color: AppTheme.gray500,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(height: 4),
-                                                  Text(
-                                                    project.customerName,
-                                                    style: const TextStyle(
-                                                      fontSize: 14,
-                                                      color: AppTheme.gray900,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  const Text(
-                                                    'Location',
-                                                    style: TextStyle(
-                                                      fontSize: 12,
-                                                      color: AppTheme.gray500,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(height: 4),
-                                                  Text(
-                                                    project.location,
-                                                    style: const TextStyle(
-                                                      fontSize: 14,
-                                                      color: AppTheme.gray900,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 12),
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  const Text(
-                                                    'Team Leader',
-                                                    style: TextStyle(
-                                                      fontSize: 12,
-                                                      color: AppTheme.gray500,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(height: 4),
-                                                  Text(
-                                                    project.teamLeader,
-                                                    style: const TextStyle(
-                                                      fontSize: 14,
-                                                      color: AppTheme.gray900,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  const Text(
-                                                    'Team Size',
-                                                    style: TextStyle(
-                                                      fontSize: 12,
-                                                      color: AppTheme.gray500,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(height: 4),
-                                                  Text(
-                                                    '${project.teamMembers.length} ${project.teamMembers.length == 1 ? 'member' : 'members'}',
-                                                    style: const TextStyle(
-                                                      fontSize: 14,
-                                                      color: AppTheme.gray900,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    )
-                                  : Row(
-                                      children: [
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              const Text(
-                                                'Customer',
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: AppTheme.gray500,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                project.customerName,
-                                                style: const TextStyle(
-                                                  fontSize: 14,
-                                                  color: AppTheme.gray900,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              const Text(
-                                                'Location',
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: AppTheme.gray500,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                project.location,
-                                                style: const TextStyle(
-                                                  fontSize: 14,
-                                                  color: AppTheme.gray900,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              const Text(
-                                                'Team Leader',
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: AppTheme.gray500,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                project.teamLeader,
-                                                style: const TextStyle(
-                                                  fontSize: 14,
-                                                  color: AppTheme.gray900,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              const Text(
-                                                'Team Size',
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: AppTheme.gray500,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                '${project.teamMembers.length} ${project.teamMembers.length == 1 ? 'member' : 'members'}',
-                                                style: const TextStyle(
-                                                  fontSize: 14,
-                                                  color: AppTheme.gray900,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                              const SizedBox(height: 16),
-                              // Progress section
-                              Row(
-                                children: [
-                                  const Text(
-                                    'Progress',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: AppTheme.gray600,
-                                    ),
-                                  ),
-                                  const Spacer(),
-                                  Text(
-                                    '${project.progress}%',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                      color: _getProgressColor(
-                                        project.progress,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              CustomProgress(
-                                value: project.progress.toDouble(),
-                                valueColor: _getProgressColor(project.progress),
-                              ),
-                              const SizedBox(height: 16),
-                              // Phase tags
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  if (project.phases.isNotEmpty)
-                                    Wrap(
-                                      spacing: 8,
-                                      runSpacing: 8,
-                                      children: [
-                                        ...project.phases.take(3).map((phase) {
-                                          // Extract phase number or name
-                                          final phaseName =
-                                              phase.name.contains(':')
-                                              ? phase.name.split(':')[0].trim()
-                                              : phase.name.split('–')[0].trim();
-                                          return CustomBadge(
-                                            text: phaseName,
-                                            variant: BadgeVariant.secondary,
-                                          );
-                                        }),
-                                        if (project.phases.length > 3)
-                                          CustomBadge(
-                                            text:
-                                                '+${project.phases.length - 3} more',
-                                            variant: BadgeVariant.secondary,
-                                          ),
-                                      ],
-                                    ),
-                                  CustomBadge(
-                                    text: project.projectStatus.toUpperCase(),
-                                    variant: BadgeVariant.secondary,
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                                ),
+                              ],
+                            );
+                          }).toList(),
                         ),
-                      );
-                    }).toList()
-                  else
-                    // Table View
-                    CustomCard(
-                      padding: EdgeInsets.all(
-                        isMobile ? 16 : (isTablet ? 20 : 24),
                       ),
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          return SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: ConstrainedBox(
-                              constraints: BoxConstraints(
-                                minWidth: constraints.maxWidth,
-                              ),
-                              child: DataTable(
-                                columnSpacing: isMobile ? 16 : 24,
-                                headingRowColor: MaterialStateProperty.all(
-                                  AppTheme.gray100,
-                                ),
-                                dataRowColor: MaterialStateProperty.all(
-                                  AppTheme.card,
-                                ),
-                                columns: const [
-                                  DataColumn(
-                                    label: Text(
-                                      'Plan Number',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                                  DataColumn(
-                                    label: Text(
-                                      'Product Name',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                                  DataColumn(
-                                    label: Text(
-                                      'Customer Name',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                                  DataColumn(
-                                    label: Text(
-                                      'Status',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                                  DataColumn(
-                                    label: Text(
-                                      'Actions',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                                rows: filteredProjects.map((project) {
-                                  final projectId = _getProjectId(project);
-                                  final statusText = _getStatusText(project);
-                                  return DataRow(
-                                    cells: [
-                                      DataCell(Text(projectId)),
-                                      DataCell(Text(project.partName)),
-                                      DataCell(Text(project.customerName)),
-                                      DataCell(
-                                        CustomBadge(
-                                          text: statusText,
-                                          variant: BadgeVariant.secondary,
-                                        ),
-                                      ),
-                                      DataCell(
-                                        CustomButton(
-                                          text: 'View Details',
-                                          onPressed: () =>
-                                              widget.onViewProject(project),
-                                          variant: ButtonVariant.outline,
-                                          size: ButtonSize.sm,
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                }).toList(),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                ],
+                    );
+                  },
+                ),
               ),
-            ),
-          ),
+          ],
         ),
       ),
     );
@@ -1430,3 +1353,6 @@ extension ListExtension<T> on List<T> {
     if (condition) add(item);
   }
 }
+
+
+  

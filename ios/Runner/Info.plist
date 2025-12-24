@@ -45,5 +45,17 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	
+	<!-- Permissions for file downloads and access -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs access to photo library to save downloaded files.</string>
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>This app needs access to documents folder to save downloaded files.</string>
+	<key>NSDownloadsFolderUsageDescription</key>
+	<string>This app needs access to downloads folder to save downloaded files.</string>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
+	<key>UIFileSharingEnabled</key>
+	<true/>
 </dict>
 </plist>

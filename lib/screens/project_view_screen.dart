@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../models/models.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_card.dart';
@@ -8,8 +7,11 @@ import '../widgets/gantt_chart.dart';
 import '../theme/app_theme.dart';
 import 'package:intl/intl.dart';
 import '../utils/pdf_export.dart';
+import '../services/api_service.dart';
+import 'end_phase_forms_screen.dart';
+import 'dart:developer' as developer;
 
-class ProjectViewScreen extends StatelessWidget {
+class ProjectViewScreen extends StatefulWidget {
   final Project project;
   final VoidCallback onBack;
   final VoidCallback onEdit;
@@ -29,6 +31,83 @@ class ProjectViewScreen extends StatelessWidget {
     this.userRole,
     this.onRefresh,
   });
+
+  @override
+  State<ProjectViewScreen> createState() => _ProjectViewScreenState();
+}
+
+class _ProjectViewScreenState extends State<ProjectViewScreen> {
+  int _endPhaseFormsCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchEndPhaseFormsCount();
+  }
+
+  Future<void> _fetchEndPhaseFormsCount() async {
+    try {
+      final apiService = ApiService();
+      final response = await apiService.getEndPhaseForms();
+      final allForms = response['endPhaseForms'] as List<dynamic>;
+      
+      // Filter forms for this project
+      final projectForms = allForms.where((form) {
+        final project = form['apqpProject'];
+        return project != null && project['_id'] == widget.project.id;
+      }).toList();
+
+      setState(() {
+        _endPhaseFormsCount = projectForms.length;
+      });
+    } catch (e) {
+      developer.log('Error fetching end phase forms count: $e');
+    }
+  }
+
+  void _navigateToEndPhaseForms() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
+    if (isMobile) {
+      // Navigate to new page for mobile
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => EndPhaseFormsScreen(
+            projectId: widget.project.id,
+            projectName: widget.project.partName,
+            project: widget.project,
+            userRole: widget.userRole,
+          ),
+        ),
+      ).then((_) {
+        // Refresh count when returning
+        _fetchEndPhaseFormsCount();
+      });
+    } else {
+      // Show dialog for web/desktop/tablet
+      showDialog(
+        context: context,
+        builder: (context) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 900, maxHeight: 600),
+            child: EndPhaseFormsScreen(
+              projectId: widget.project.id,
+              projectName: widget.project.partName,
+              project: widget.project,
+              userRole: widget.userRole,
+              isDialog: true,
+            ),
+          ),
+        ),
+      ).then((_) {
+        // Refresh count when dialog closes
+        _fetchEndPhaseFormsCount();
+      });
+    }
+  }
 
   void _showExportDialog(BuildContext context) {
     showDialog(
@@ -51,26 +130,6 @@ class ProjectViewScreen extends StatelessWidget {
                 _exportToPDF(context);
               },
             ),
-            // const SizedBox(height: 12),
-            // _ExportOption(
-            //   icon: Icons.table_chart,
-            //   title: 'Export as Excel',
-            //   description: 'Export project data to Excel spreadsheet',
-            //   onTap: () {
-            //     Navigator.pop(context);
-            //     _exportToExcel(context);
-            //   },
-            // ),
-            // const SizedBox(height: 12),
-            // _ExportOption(
-            //   icon: Icons.description,
-            //   title: 'Export as CSV',
-            //   description: 'Export project data as CSV file',
-            //   onTap: () {
-            //     Navigator.pop(context);
-            //     _exportToCSV(context);
-            //   },
-            // ),
           ],
         ),
         actions: [
@@ -85,45 +144,11 @@ class ProjectViewScreen extends StatelessWidget {
 
   void _exportToPDF(BuildContext context) async {
     try {
-      // Show loading indicator
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(child: CircularProgressIndicator()),
-      );
-
       // Generate and export PDF
-      await PdfExportService.exportProjectToPdf(project);
-
-      // Close loading indicator
-      if (context.mounted) {
-        Navigator.pop(context);
-
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Row(
-              children: [
-                Icon(Icons.check_circle, color: Colors.white),
-                SizedBox(width: 8),
-                Text('PDF exported successfully!'),
-              ],
-            ),
-            backgroundColor: AppTheme.green500,
-            action: SnackBarAction(
-              label: 'OK',
-              textColor: Colors.white,
-              onPressed: () {},
-            ),
-          ),
-        );
-      }
+      await PdfExportService.exportProjectToPdf(widget.project);
     } catch (e) {
-      // Close loading indicator if still open
+      // Show error message
       if (context.mounted) {
-        Navigator.pop(context);
-
-        // Show error message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(
@@ -160,7 +185,7 @@ class ProjectViewScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Project: ${project.partName}',
+              'Project: ${widget.project.partName}',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
@@ -187,8 +212,8 @@ class ProjectViewScreen extends StatelessWidget {
             text: 'Delete',
             onPressed: () {
               Navigator.pop(context);
-              if (onDelete != null) {
-                onDelete!();
+              if (widget.onDelete != null) {
+                widget.onDelete!();
               }
             },
             variant: ButtonVariant.destructive,
@@ -199,13 +224,74 @@ class ProjectViewScreen extends StatelessWidget {
     );
   }
 
+  Future<void> _sendTaskReminders(BuildContext context) async {
+    final apiService = ApiService();
+    
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+
+    try {
+      // Send reminder for the entire project using project ID
+      final response = await apiService.sendTaskReminder(
+        projectId: widget.project.id,
+      );
+
+      if (context.mounted) {
+        Navigator.pop(context); // Close loading
+
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    response['message'] ?? 'Reminder sent successfully',
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: AppTheme.green500,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      developer.log('Error sending task reminders: $e');
+      if (context.mounted) {
+        Navigator.pop(context); // Close loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(child: Text('Error: $e')),
+              ],
+            ),
+            backgroundColor: AppTheme.red500,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final totalActivities = project.phases.fold<int>(
+    final totalActivities = widget.project.phases.fold<int>(
       0,
       (sum, phase) => sum + phase.activities.length,
     );
-    final completedActivities = project.phases.fold<int>(
+    final completedActivities = widget.project.phases.fold<int>(
       0,
       (sum, phase) =>
           sum +
@@ -213,7 +299,7 @@ class ProjectViewScreen extends StatelessWidget {
               .where((a) => a.status == ActivityStatus.completed)
               .length,
     );
-    final inProgressActivities = project.phases.fold<int>(
+    final inProgressActivities = widget.project.phases.fold<int>(
       0,
       (sum, phase) =>
           sum +
@@ -230,11 +316,11 @@ class ProjectViewScreen extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, size: 20),
-          onPressed: onBack,
+          onPressed: widget.onBack,
           color: AppTheme.gray900,
         ),
         title: Text(
-          project.partName,
+          widget.project.partName,
           style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w500,
@@ -243,16 +329,16 @@ class ProjectViewScreen extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
         ),
         actions: [
-          if (userRole != 'manager') ...[
+          if (widget.userRole != 'manager') ...[
             IconButton(
               icon: const Icon(Icons.edit, size: 20),
-              onPressed: onEdit,
+              onPressed: widget.onEdit,
               color: AppTheme.gray900,
               tooltip: 'Edit',
             ),
             IconButton(
               icon: const Icon(Icons.delete_outline, size: 20),
-              onPressed: onDelete != null
+              onPressed: widget.onDelete != null
                   ? () => _showDeleteConfirmation(context)
                   : null,
               color: AppTheme.red500,
@@ -298,14 +384,14 @@ class ProjectViewScreen extends StatelessWidget {
                           //   variant: BadgeVariant.outline,
                           // ),
                           const SizedBox(width: 8),
-                          CustomBadge(text: '${project.progress}% Complete'),
+                          CustomBadge(text: '${widget.project.progress}% Complete'),
                         ],
                       ),
                       const SizedBox(height: 24),
                       LayoutBuilder(
                         builder: (context, constraints) {
                           final isMobile = constraints.maxWidth < 600;
-                          
+
                           if (isMobile) {
                             return Column(
                               children: [
@@ -316,7 +402,7 @@ class ProjectViewScreen extends StatelessWidget {
                                       child: _InfoItem(
                                         icon: Icons.person,
                                         label: 'Customer',
-                                        value: project.customerName,
+                                        value: widget.project.customerName,
                                       ),
                                     ),
                                     const SizedBox(width: 16),
@@ -324,7 +410,7 @@ class ProjectViewScreen extends StatelessWidget {
                                       child: _InfoItem(
                                         icon: Icons.location_on,
                                         label: 'Customer Zone',
-                                        value: project.location,
+                                        value: widget.project.location,
                                       ),
                                     ),
                                   ],
@@ -337,7 +423,7 @@ class ProjectViewScreen extends StatelessWidget {
                                       child: _InfoItem(
                                         icon: Icons.people,
                                         label: 'Team Leader',
-                                        value: project.teamLeader,
+                                        value: widget.project.teamLeader,
                                       ),
                                     ),
                                     const SizedBox(width: 16),
@@ -346,7 +432,11 @@ class ProjectViewScreen extends StatelessWidget {
                                         icon: Icons.calendar_today,
                                         label: 'Date of Issue',
                                         value: DateFormat('MMM dd, yyyy')
-                                            .format(DateTime.parse(project.dateOfIssue)),
+                                            .format(
+                                              DateTime.parse(
+                                                widget.project.dateOfIssue,
+                                              ),
+                                            ),
                                       ),
                                     ),
                                   ],
@@ -359,9 +449,9 @@ class ProjectViewScreen extends StatelessWidget {
                                       child: _InfoItem(
                                         icon: Icons.description,
                                         label: 'Plan Number',
-                                        value: project.planNumber.isEmpty
+                                        value: widget.project.planNumber.isEmpty
                                             ? 'N/A'
-                                            : project.planNumber,
+                                            : widget.project.planNumber,
                                       ),
                                     ),
                                     const SizedBox(width: 16),
@@ -369,9 +459,9 @@ class ProjectViewScreen extends StatelessWidget {
                                       child: _InfoItem(
                                         icon: Icons.edit_note,
                                         label: 'Revision',
-                                        value: project.revisionNumber.isEmpty
+                                        value: widget.project.revisionNumber.isEmpty
                                             ? 'N/A'
-                                            : '${project.revisionNumber} (${DateFormat('MMM dd, yyyy').format(DateTime.parse(project.revisionDate))})',
+                                            : '${widget.project.revisionNumber} (${DateFormat('MMM dd, yyyy').format(DateTime.parse(widget.project.revisionDate))})',
                                       ),
                                     ),
                                   ],
@@ -384,7 +474,7 @@ class ProjectViewScreen extends StatelessWidget {
                                       child: _InfoItem(
                                         icon: Icons.access_time,
                                         label: 'Duration',
-                                        value: '${project.totalWeeks} weeks',
+                                        value: '${widget.project.totalWeeks} weeks',
                                       ),
                                     ),
                                     const SizedBox(width: 16),
@@ -392,7 +482,8 @@ class ProjectViewScreen extends StatelessWidget {
                                       child: _InfoItem(
                                         icon: Icons.layers,
                                         label: 'Total Phases',
-                                        value: '${project.phases.length} phases',
+                                        value:
+                                            '${widget.project.phases.length} phases',
                                       ),
                                     ),
                                   ],
@@ -400,7 +491,7 @@ class ProjectViewScreen extends StatelessWidget {
                               ],
                             );
                           }
-                          
+
                           return Column(
                             children: [
                               Row(
@@ -409,29 +500,30 @@ class ProjectViewScreen extends StatelessWidget {
                                     child: _InfoItem(
                                       icon: Icons.person,
                                       label: 'Customer',
-                                      value: project.customerName,
+                                      value: widget.project.customerName,
                                     ),
                                   ),
                                   Expanded(
                                     child: _InfoItem(
                                       icon: Icons.location_on,
                                       label: 'Customer Zone',
-                                      value: project.location,
+                                      value: widget.project.location,
                                     ),
                                   ),
                                   Expanded(
                                     child: _InfoItem(
                                       icon: Icons.people,
                                       label: 'Team Leader',
-                                      value: project.teamLeader,
+                                      value: widget.project.teamLeader,
                                     ),
                                   ),
                                   Expanded(
                                     child: _InfoItem(
                                       icon: Icons.calendar_today,
                                       label: 'Date of Issue',
-                                      value: DateFormat('MMM dd, yyyy')
-                                          .format(DateTime.parse(project.dateOfIssue)),
+                                      value: DateFormat('MMM dd, yyyy').format(
+                                        DateTime.parse(widget.project.dateOfIssue),
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -443,32 +535,32 @@ class ProjectViewScreen extends StatelessWidget {
                                     child: _InfoItem(
                                       icon: Icons.description,
                                       label: 'Plan Number',
-                                      value: project.planNumber.isEmpty
+                                      value: widget.project.planNumber.isEmpty
                                           ? 'N/A'
-                                          : project.planNumber,
+                                          : widget.project.planNumber,
                                     ),
                                   ),
                                   Expanded(
                                     child: _InfoItem(
                                       icon: Icons.edit_note,
                                       label: 'Revision',
-                                      value: project.revisionNumber.isEmpty
+                                      value: widget.project.revisionNumber.isEmpty
                                           ? 'N/A'
-                                          : '${project.revisionNumber} (${DateFormat('MMM dd, yyyy').format(DateTime.parse(project.revisionDate))})',
+                                          : '${widget.project.revisionNumber} (${DateFormat('MMM dd, yyyy').format(DateTime.parse(widget.project.revisionDate))})',
                                     ),
                                   ),
                                   Expanded(
                                     child: _InfoItem(
                                       icon: Icons.access_time,
                                       label: 'Duration',
-                                      value: '${project.totalWeeks} weeks',
+                                      value: '${widget.project.totalWeeks} weeks',
                                     ),
                                   ),
                                   Expanded(
                                     child: _InfoItem(
                                       icon: Icons.layers,
                                       label: 'Total Phases',
-                                      value: '${project.phases.length} phases',
+                                      value: '${widget.project.phases.length} phases',
                                     ),
                                   ),
                                 ],
@@ -477,7 +569,7 @@ class ProjectViewScreen extends StatelessWidget {
                           );
                         },
                       ),
-                      if (project.teamMembers.isNotEmpty) ...[
+                      if (widget.project.teamMembers.isNotEmpty) ...[
                         const SizedBox(height: 24),
                         const Text(
                           'Team Members',
@@ -490,7 +582,7 @@ class ProjectViewScreen extends StatelessWidget {
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
-                          children: project.teamMembers.map((member) {
+                          children: widget.project.teamMembers.map((member) {
                             return CustomBadge(
                               text: member,
                               variant: BadgeVariant.secondary,
@@ -503,20 +595,17 @@ class ProjectViewScreen extends StatelessWidget {
                       const SizedBox(height: 16),
                       const Text(
                         'Authorized by',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppTheme.gray600,
-                        ),
+                        style: TextStyle(fontSize: 14, color: AppTheme.gray600),
                       ),
                       const SizedBox(height: 16),
-                   Text(
-                          project.teamLeader,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: AppTheme.gray900,
-                          ),
+                      Text(
+                        widget.project.teamLeader,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: AppTheme.gray900,
                         ),
+                      ),
                     ],
                   ),
                 ),
@@ -528,26 +617,99 @@ class ProjectViewScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'APQP Gantt Chart',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w500,
-                          color: AppTheme.gray900,
-                        ),
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isMobile = constraints.maxWidth < 600;
+                          
+                          if (isMobile) {
+                            // Mobile layout: Stack header and button vertically
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'APQP Gantt Chart',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w500,
+                                    color: AppTheme.gray900,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                const Text(
+                                  'Project timeline and activity tracking',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: AppTheme.gray600,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: CustomButton(
+                                    text: 'Task Reminder',
+                                    onPressed: () => _sendTaskReminders(context),
+                                    variant: ButtonVariant.default_,
+                                    size: ButtonSize.default_,
+                                    icon: const Icon(
+                                      Icons.notifications,
+                                      size: 16,
+                                      color: AppTheme.background,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 24),
+                              ],
+                            );
+                          } else {
+                            // Desktop/Tablet layout: Keep original row layout
+                            return Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'APQP Gantt Chart',
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w500,
+                                        color: AppTheme.gray900,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    const Text(
+                                      'Project timeline and activity tracking',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: AppTheme.gray600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 24),
+                                  ],
+                                ),
+                                CustomButton(
+                                  text: 'Task Reminder',
+                                  onPressed: () => _sendTaskReminders(context),
+                                  variant: ButtonVariant.default_,
+                                  size: ButtonSize.lg,
+                                  icon: const Icon(
+                                    Icons.notifications,
+                                    size: 16,
+                                    color: AppTheme.background,
+                                  ),
+                                ),
+                              ],
+                            );
+                          }
+                        },
                       ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Project timeline and activity tracking',
-                        style: TextStyle(fontSize: 14, color: AppTheme.gray600),
-                      ),
-                      const SizedBox(height: 24),
+
                       GanttChartWidget(
-                        project: project,
-                        onUpdateActivityStatus: onUpdateActivityStatus,
-                        canAssignStaff: userRole == 'manager',
-                        onRefresh: onRefresh,
-                        onNavigateBack: onBack,
+                        project: widget.project,
+                        onUpdateActivityStatus: widget.onUpdateActivityStatus,
+                        canAssignStaff: widget.userRole == 'manager',
+                        onRefresh: widget.onRefresh,
+                        onNavigateBack: widget.onBack,
                       ),
                       const SizedBox(height: 24),
                       const Divider(),
@@ -560,7 +722,7 @@ class ProjectViewScreen extends StatelessWidget {
                       LayoutBuilder(
                         builder: (context, constraints) {
                           final isMobile = constraints.maxWidth < 600;
-                          
+
                           if (isMobile) {
                             return Column(
                               children: [
@@ -597,7 +759,7 @@ class ProjectViewScreen extends StatelessWidget {
                               ],
                             );
                           }
-                          
+
                           return Row(
                             children: [
                               _LegendItem(
@@ -627,7 +789,7 @@ class ProjectViewScreen extends StatelessWidget {
                 LayoutBuilder(
                   builder: (context, constraints) {
                     final isMobile = constraints.maxWidth < 600;
-                    
+
                     if (isMobile) {
                       return Column(
                         children: [
@@ -701,10 +863,39 @@ class ProjectViewScreen extends StatelessWidget {
                               ],
                             ),
                           ),
+                          const SizedBox(height: 12),
+                          InkWell(
+                            onTap: _navigateToEndPhaseForms,
+                            child: CustomCard(
+                              padding: const EdgeInsets.all(20),
+                              child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'End Phase  Form',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: AppTheme.gray600,
+                                  ),
+                                ),
+                               Text(
+                                        '$_endPhaseFormsCount',
+                                        style: const TextStyle(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.w500,
+                                          color: AppTheme.blue600,
+                                        ),
+                                      ),
+                              ],
+                            )
+                              
+                             
+                            ),
+                          ),
                         ],
                       );
                     }
-                    
+
                     return Row(
                       children: [
                         Expanded(
@@ -786,8 +977,39 @@ class ProjectViewScreen extends StatelessWidget {
                             ),
                           ),
                         ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: InkWell(
+                            onTap: _navigateToEndPhaseForms,
+                            child: CustomCard(
+                              padding: const EdgeInsets.all(24),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'End Phase Forms',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: AppTheme.gray600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                   Text(
+                                        '$_endPhaseFormsCount',
+                                        style: const TextStyle(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.w500,
+                                          color: AppTheme.blue600,
+                                        ),
+                                      ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     );
+                 
                   },
                 ),
               ],

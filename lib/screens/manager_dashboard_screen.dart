@@ -1,3 +1,4 @@
+import 'package:convert2dart/screens/inquiry_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'dart:developer' as developer;
@@ -6,22 +7,31 @@ import '../widgets/custom_button.dart';
 import '../widgets/custom_card.dart';
 import '../widgets/custom_badge.dart';
 import '../widgets/custom_progress.dart';
+import '../widgets/dashboard_layout.dart';
 import '../theme/app_theme.dart';
 import '../bloc/manager/manager_bloc.dart';
-import '../bloc/entity/entity_bloc.dart';
 import '../utils/shared_preferences_manager.dart';
-import 'inquiry_screen.dart';
-import 'search_dialog.dart';
-import 'entity_detail_dialog.dart';
+import '../widgets/profile_dialog.dart';
+import '../widgets/individual_task_management_dialog.dart';
+import '../screens/individual_task_grid_screen.dart';
+import '../screens/department_task_grid_screen.dart';
+import '../widgets/department_task_management_dialog.dart';
+import '../widgets/apqp_task_management_dialog.dart';
+import '../screens/apqp_task_grid_screen.dart';
+import 'all_audits_screen.dart';
+import '../widgets/all_audits_dialog.dart';
+
 
 class ManagerDashboardScreen extends StatefulWidget {
   final Function(Project project) onViewProject;
   final VoidCallback? onLogout;
+  final VoidCallback onInquiry;
   final String? userName;
 
   const ManagerDashboardScreen({
     super.key,
     required this.onViewProject,
+    required this.onInquiry,
     this.onLogout,
     this.userName,
   });
@@ -34,7 +44,8 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
   bool _isTableView = true;
   String _filterText = '';
   String? _staffId;
-  String? _statusFilter; // null = all, 'ongoing' = active, 'completed' = completed
+  String?
+  _statusFilter; // null = all, 'ongoing' = active, 'completed' = completed
 
   @override
   void initState() {
@@ -61,14 +72,16 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
 
   List<Project> _filterProjects(List<Project> projects) {
     var filtered = projects;
-    
+
     // Apply status filter
     if (_statusFilter == 'ongoing') {
-      filtered = filtered.where((p) => p.progress > 0 && p.progress < 100).toList();
+      filtered = filtered
+          .where((p) => p.progress > 0 && p.progress < 100)
+          .toList();
     } else if (_statusFilter == 'completed') {
       filtered = filtered.where((p) => p.progress == 100).toList();
     }
-    
+
     // Apply text filter
     if (_filterText.isNotEmpty) {
       filtered = filtered
@@ -83,26 +96,8 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
           )
           .toList();
     }
-    
+
     return filtered;
-  }
-
-  void _handleSearch(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => SearchDialog(
-
-        onEntitySelected: (entityType) {
-          showDialog(
-            context: context,
-            builder: (detailContext) => BlocProvider.value(
-              value: context.read<EntityBloc>(),
-              child: EntityDetailDialog(entityType: entityType),
-            ),
-          );
-        },
-      ),
-    );
   }
 
   Color _getProgressColor(int progress) {
@@ -133,216 +128,162 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
     final isTablet = screenWidth >= 600 && screenWidth < 1024;
-    final isDesktop = screenWidth >= 1024;
 
-    return Scaffold(
-      backgroundColor: AppTheme.gray50,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(isMobile ? 16 : 24),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxWidth: isDesktop ? 1280 : (isTablet ? 900 : double.infinity),
-              ),
-              child: BlocBuilder<ManagerBloc, ManagerState>(
-                builder: (context, state) {
-                  final projects = state is ManagerLoaded
-                      ? state.projects
-                      : <Project>[];
-                  final filteredProjects = _filterProjects(projects);
-                  final isLoading = state is ManagerLoading;
-                  final error = state is ManagerError ? state.message : null;
-
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      // Header
-                      _buildHeader(isMobile, isTablet),
-                      SizedBox(height: isMobile ? 24 : 32),
-
-                      // Stats Overview
-                      _buildStatsOverview(projects, isMobile, isTablet),
-                      SizedBox(height: isMobile ? 24 : 32),
-
-                      // Filter and View Toggle
-                      _buildFilterSection(isMobile),
-                      SizedBox(height: isMobile ? 24 : 32),
-
-                      // Projects List or Table
-                      if (isLoading)
-                        const Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(48.0),
-                            child: CircularProgressIndicator(),
-                          ),
-                        )
-                      else if (error != null && projects.isEmpty)
-                        _buildErrorCard(error, isMobile)
-                      else if (filteredProjects.isEmpty)
-                        _buildEmptyCard(isMobile)
-                      else if (!_isTableView)
-                        ..._buildListView(filteredProjects, isMobile, isTablet)
-                      else
-                        _buildTableView(filteredProjects, isMobile, isTablet),
-                    ],
-                  );
-                },
-              ),
-            ),
+    return DashboardLayout(
+      title: 'Manager Dashboard',
+      subtitle: 'Manager',
+      userName: widget.userName ?? 'Manager',
+      navigationItems: [
+        NavigationItem(icon: Icons.dashboard, label: 'Dashboard', onTap: () {}),
+      
+        NavigationItem(
+          icon: Icons.task_alt,
+          label: 'APQP Task',
+          onTap: () {
+            final screenWidth = MediaQuery.of(context).size.width;
+            if (screenWidth < 600) {
+              // Mobile: Open full screen
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const ApqpTaskGridScreen(),
+                ),
+              );
+            } else {
+              // Web/Tablet: Open dialog
+              showDialog(
+                context: context,
+                builder: (_) => const ApqpTaskManagementDialog(),
+              );
+            }
+          },
+        ),
+        NavigationItem(
+          icon: Icons.person_outline,
+          label: 'Individual Tasks',
+          onTap: () {
+            final screenWidth = MediaQuery.of(context).size.width;
+            if (screenWidth < 600) {
+              // Mobile: Open full screen
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const IndividualTaskGridScreen(),
+                ),
+              );
+            } else {
+              // Web/Tablet: Open dialog
+              showDialog(
+                context: context,
+                builder: (_) => const IndividualTaskManagementDialog(),
+              );
+            }
+          },
+        ),
+        NavigationItem(
+          icon: Icons.business,
+          label: 'Department Tasks',
+          onTap: () {
+            final screenWidth = MediaQuery.of(context).size.width;
+            if (screenWidth < 600) {
+              // Mobile: Open full screen
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const DepartmentTaskGridScreen(),
+                ),
+              );
+            } else {
+              // Web/Tablet: Open dialog
+              showDialog(
+                context: context,
+                builder: (_) => const DepartmentTaskManagementDialog(),
+              );
+            }
+          },
+        ),
+         NavigationItem(
+          icon: Icons.check_circle_outline,
+          label: 'Audit Tasks',
+          onTap: () => _handleAudit(context),
+        ),
+        NavigationItem(
+          icon: Icons.help_outline,
+          label: 'Task Help',
+          onTap: () {},
+        ),
+        NavigationItem(
+          icon: Icons.notifications_outlined,
+          label: 'Notifications',
+          onTap: widget.onInquiry,
+        ),
+        NavigationItem(
+          icon: Icons.account_circle_outlined,
+          label: 'Profile',
+          onTap: () {
+            showDialog(
+              context: context,
+              builder: (_) => ProfileDialog(onLogout: widget.onLogout),
+            );
+          },
+        ),
+      ],
+      onLogout: widget.onLogout,
+      onNotification: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) =>
+                InquiryScreen(onCancel: () => Navigator.of(context).pop()),
           ),
+        );
+      },
+      child: SingleChildScrollView(
+        padding: EdgeInsets.all(isMobile ? 16 : 24),
+        child: BlocBuilder<ManagerBloc, ManagerState>(
+          builder: (context, state) {
+            final projects = state is ManagerLoaded
+                ? state.projects
+                : <Project>[];
+            final filteredProjects = _filterProjects(projects);
+            final isLoading = state is ManagerLoading;
+            final error = state is ManagerError ? state.message : null;
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                // _buildHeader(isMobile, isTablet),
+                SizedBox(height: isMobile ? 24 : 32),
+
+                // Stats Overview
+                _buildStatsOverview(projects, isMobile, isTablet),
+                SizedBox(height: isMobile ? 24 : 32),
+
+                // Filter and View Toggle
+                _buildFilterSection(isMobile),
+                SizedBox(height: isMobile ? 24 : 32),
+
+                // Projects List or Table
+                if (isLoading)
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(48.0),
+                      child: CircularProgressIndicator(),
+                    ),
+                  )
+                else if (error != null && projects.isEmpty)
+                  _buildErrorCard(error, isMobile)
+                else if (filteredProjects.isEmpty)
+                  _buildEmptyCard(isMobile)
+                else if (!_isTableView)
+                  ..._buildListView(filteredProjects, isMobile, isTablet)
+                else
+                  _buildTableView(filteredProjects, isMobile, isTablet),
+              ],
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget _buildHeader(bool isMobile, bool isTablet) {
-    return isMobile
-        ? Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Manager Dashboard',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w500,
-                      color: AppTheme.gray900,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'View and manage your team projects',
-                    style: TextStyle(fontSize: 14, color: AppTheme.gray600),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  SizedBox(
-                    child: CustomButton(
-                      text: '',
-                      onPressed: () => _handleSearch(context),
-                      variant: ButtonVariant.outline,
-                      size: ButtonSize.lg,
-                      icon: const Icon(Icons.search, size: 20),
-                    ),
-                  ),
-                  SizedBox(
-                    child: CustomButton(
-                      text: '',
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const InquiryScreen(),
-                          ),
-                        );
-                      },
-                      variant: ButtonVariant.outline,
-                      size: ButtonSize.lg,
-                      icon: const Icon(Icons.notifications, size: 20),
-                    ),
-                  ),
-                  SizedBox(
-                    child: CustomButton(
-                      text: '',
-                      onPressed: widget.onLogout,
-                      variant: ButtonVariant.outline,
-                      size: ButtonSize.lg,
-                      icon: const Icon(Icons.logout, size: 20),
-                    ),
-                  ),
-                ],
-              ),
-              // Row(
-              //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              //   children: [
-              //     SizedBox(
-              //       child: CustomButton(
-              //         text: '',
-              //         onPressed: _refreshProjects,
-              //         variant: ButtonVariant.outline,
-              //         size: ButtonSize.lg,
-              //         icon: const Icon(Icons.refresh, size: 20),
-              //       ),
-              //     ),
-              //     if (widget.onLogout != null)
-              //       SizedBox(
-              //         child: CustomButton(
-              //           text: '',
-              //           onPressed: widget.onLogout,
-              //           variant: ButtonVariant.outline,
-              //           size: ButtonSize.lg,
-              //           icon: const Icon(Icons.logout, size: 20),
-              //         ),
-              //       ),
-              //   ],
-              // ),
-            ],
-          )
-        : Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Manager Dashboard',
-                      style: TextStyle(
-                        fontSize: isTablet ? 26 : 28,
-                        fontWeight: FontWeight.w500,
-                        color: AppTheme.gray900,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'View and manage your team projects',
-                      style: TextStyle(fontSize: 14, color: AppTheme.gray600),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 16),
-              // CustomButton(
-              //   text: 'Search',
-              //   onPressed: () => _handleSearch(context),
-              //   variant: ButtonVariant.outline,
-              //   size: ButtonSize.lg,
-              //   icon: const Icon(Icons.search, size: 20),
-              // ),
-              const SizedBox(width: 8),
-              CustomButton(
-                text: '',
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const InquiryScreen(),
-                    ),
-                  );
-                },
-                variant: ButtonVariant.outline,
-                size: ButtonSize.lg,
-                icon: const Icon(Icons.notifications, size: 20),
-              ),
-              if (widget.onLogout != null) ...[
-                const SizedBox(width: 8),
-                CustomButton(
-                  text: 'Logout',
-                  onPressed: widget.onLogout,
-                  variant: ButtonVariant.outline,
-                  size: ButtonSize.lg,
-                  icon: const Icon(Icons.logout, size: 20),
-                ),
-              ],
-            ],
-          );
-  }
 
   Widget _buildStatsOverview(
     List<Project> projects,
@@ -439,15 +380,6 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
       child: CustomCard(
         padding: padding,
         child: Container(
-          // decoration: isSelected
-          //     ? BoxDecoration(
-          //         border: Border.all(
-          //           color: iconColor,
-          //           width: 2,
-          //         ),
-          //         borderRadius: BorderRadius.circular(8),
-          //       )
-          //     : null,
           padding: isSelected ? const EdgeInsets.all(2) : null,
           child: Row(
             children: [
@@ -465,7 +397,10 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
                 children: [
                   Text(
                     label,
-                    style: const TextStyle(fontSize: 14, color: AppTheme.gray600),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: AppTheme.gray600,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -972,4 +907,23 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
       context.read<ManagerBloc>().add(LoadManagerProjects(_staffId!));
     }
   }
+
+  void _handleAudit(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
+    if (isMobile) {
+      // Mobile: Navigate to full screen
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const AllAuditsScreen()),
+      );
+    } else {
+      // Web/Desktop: Show dialog
+      showDialog(
+        context: context,
+        builder: (_) => const AllAuditsDialog(),
+      );
+    }
+  }
+
 }

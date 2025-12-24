@@ -1,182 +1,139 @@
-Opening edit dialog for staff: 692e6ba925235e79611d9cb2
-js_primitives.dart:28 *** Request ***
-js_primitives.dart:28 uri: http://192.168.29.110:5000/texspin/api/designation
-js_primitives.dart:28 method: GET
-js_primitives.dart:28 responseType: ResponseType.json
-js_primitives.dart:28 followRedirects: true
-js_primitives.dart:28 persistentConnection: true
-js_primitives.dart:28 connectTimeout: 0:00:30.000000
-js_primitives.dart:28 sendTimeout: null
-js_primitives.dart:28 receiveTimeout: 0:00:30.000000
-js_primitives.dart:28 receiveDataWhenStatusError: true
-js_primitives.dart:28 extra: {}
-js_primitives.dart:28 headers:
-js_primitives.dart:28  Content-Type: application/json
-js_primitives.dart:28  Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5MTQ1N2NlYzVhZTYwNmIyOTAxMTIzYiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc2NDY1Njk1OSwiZXhwIjoxNzY0NzQzMzU5fQ.A3fN_G6poxf1oBCcSaJqOhsQl2aGKYeJizOGNohlKto
-js_primitives.dart:28 data:
-js_primitives.dart:28 null
-js_primitives.dart:28 
-js_primitives.dart:28 *** Request ***
-js_primitives.dart:28 uri: http://192.168.29.110:5000/texspin/api/zone
-js_primitives.dart:28 method: GET
-js_primitives.dart:28 responseType: ResponseType.json
-js_primitives.dart:28 followRedirects: true
-js_primitives.dart:28 persistentConnection: true
-js_primitives.dart:28 connectTimeout: 0:00:30.000000
-js_primitives.dart:28 sendTimeout: null
-js_primitives.dart:28 receiveTimeout: 0:00:30.000000
-js_primitives.dart:28 receiveDataWhenStatusError: true
-js_primitives.dart:28 extra: {}
-js_primitives.dart:28 headers:
-js_primitives.dart:28  Content-Type: application/json
-js_primitives.dart:28  Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5MTQ1N2NlYzVhZTYwNmIyOTAxMTIzYiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc2NDY1Njk1OSwiZXhwIjoxNzY0NzQzMzU5fQ.A3fN_G6poxf1oBCcSaJqOhsQl2aGKYeJizOGNohlKto
-js_primitives.dart:28 data:
-js_primitives.dart:28 null
-js_primitives.dart:28 
-js_primitives.dart:28 *** Request ***
-js_primitives.dart:28 uri: http://192.168.29.110:5000/texspin/api/department
-js_primitives.dart:28 method: GET
-js_primitives.dart:28 responseType: ResponseType.json
-js_primitives.dart:28 followRedirects: true
-js_primitives.dart:28 persistentConnection: true
-js_primitives.dart:28 connectTimeout: 0:00:30.000000
-js_primitives.dart:28 sendTimeout: null
-js_primitives.dart:28 receiveTimeout: 0:00:30.000000
-js_primitives.dart:28 receiveDataWhenStatusError: true
-js_primitives.dart:28 extra: {}
-js_primitives.dart:28 headers:
-js_primitives.dart:28  Content-Type: application/json
-js_primitives.dart:28  Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5MTQ1N2NlYzVhZTYwNmIyOTAxMTIzYiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc2NDY1Njk1OSwiZXhwIjoxNzY0NzQzMzU5fQ.A3fN_G6poxf1oBCcSaJqOhsQl2aGKYeJizOGNohlKto
-js_primitives.dart:28 data:
-js_primitives.dart:28 null
-js_primitives.dart:28 
-js_primitives.dart:28 *** Request ***
-js_primitives.dart:28 uri: http://192.168.29.110:5000/texspin/api/designation
-js_primitives.dart:28 method: GET
-js_primitives.dart:28 responseType: ResponseType.json
-js_primitives.dart:28 followRedirects: true
-js_primitives.dart:28 persistentConnection: true
-js_primitives.dart:28 connectTimeout: 0:00:30.000000
-js_primitives.dart:28 sendTimeout: null
-js_primitives.dart:28 receiveTimeout: 0:00:30.000000
-js_primitives.dart:28 receiveDataWhenStatusError: true
-js_primitives.dart:28 extra: {}
-js_primitives.dart:28 headers:
-js_primitives.dart:28  Content-Type: application/json
-js_primitives.dart:28  Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5MTQ1N2NlYzVhZTYwNmIyOTAxMTIzYiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc2NDY1Njk1OSwiZXhwIjoxNzY0NzQzMzU5fQ.A3fN_G6poxf1oBCcSaJqOhsQl2aGKYeJizOGNohlKto
-js_primitives.dart:28 data:
-js_primitives.dart:28 null
-js_primitives.dart:28 
-js_primitives.dart:28 *** Request ***
-js_primitives.dart:28 uri: http://192.168.29.110:5000/texspin/api/zone
-js_primitives.dart:28 method: GET
-js_primitives.dart:28 responseType: ResponseType.json
-js_primitives.dart:28 followRedirects: true
-js_primitives.dart:28 persistentConnection: true
-js_primitives.dart:28 connectTimeout: 0:00:30.000000
-js_primitives.dart:28 sendTimeout: null
-js_primitives.dart:28 receiveTimeout: 0:00:30.000000
-js_primitives.dart:28 receiveDataWhenStatusError: true
-js_primitives.dart:28 extra: {}
-js_primitives.dart:28 headers:
-js_primitives.dart:28  Content-Type: application/json
-js_primitives.dart:28  Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5MTQ1N2NlYzVhZTYwNmIyOTAxMTIzYiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc2NDY1Njk1OSwiZXhwIjoxNzY0NzQzMzU5fQ.A3fN_G6poxf1oBCcSaJqOhsQl2aGKYeJizOGNohlKto
-js_primitives.dart:28 data:
-js_primitives.dart:28 null
-js_primitives.dart:28 
-js_primitives.dart:28 *** Request ***
-js_primitives.dart:28 uri: http://192.168.29.110:5000/texspin/api/department
-js_primitives.dart:28 method: GET
-js_primitives.dart:28 responseType: ResponseType.json
-js_primitives.dart:28 followRedirects: true
-js_primitives.dart:28 persistentConnection: true
-js_primitives.dart:28 connectTimeout: 0:00:30.000000
-js_primitives.dart:28 sendTimeout: null
-js_primitives.dart:28 receiveTimeout: 0:00:30.000000
-js_primitives.dart:28 receiveDataWhenStatusError: true
-js_primitives.dart:28 extra: {}
-js_primitives.dart:28 headers:
-js_primitives.dart:28  Content-Type: application/json
-js_primitives.dart:28  Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5MTQ1N2NlYzVhZTYwNmIyOTAxMTIzYiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc2NDY1Njk1OSwiZXhwIjoxNzY0NzQzMzU5fQ.A3fN_G6poxf1oBCcSaJqOhsQl2aGKYeJizOGNohlKto
-js_primitives.dart:28 data:
-js_primitives.dart:28 null
-js_primitives.dart:28 
-js_primitives.dart:28 *** Request ***
-js_primitives.dart:28 uri: http://192.168.29.110:5000/texspin/api/workcategory
-js_primitives.dart:28 method: GET
-js_primitives.dart:28 responseType: ResponseType.json
-js_primitives.dart:28 followRedirects: true
-js_primitives.dart:28 persistentConnection: true
-js_primitives.dart:28 connectTimeout: 0:00:30.000000
-js_primitives.dart:28 sendTimeout: null
-js_primitives.dart:28 receiveTimeout: 0:00:30.000000
-js_primitives.dart:28 receiveDataWhenStatusError: true
-js_primitives.dart:28 extra: {}
-js_primitives.dart:28 headers:
-js_primitives.dart:28  Content-Type: application/json
-js_primitives.dart:28  Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5MTQ1N2NlYzVhZTYwNmIyOTAxMTIzYiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc2NDY1Njk1OSwiZXhwIjoxNzY0NzQzMzU5fQ.A3fN_G6poxf1oBCcSaJqOhsQl2aGKYeJizOGNohlKto
-js_primitives.dart:28 data:
-js_primitives.dart:28 null
-js_primitives.dart:28 
-js_primitives.dart:28 *** Response ***
-js_primitives.dart:28 uri: http://192.168.29.110:5000/texspin/api/designation
-js_primitives.dart:28 statusCode: 200
-js_primitives.dart:28 headers:
-js_primitives.dart:28  content-length: 516
-js_primitives.dart:28  content-type: application/json; charset=utf-8
-js_primitives.dart:28 Response Text:
-js_primitives.dart:28 {"message":"Designations fetched successfully","total":3,"designations":[{"id":"69145984c5ae606b2901124c","name":"Vice HOD","status":"active","createdAt":"2025-11-12T09:55:16.436Z","updatedAt":"2025-11-12T09:55:16.436Z"},{"id":"6914597cc5ae606b29011249","name":"HOD","status":"active","createdAt":"2025-11-12T09:55:08.712Z","updatedAt":"2025-11-12T09:55:08.712Z"},{"id":"69145952c5ae606b29011246","name":"Team Leader","status":"active","createdAt":"2025-11-12T09:54:26.879Z","updatedAt":"2025-11-20T04:40:23.468Z"}]}
-js_primitives.dart:28 
-js_primitives.dart:28 *** Response ***
-js_primitives.dart:28 uri: http://192.168.29.110:5000/texspin/api/zone
-js_primitives.dart:28 statusCode: 200
-js_primitives.dart:28 headers:
-js_primitives.dart:28  content-length: 360
-js_primitives.dart:28  content-type: application/json; charset=utf-8
-js_primitives.dart:28 Response Text:
-js_primitives.dart:28 {"message":"Zones fetched successfully","total":2,"zones":[{"id":"691459cec5ae606b29011254","name":"South zone","status":"active","createdAt":"2025-11-12T09:56:30.844Z","updatedAt":"2025-11-12T09:56:30.844Z"},{"id":"691459c6c5ae606b29011251","name":"North zone","status":"active","createdAt":"2025-11-12T09:56:22.646Z","updatedAt":"2025-11-12T09:56:22.646Z"}]}
-js_primitives.dart:28 
-js_primitives.dart:28 *** Response ***
-js_primitives.dart:28 uri: http://192.168.29.110:5000/texspin/api/designation
-js_primitives.dart:28 statusCode: 200
-js_primitives.dart:28 headers:
-js_primitives.dart:28  content-length: 516
-js_primitives.dart:28  content-type: application/json; charset=utf-8
-js_primitives.dart:28 Response Text:
-js_primitives.dart:28 {"message":"Designations fetched successfully","total":3,"designations":[{"id":"69145984c5ae606b2901124c","name":"Vice HOD","status":"active","createdAt":"2025-11-12T09:55:16.436Z","updatedAt":"2025-11-12T09:55:16.436Z"},{"id":"6914597cc5ae606b29011249","name":"HOD","status":"active","createdAt":"2025-11-12T09:55:08.712Z","updatedAt":"2025-11-12T09:55:08.712Z"},{"id":"69145952c5ae606b29011246","name":"Team Leader","status":"active","createdAt":"2025-11-12T09:54:26.879Z","updatedAt":"2025-11-20T04:40:23.468Z"}]}
-js_primitives.dart:28 
-js_primitives.dart:28 *** Response ***
-js_primitives.dart:28 uri: http://192.168.29.110:5000/texspin/api/department
-js_primitives.dart:28 statusCode: 200
-js_primitives.dart:28 headers:
-js_primitives.dart:28  content-length: 370
-js_primitives.dart:28  content-type: application/json; charset=utf-8
-js_primitives.dart:28 Response Text:
-js_primitives.dart:28 {"message":"Departments fetched successfully","total":2,"departments":[{"id":"69145a26c5ae606b2901125f","name":"Designing","status":"active","createdAt":"2025-11-12T09:57:58.569Z","updatedAt":"2025-11-12T09:57:58.569Z"},{"id":"69145a0dc5ae606b2901125c","name":"Marketing","status":"active","createdAt":"2025-11-12T09:57:33.730Z","updatedAt":"2025-11-12T09:57:33.730Z"}]}
-js_primitives.dart:28 
-js_primitives.dart:28 *** Response ***
-js_primitives.dart:28 uri: http://192.168.29.110:5000/texspin/api/zone
-js_primitives.dart:28 statusCode: 200
-js_primitives.dart:28 headers:
-js_primitives.dart:28  content-length: 360
-js_primitives.dart:28  content-type: application/json; charset=utf-8
-js_primitives.dart:28 Response Text:
-js_primitives.dart:28 {"message":"Zones fetched successfully","total":2,"zones":[{"id":"691459cec5ae606b29011254","name":"South zone","status":"active","createdAt":"2025-11-12T09:56:30.844Z","updatedAt":"2025-11-12T09:56:30.844Z"},{"id":"691459c6c5ae606b29011251","name":"North zone","status":"active","createdAt":"2025-11-12T09:56:22.646Z","updatedAt":"2025-11-12T09:56:22.646Z"}]}
-js_primitives.dart:28 
-js_primitives.dart:28 *** Response ***
-js_primitives.dart:28 uri: http://192.168.29.110:5000/texspin/api/department
-js_primitives.dart:28 statusCode: 200
-js_primitives.dart:28 headers:
-js_primitives.dart:28  content-length: 370
-js_primitives.dart:28  content-type: application/json; charset=utf-8
-js_primitives.dart:28 Response Text:
-js_primitives.dart:28 {"message":"Departments fetched successfully","total":2,"departments":[{"id":"69145a26c5ae606b2901125f","name":"Designing","status":"active","createdAt":"2025-11-12T09:57:58.569Z","updatedAt":"2025-11-12T09:57:58.569Z"},{"id":"69145a0dc5ae606b2901125c","name":"Marketing","status":"active","createdAt":"2025-11-12T09:57:33.730Z","updatedAt":"2025-11-12T09:57:33.730Z"}]}
-js_primitives.dart:28 
-js_primitives.dart:28 *** Response ***
-js_primitives.dart:28 uri: http://192.168.29.110:5000/texspin/api/workcategory
-js_primitives.dart:28 statusCode: 200
-js_primitives.dart:28 headers:
-js_primitives.dart:28  content-length: 378
-js_primitives.dart:28  content-type: application/json; charset=utf-8
-js_primitives.dart:28 Response Text:
-js_primitives.dart:28 {"message":"Work categories fetched successfully","total":2,"workCategories":[{"id":"6926ee592df8e423b8dd8fd3","name":"jumperr","status":"active","createdAt":"2025-11-26T12:11:05.708Z","updatedAt":"2025-11-27T04:49:55.982Z"},{"id":"6926ee492df8e423b8dd8fcf","name":"ball bearing","status":"active","createdAt":"2025-11-26T12:10:49.979Z","updatedAt":"2025-11-26T12:10:49.979Z"}]}
+post	/texspin/api/audit-template	"{
+  ""name"": ""Fire Safety Audit"",
+  ""auditSegment"": ""69438d878019a2b7b10488b2"", id or text
+  ""auditType"": ""69438a398019a2b7b10488a0"", id or text
+  ""auditQuestions"": [
+    ""6943ddce45026f66ab389053"",
+    ""6943a3fbde5aa272e5265115""
+  ]
+}
+
+
+Authorization: Bearer <token> manger or admin"	"{
+    ""message"": ""Audit Template created successfully"",
+    ""auditTemplate"": {
+        ""_id"": ""6943ddea45026f66ab38905a"",
+        ""name"": ""Fire Safety Audit"",
+        ""auditSegment"": {
+            ""_id"": ""69438d878019a2b7b10488b2"",
+            ""name"": ""Supplier""
+        },
+        ""auditType"": {
+            ""_id"": ""69438a398019a2b7b10488a0"",
+            ""name"": ""System""
+        },
+        ""auditQuestions"": [
+            {
+                ""_id"": ""6943ddce45026f66ab389053"",
+                ""question"": ""Is fire extinguisher available?"",
+                ""answer"": ""Yes""
+            },
+            {
+                ""_id"": ""6943a3fbde5aa272e5265115"",
+                ""question"": ""Is fire extinguisher available and functional?"",
+                ""answer"": ""Yes, available near main entrance""
+            }
+        ],
+        ""status"": ""active"",
+        ""createdBy"": ""691dac1022af03f34d15d47d"",
+        ""createdAt"": ""2025-12-18T10:56:42.152Z"",
+        ""updatedAt"": ""2025-12-18T10:56:42.152Z"",
+        ""__v"": 0
+    }
+}"
+put	/texspin/api/audit-template/:id	"{
+    ""name"":""asdfgh""
+}
+
+Authorization: Bearer <token> manger or admin"	"{
+    ""message"": ""Audit Template updated successfully"",
+    ""auditTemplate"": {
+        ""_id"": ""6943ddea45026f66ab38905a"",
+        ""name"": ""asdfgh"",
+        ""auditSegment"": {
+            ""_id"": ""69438d878019a2b7b10488b2"",
+            ""name"": ""Supplier""
+        },
+        ""auditType"": {
+            ""_id"": ""69438a398019a2b7b10488a0"",
+            ""name"": ""System""
+        },
+        ""auditQuestions"": [
+            {
+                ""_id"": ""6943ddce45026f66ab389053"",
+                ""question"": ""Is fire extinguisher available?"",
+                ""answer"": ""Yes""
+            },
+            {
+                ""_id"": ""6943a3fbde5aa272e5265115"",
+                ""question"": ""Is fire extinguisher available and functional?"",
+                ""answer"": ""Yes, available near main entrance""
+            }
+        ],
+        ""status"": ""active"",
+        ""createdBy"": ""691dac1022af03f34d15d47d"",
+        ""createdAt"": ""2025-12-18T10:56:42.152Z"",
+        ""updatedAt"": ""2025-12-18T10:58:29.489Z"",
+        ""__v"": 0
+    }
+}"
+patch	/texspin/api/audit-template/:id/status	"{
+    ""status"":""inactive""
+}
+
+Authorization: Bearer <token> manger or admin"	"{
+    ""message"": ""Audit Template status updated successfully"",
+    ""auditTemplate"": {
+        ""id"": ""6943ddea45026f66ab38905a"",
+        ""name"": ""asdfgh"",
+        ""status"": ""inactive""
+    }
+}"
+delete	/texspin/api/audit-template/:id	Authorization: Bearer <token> manger or admin	"{
+    ""message"": ""Audit Template deleted successfully"",
+    ""deletedAuditTemplate"": {
+        ""id"": ""6943dbda5b262e708b5c0375"",
+        ""name"": ""Fire Safety Audit""
+    }
+}"
+
+http://192.168.29.110:5000/texspin/api/audit-template
+{
+    "message": "Audit Templates fetched successfully",
+    "total": 1,
+    "auditTemplates": [
+        {
+            "id": "6943ddea45026f66ab38905a",
+            "name": "asdfgh",
+            "auditSegment": {
+                "_id": "69438d878019a2b7b10488b2",
+                "name": "Supplier"
+            },
+            "auditType": {
+                "_id": "69438a398019a2b7b10488a0",
+                "name": "System"
+            },
+            "auditQuestions": [
+                {
+                    "_id": "6943ddce45026f66ab389053",
+                    "question": "Is fire extinguisher available?",
+                    "answer": "Yes"
+                },
+                {
+                    "_id": "6943a3fbde5aa272e5265115",
+                    "question": "Is fire extinguisher available and functional?",
+                    "answer": "Yes, available near main entrance"
+                }
+            ],
+            "status": "inactive",
+            "createdAt": "2025-12-18T10:56:42.152Z",
+            "updatedAt": "2025-12-18T10:59:23.061Z",
+            "createdBy": null
+        }
+    ]
+}
+
+
+intigrate this api inside audit management --> create audit template ---> then this apis 
+we need to open dialog thair display all template list and with floting btn and like same we have done for 
+others adn floting btn or edit btn click open another dialog intigrate thsi dialogs
