@@ -4,6 +4,7 @@ import '../widgets/custom_card.dart';
 import '../widgets/create_audit_main_dialog.dart';
 import '../widgets/assign_question_dialog.dart';
 import '../widgets/review_question_dialog.dart';
+import '../widgets/audit_transaction_dialog.dart';
 import '../services/api_service.dart';
 import 'dart:developer' as developer;
 
@@ -729,12 +730,33 @@ class _AuditDetailsDialog extends StatelessWidget {
               ],
             ),
           ),
+          // Audit Transaction Button
+          Tooltip(
+            message: 'Audit Transaction',
+            child: IconButton(
+              icon: const Icon(Icons.receipt_long),
+              onPressed: () => _showAuditTransactionDialog(context),
+              color: AppTheme.green600,
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.close),
             onPressed: () => Navigator.pop(context),
             color: AppTheme.gray600,
           ),
         ],
+      ),
+    );
+  }
+
+  void _showAuditTransactionDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AuditTransactionDialog(
+        audit: audit,
+        onTransactionUpdated: () {
+          // Refresh audit details if needed
+        },
       ),
     );
   }

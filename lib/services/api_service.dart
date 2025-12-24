@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import '../utils/shared_preferences_manager.dart';
 import '../screens/app.dart';
+import 'dart:developer' as developer;
 
 class ApiService {
   static const String baseUrl =
@@ -2471,6 +2472,120 @@ class ApiService {
       final response = await _dio.delete(
         '/texspin/api/audit-main/$auditId',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // Update Audit Main (for audit transaction)
+  Future<Map<String, dynamic>> updateAuditMain({
+    required String auditId,
+    Map<String, dynamic>? data,
+    List<String>? methodologyFiles,
+    List<String>? observationFiles,
+    List<String>? actionPlanFiles,
+    List<String>? actionEvidenceFiles,
+    List<String>? otherFiles,
+    int? auditScore,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      
+      // Prepare the FormData payload
+      Map<String, dynamic> formFields = {};
+      
+      if (auditScore != null) {
+        formFields['auditScore'] = auditScore.toString();
+      }
+      
+      if (methodologyFiles != null && methodologyFiles.isNotEmpty) {
+        formFields['auditMethodology'] = methodologyFiles.first; // API seems to expect single file
+      }
+      
+      if (observationFiles != null && observationFiles.isNotEmpty) {
+        formFields['auditObservation'] = observationFiles.first;
+      }
+      
+      if (actionPlanFiles != null && actionPlanFiles.isNotEmpty) {
+        formFields['actionPlan'] = actionPlanFiles.first;
+      }
+      
+      if (actionEvidenceFiles != null && actionEvidenceFiles.isNotEmpty) {
+        formFields['actionEvidence'] = actionEvidenceFiles.first;
+      }
+      
+      if (otherFiles != null && otherFiles.isNotEmpty) {
+        // For multiple files, send as array or comma-separated string
+        formFields['otherDocs'] = otherFiles.join(',');
+      }
+      
+      // Add any additional data
+      if (data != null) {
+        formFields.addAll(data.map((key, value) => MapEntry(key, value.toString())));
+      }
+      
+      // Create FormData
+      FormData formData = FormData.fromMap(formFields);
+      
+      // Debug: Log the data being sent
+      developer.log('Sending audit update FormData: $formFields', name: 'ApiService');
+      
+      final response = await _dio.put(
+        '/texspin/api/audit-main/$auditId',
+        data: formData,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'multipart/form-data',
+          },
+        ),
+      );
+      
+      developer.log('Audit update API response: ${response.data}', name: 'ApiService');
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // Upload file (generic file upload method)
+  Future<Map<String, dynamic>> uploadFile({
+    String? filePath,
+    List<int>? fileBytes,
+    required String fileName,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      
+      MultipartFile multipartFile;
+      
+      if (fileBytes != null) {
+        // For web platform, use bytes
+        multipartFile = MultipartFile.fromBytes(fileBytes, filename: fileName);
+      } else if (filePath != null) {
+        // For mobile/desktop platforms, use file path
+        multipartFile = await MultipartFile.fromFile(filePath, filename: fileName);
+      } else {
+        throw Exception('Either filePath or fileBytes must be provided');
+      }
+      
+      FormData formData = FormData.fromMap({
+        'file': multipartFile,
+      });
+      
+      final response = await _dio.post(
+        '/texspin/api/audit-main/upload', // Try audit-specific upload endpoint
+        data: formData,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'multipart/form-data',
+          },
+        ),
       );
       return response.data;
     } on DioException catch (e) {
