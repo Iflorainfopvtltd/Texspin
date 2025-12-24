@@ -16,13 +16,52 @@ class AllAuditsDialog extends StatefulWidget {
 
 class _AllAuditsDialogState extends State<AllAuditsDialog> {
   final ApiService _apiService = ApiService();
+  final TextEditingController _searchController = TextEditingController();
   List<Map<String, dynamic>> _audits = [];
+  List<Map<String, dynamic>> _filteredAudits = [];
   bool _isLoading = false;
+  String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
     _fetchAudits();
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _searchController.removeListener(_onSearchChanged);
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    setState(() {
+      _searchQuery = _searchController.text;
+      _filterAudits();
+    });
+  }
+
+  void _filterAudits() {
+    if (_searchQuery.isEmpty) {
+      _filteredAudits = List.from(_audits);
+    } else {
+      _filteredAudits = _audits.where((audit) {
+        final auditNumber = (audit['auditNumber'] ?? '').toString().toLowerCase();
+        final company = (audit['companyName'] ?? '').toString().toLowerCase();
+        final location = (audit['location'] ?? '').toString().toLowerCase();
+        final template = (audit['auditTemplate']?['name'] ?? '').toString().toLowerCase();
+        final status = (audit['auditStatus'] ?? '').toString().toLowerCase();
+        final query = _searchQuery.toLowerCase();
+
+        return auditNumber.contains(query) ||
+               company.contains(query) ||
+               location.contains(query) ||
+               template.contains(query) ||
+               status.contains(query);
+      }).toList();
+    }
   }
 
   Future<void> _fetchAudits() async {
@@ -32,6 +71,7 @@ class _AllAuditsDialogState extends State<AllAuditsDialog> {
       if (response['audits'] != null) {
         setState(() {
           _audits = List<Map<String, dynamic>>.from(response['audits']);
+          _filterAudits();
         });
       }
     } catch (e) {
@@ -71,6 +111,7 @@ class _AllAuditsDialogState extends State<AllAuditsDialog> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 _buildHeader(context, isMobile),
+                _buildSearchBar(isMobile),
                 Expanded(child: _buildContent(isMobile)),
               ],
             ),
@@ -110,7 +151,7 @@ class _AllAuditsDialogState extends State<AllAuditsDialog> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'All Audits (${_audits.length})',
+              'All Audits (${_filteredAudits.length}${_searchQuery.isNotEmpty ? ' of ${_audits.length}' : ''})',
               style: TextStyle(
                 fontSize: isMobile ? 18 : 20,
                 fontWeight: FontWeight.w500,
@@ -131,16 +172,105 @@ class _AllAuditsDialogState extends State<AllAuditsDialog> {
     );
   }
 
+  Widget _buildSearchBar(bool isMobile) {
+    return Container(
+      padding: EdgeInsets.all(isMobile ? 16 : 20),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: AppTheme.border)),
+      ),
+      child: TextField(
+        controller: _searchController,
+        decoration: InputDecoration(
+          hintText: 'Search audits by number, company, location, template, or status...',
+          filled: true,
+          fillColor: AppTheme.inputBackground,
+          border: const OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(8)),
+            borderSide: BorderSide(color: AppTheme.border),
+          ),
+          enabledBorder: const OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(8)),
+            borderSide: BorderSide(color: AppTheme.border),
+          ),
+          focusedBorder: const OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(8)),
+            borderSide: BorderSide(color: AppTheme.ring, width: 2),
+          ),
+          prefixIcon: const Icon(Icons.search, color: AppTheme.gray600),
+          suffixIcon: _searchQuery.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear, color: AppTheme.gray600),
+                  onPressed: () {
+                    _searchController.clear();
+                  },
+                )
+              : null,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
+      ),
+    );
+  }
+
   Widget _buildContent(bool isMobile) {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (_audits.isEmpty) {
+    if (_filteredAudits.isEmpty && _searchQuery.isNotEmpty) {
+      return _buildNoSearchResults();
+    }
+
+    if (_filteredAudits.isEmpty) {
       return _buildEmptyState();
     }
 
     return isMobile ? _buildMobileView() : _buildDesktopView();
+  }
+
+  Widget _buildNoSearchResults() {
+    return Padding(
+      padding: const EdgeInsets.all(40),
+      child: Center(
+        child: CustomCard(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.search_off,
+                size: 64,
+                color: AppTheme.gray500,
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'No Results Found',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w500,
+                  color: AppTheme.gray900,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'No audits match your search for "${_searchQuery}"',
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppTheme.gray600,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () {
+                  _searchController.clear();
+                },
+                child: const Text('Clear Search'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildEmptyState() {
@@ -199,7 +329,7 @@ class _AllAuditsDialogState extends State<AllAuditsDialog> {
             DataColumn(label: Text('Questions', style: TextStyle(fontWeight: FontWeight.w600))),
             DataColumn(label: Text('Actions', style: TextStyle(fontWeight: FontWeight.w600))),
           ],
-          rows: _audits.map((audit) => _buildDataRow(audit)).toList(),
+          rows: _filteredAudits.map((audit) => _buildDataRow(audit)).toList(),
         ),
       ),
     );
@@ -308,9 +438,9 @@ class _AllAuditsDialogState extends State<AllAuditsDialog> {
   Widget _buildMobileView() {
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: _audits.length,
+      itemCount: _filteredAudits.length,
       itemBuilder: (context, index) {
-        final audit = _audits[index];
+        final audit = _filteredAudits[index];
         return _buildMobileAuditCard(audit);
       },
     );
