@@ -5,6 +5,7 @@ import '../theme/app_theme.dart';
 import '../widgets/staff_task_card.dart';
 import '../widgets/custom_text_input.dart';
 import '../widgets/staff_task_details_dialog.dart';
+import '../widgets/staff_task_submission_dialog.dart';
 
 class StaffDepartmentTasksScreen extends StatefulWidget {
   const StaffDepartmentTasksScreen({super.key});
@@ -152,6 +153,15 @@ class _StaffDepartmentTasksScreenState
                         context: context,
                         builder: (context) =>
                             StaffTaskDetailsDialog(task: task),
+                      );
+                    },
+                    onSubmit: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => StaffTaskSubmissionDialog(
+                          task: task,
+                          onSubmitted: _loadTasks,
+                        ),
                       );
                     },
                   );

@@ -3,6 +3,7 @@ import '../models/models.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
 import 'staff_task_details_dialog.dart';
+import 'staff_task_submission_dialog.dart';
 import 'custom_text_input.dart';
 
 class StaffDepartmentTasksDialog extends StatefulWidget {
@@ -168,6 +169,8 @@ class _StaffDepartmentTasksDialogState
                           rows: _tasks.map((task) {
                             final isPending =
                                 task.status.toLowerCase() == 'pending';
+                            final isAccepted =
+                                task.status.toLowerCase() == 'accepted';
                             return DataRow(
                               cells: [
                                 DataCell(Text(task.name)),
@@ -199,6 +202,24 @@ class _StaffDepartmentTasksDialogState
                                           );
                                         },
                                       ),
+                                      if (isAccepted)
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.upload,
+                                            color: AppTheme.blue600,
+                                          ),
+                                          tooltip: 'Submit Task',
+                                          onPressed: () {
+                                            showDialog(
+                                              context: context,
+                                              builder: (context) =>
+                                                  StaffTaskSubmissionDialog(
+                                                    task: task,
+                                                    onSubmitted: _loadTasks,
+                                                  ),
+                                            );
+                                          },
+                                        ),
                                       if (isPending) ...[
                                         IconButton(
                                           icon: const Icon(
