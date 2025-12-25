@@ -1881,7 +1881,6 @@ class ApiService {
     required String? filePath,
     required List<int>? fileBytes,
     required String fileName,
-    String? notes,
     String? bearerToken,
   }) async {
     try {
@@ -1902,16 +1901,8 @@ class ApiService {
         throw Exception('Either filePath or fileBytes must be provided');
       }
 
-      Map<String, dynamic> dataMap = {
-        'file': multipartFile,
-        'status': 'submitted',
-      };
-
-      if (notes != null && notes.isNotEmpty) {
-        dataMap['submissionNotes'] = notes;
-      }
-
-      FormData formData = FormData.fromMap(dataMap);
+      // Only sending file as per user request
+      FormData formData = FormData.fromMap({'file': multipartFile});
 
       final response = await _dio.put(
         '/texspin/api/department-task/$taskId/submit',

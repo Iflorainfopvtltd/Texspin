@@ -22,6 +22,7 @@ class StaffTaskCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool isPending = task.status.toLowerCase() == 'pending';
     final bool isAccepted = task.status.toLowerCase() == 'accepted';
+    final bool isRevision = task.status.toLowerCase() == 'revision';
 
     return Card(
       elevation: 2,
@@ -78,7 +79,7 @@ class StaffTaskCard extends StatelessWidget {
                   onPressed: onViewDetails,
                   child: const Text('View Details'),
                 ),
-                if (isAccepted && onSubmit != null) ...[
+                if ((isAccepted || isRevision) && onSubmit != null) ...[
                   const SizedBox(width: 8),
                   ElevatedButton.icon(
                     onPressed: onSubmit,
@@ -90,7 +91,7 @@ class StaffTaskCard extends StatelessWidget {
                       ),
                     ),
                     icon: const Icon(Icons.upload, size: 16),
-                    label: const Text('Submit'),
+                    label: Text(isRevision ? 'Submit Revision' : 'Submit'),
                   ),
                 ],
                 if (isPending) ...[

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:file_picker/file_picker.dart';
 import '../models/models.dart';
 import '../services/api_service.dart';
@@ -21,7 +22,6 @@ class StaffTaskSubmissionDialog extends StatefulWidget {
 
 class _StaffTaskSubmissionDialogState extends State<StaffTaskSubmissionDialog> {
   final ApiService _apiService = ApiService();
-  final TextEditingController _notesController = TextEditingController();
 
   PlatformFile? _selectedFile;
   bool _isSubmitting = false;
@@ -29,7 +29,6 @@ class _StaffTaskSubmissionDialogState extends State<StaffTaskSubmissionDialog> {
 
   @override
   void dispose() {
-    _notesController.dispose();
     super.dispose();
   }
 
@@ -37,7 +36,7 @@ class _StaffTaskSubmissionDialogState extends State<StaffTaskSubmissionDialog> {
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['xlsx', 'xls', 'pdf', 'doc', 'docx', 'jpg', 'png'],
+        allowedExtensions: ['xlsx', 'xls'],
       );
 
       if (result != null) {
@@ -67,10 +66,9 @@ class _StaffTaskSubmissionDialogState extends State<StaffTaskSubmissionDialog> {
     try {
       await _apiService.submitDepartmentTask(
         taskId: widget.task.id,
-        filePath: _selectedFile!.path,
+        filePath: kIsWeb ? null : _selectedFile!.path,
         fileBytes: _selectedFile!.bytes,
         fileName: _selectedFile!.name,
-        notes: _notesController.text,
       );
 
       if (mounted) {
@@ -177,35 +175,6 @@ class _StaffTaskSubmissionDialogState extends State<StaffTaskSubmissionDialog> {
                         ),
                       ),
                     ],
-
-                    const SizedBox(height: 24),
-
-                    const Text(
-                      'Add Description / Notes',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: AppTheme.gray900,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _notesController,
-                      maxLines: 4,
-                      decoration: InputDecoration(
-                        hintText:
-                            'Add any notes or comments about your submission...',
-                        hintStyle: const TextStyle(color: AppTheme.gray500),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: AppTheme.border),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: AppTheme.border),
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -252,20 +221,13 @@ class _StaffTaskSubmissionDialogState extends State<StaffTaskSubmissionDialog> {
   }
 
   Widget _buildProgressBar(bool isMobile) {
-    // Determine current step based on status
-    // Steps: 1: Pending, 2: Accepted, 3: Submitted, 4: Under Review, 5: Completed
-    // Steps: 1: Pending, 2: Accepted, 3: Submitted, 4: Under Review, 5: Completed
-
-    // The user's image shows "Accepted" as active when submitting.
-    // "Submitted" is next.
-
     return LayoutBuilder(
       builder: (context, constraints) {
         return Row(
           children: [
             _buildStep(1, 'Pending', true, isMobile),
             _buildLine(true),
-            _buildStep(2, 'Accepted', true, isMobile), // Active
+            _buildStep(2, 'Accepted', true, isMobile), // Active state
             _buildLine(false),
             _buildStep(3, 'Submitted', false, isMobile),
             _buildLine(false),
@@ -322,11 +284,7 @@ class _StaffTaskSubmissionDialogState extends State<StaffTaskSubmissionDialog> {
       child: Container(
         height: 2,
         color: isActive ? AppTheme.blue600 : AppTheme.gray300,
-        margin: const EdgeInsets.only(
-          left: 4,
-          right: 4,
-          bottom: 20,
-        ), // Adjust alignment with circle
+        margin: const EdgeInsets.only(left: 4, right: 4, bottom: 20),
       ),
     );
   }
@@ -342,10 +300,7 @@ class _StaffTaskSubmissionDialogState extends State<StaffTaskSubmissionDialog> {
           'Assigned By',
           '${widget.task.createdBy['firstName'] ?? ''} ${widget.task.createdBy['lastName'] ?? ''}',
         ),
-        _buildDetailItem(
-          'Priority',
-          'High',
-        ), // Hardcoded as per image/request context
+        _buildDetailItem('Priority', 'High'),
       ],
     );
   }
@@ -381,9 +336,8 @@ class _StaffTaskSubmissionDialogState extends State<StaffTaskSubmissionDialog> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: AppTheme.blue200, // Using blue/dashed look equivalent
-            style: BorderStyle
-                .solid, // Flutter default doesn't support dashed easily without package
+            color: AppTheme.blue200,
+            style: BorderStyle.solid,
             width: 1.5,
           ),
         ),

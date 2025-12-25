@@ -171,6 +171,8 @@ class _StaffDepartmentTasksDialogState
                                 task.status.toLowerCase() == 'pending';
                             final isAccepted =
                                 task.status.toLowerCase() == 'accepted';
+                            final isRevision =
+                                task.status.toLowerCase() == 'revision';
                             return DataRow(
                               cells: [
                                 DataCell(Text(task.name)),
@@ -202,13 +204,15 @@ class _StaffDepartmentTasksDialogState
                                           );
                                         },
                                       ),
-                                      if (isAccepted)
+                                      if (isAccepted || isRevision)
                                         IconButton(
                                           icon: const Icon(
                                             Icons.upload,
                                             color: AppTheme.blue600,
                                           ),
-                                          tooltip: 'Submit Task',
+                                          tooltip: isRevision
+                                              ? 'Submit Revision'
+                                              : 'Submit Task',
                                           onPressed: () {
                                             showDialog(
                                               context: context,
