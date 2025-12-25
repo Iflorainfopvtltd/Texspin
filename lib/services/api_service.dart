@@ -10,7 +10,7 @@ class ApiService {
 
   // Singleton pattern to ensure consistent configuration
   static ApiService? _instance;
-  
+
   factory ApiService() {
     _instance ??= ApiService._internal();
     return _instance!;
@@ -29,7 +29,7 @@ class ApiService {
     _dio.interceptors.add(
       LogInterceptor(requestBody: true, responseBody: true, error: true),
     );
-    
+
     // Debug logging to verify base URL configuration
     print('🔥 ApiService initialized with baseUrl: $baseUrl');
   }
@@ -930,7 +930,7 @@ class ApiService {
       // Safely handle different response data types
       final responseData = error.response?.data;
       String message = 'An error occurred';
-      
+
       if (responseData != null) {
         if (responseData is Map<String, dynamic>) {
           // Handle JSON response
@@ -946,7 +946,7 @@ class ApiService {
           message = responseData.toString();
         }
       }
-      
+
       if (statusCode == 401) {
         SharedPreferencesManager.clearAll();
         if (App.onGlobalLogout != null) {
@@ -1197,15 +1197,13 @@ class ApiService {
   }) async {
     try {
       final token = bearerToken ?? await _getToken();
-      
-      final data = <String, dynamic>{
-        'status': status,
-      };
-      
+
+      final data = <String, dynamic>{'status': status};
+
       if (status == 'rejected' && rejectionReason != null) {
         data['rejectionReason'] = rejectionReason;
       }
-      
+
       final response = await _dio.put(
         '/texspin/api/task/$taskId/review',
         data: data,
@@ -1535,7 +1533,7 @@ class ApiService {
   }) async {
     try {
       final token = bearerToken ?? await _getToken();
-      
+
       // Create FormData with proper field mapping
       Map<String, dynamic> formFields = {
         'apqpProject': data['apqpProject'],
@@ -1543,21 +1541,22 @@ class ApiService {
         'date': data['date'],
         'teamLeader': data['teamLeader'],
       };
-      
+
       // Add team members as JSON array string
       if (data['teamMembers'] != null && data['teamMembers'] is List) {
         // Convert list to JSON array string format that backend expects
         // e.g., ["id1", "id2"]
         final teamMembersList = data['teamMembers'] as List;
-        formFields['teamMembers'] = '[${teamMembersList.map((id) => '"$id"').join(',')}]';
+        formFields['teamMembers'] =
+            '[${teamMembersList.map((id) => '"$id"').join(',')}]';
       }
-      
+
       FormData formData = FormData.fromMap(formFields);
-      
+
       // Add files if provided
       final filesToUpload = files ?? (file != null ? [file] : <dynamic>[]);
       print('API: Files to upload: ${filesToUpload.length}');
-      
+
       for (final fileItem in filesToUpload) {
         if (fileItem != null) {
           print('API: Processing file: ${fileItem.name}');
@@ -1614,7 +1613,7 @@ class ApiService {
   }) async {
     try {
       final token = bearerToken ?? await _getToken();
-      
+
       // Create FormData with proper field mapping
       Map<String, dynamic> formFields = {
         'apqpProject': data['apqpProject'],
@@ -1622,21 +1621,22 @@ class ApiService {
         'date': data['date'],
         'teamLeader': data['teamLeader'],
       };
-      
+
       // Add team members as JSON array string
       if (data['teamMembers'] != null && data['teamMembers'] is List) {
         // Convert list to JSON array string format that backend expects
         // e.g., ["id1", "id2"]
         final teamMembersList = data['teamMembers'] as List;
-        formFields['teamMembers'] = '[${teamMembersList.map((id) => '"$id"').join(',')}]';
+        formFields['teamMembers'] =
+            '[${teamMembersList.map((id) => '"$id"').join(',')}]';
       }
-      
+
       FormData formData = FormData.fromMap(formFields);
-      
+
       // Add files if provided
       final filesToUpload = files ?? (file != null ? [file] : <dynamic>[]);
       print('API UPDATE: Files to upload: ${filesToUpload.length}');
-      
+
       for (final fileItem in filesToUpload) {
         if (fileItem != null) {
           print('API UPDATE: Processing file: ${fileItem.name}');
@@ -1697,8 +1697,6 @@ class ApiService {
     }
   }
 
-
-
   // Delete End Phase Form
   Future<Map<String, dynamic>> deleteEndPhaseForm({
     required String id,
@@ -1751,7 +1749,9 @@ class ApiService {
   }
 
   // Get Project Approvals for Task Updates
-  Future<Map<String, dynamic>> getProjectApprovals({String? bearerToken}) async {
+  Future<Map<String, dynamic>> getProjectApprovals({
+    String? bearerToken,
+  }) async {
     try {
       final token = bearerToken ?? await _getToken();
       final response = await _dio.get(
@@ -1775,24 +1775,24 @@ class ApiService {
   }) async {
     try {
       final token = bearerToken ?? await _getToken();
-      
+
       // Ensure all values are properly formatted as strings
       final phaseIdStr = phaseId.toString().trim();
       final activityIdStr = activityId.toString().trim();
       final fileActionStr = fileAction.toString().trim();
-      
+
       final data = <String, dynamic>{
         'phase': phaseIdStr,
         'activity': activityIdStr,
         'fileAction': fileActionStr,
       };
-      
+
       if (fileAction == 'reject' && rejectionReason != null) {
         data['rejectionReason'] = rejectionReason.toString().trim();
       }
-      
+
       final url = '/texspin/api/apqpproject/$projectId/activity';
-      
+
       final response = await _dio.patch(
         url,
         data: data,
@@ -1814,18 +1814,15 @@ class ApiService {
   }) async {
     try {
       final token = bearerToken ?? await _getToken();
-      
-      final data = <String, dynamic>{
-        'status': status,
-      };
-      
+
+      final data = <String, dynamic>{'status': status};
+
       if (status == 'rejected' && rejectionReason != null) {
         data['rejectionReason'] = rejectionReason;
       }
-      
+
       final url = '/texspin/api/task/$taskId/status';
 
-      
       final response = await _dio.put(
         url,
         data: data,
@@ -1843,6 +1840,34 @@ class ApiService {
       final token = bearerToken ?? await _getToken();
       final response = await _dio.get(
         '/texspin/api/department-task',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> respondToDepartmentTask({
+    required String taskId,
+    required String status,
+    String? rejectionReason,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+
+      final data = <String, dynamic>{'status': status};
+
+      if (status == 'rejected' && rejectionReason != null) {
+        data['rejectionReason'] = rejectionReason;
+      }
+
+      // User requested /texspin/api/department-task/:id/accept
+      // Changing to PUT as PATCH returned 404
+      final response = await _dio.put(
+        '/texspin/api/department-task/$taskId/accept',
+        data: data,
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       return response.data;
@@ -1884,15 +1909,13 @@ class ApiService {
   }) async {
     try {
       final token = bearerToken ?? await _getToken();
-      
-      final data = <String, dynamic>{
-        'status': status,
-      };
-      
+
+      final data = <String, dynamic>{'status': status};
+
       if (status == 'rejected' && rejectionReason != null) {
         data['rejectionReason'] = rejectionReason;
       }
-      
+
       final response = await _dio.put(
         '/texspin/api/department-task/$taskId/review',
         data: data,
@@ -1930,10 +1953,7 @@ class ApiService {
       final token = bearerToken ?? await _getToken();
       final response = await _dio.put(
         '/texspin/api/department-task/$taskId/reassign',
-        data: {
-          'assignedStaffId': assignedStaffId,
-          'deadline': deadline,
-        },
+        data: {'assignedStaffId': assignedStaffId, 'deadline': deadline},
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       return response.data;
@@ -2131,7 +2151,7 @@ class ApiService {
       final token = bearerToken ?? await _getToken();
       final data = {'question': question};
       if (answer != null) data['answer'] = answer;
-      
+
       final response = await _dio.post(
         '/texspin/api/audit-questions',
         data: data,
@@ -2154,7 +2174,7 @@ class ApiService {
       final data = <String, dynamic>{};
       if (question != null) data['question'] = question;
       if (answer != null) data['answer'] = answer;
-      
+
       final response = await _dio.put(
         '/texspin/api/audit-questions/$id',
         data: data,
@@ -2424,10 +2444,7 @@ class ApiService {
       final token = bearerToken ?? await _getToken();
       final response = await _dio.patch(
         '/texspin/api/audit-main/$auditId/assign-question/$questionId',
-        data: {
-          'assignedTo': assignedTo,
-          'deadline': deadline,
-        },
+        data: {'assignedTo': assignedTo, 'deadline': deadline},
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       return response.data;
@@ -2450,7 +2467,7 @@ class ApiService {
       if (action == 'reject' && reason != null) {
         data['reason'] = reason;
       }
-      
+
       final response = await _dio.patch(
         '/texspin/api/audit-main/$auditId/review-question/$questionId',
         data: data,
@@ -2493,46 +2510,52 @@ class ApiService {
   }) async {
     try {
       final token = bearerToken ?? await _getToken();
-      
+
       // Prepare the FormData payload
       Map<String, dynamic> formFields = {};
-      
+
       if (auditScore != null) {
         formFields['auditScore'] = auditScore.toString();
       }
-      
+
       if (methodologyFiles != null && methodologyFiles.isNotEmpty) {
-        formFields['auditMethodology'] = methodologyFiles.first; // API seems to expect single file
+        formFields['auditMethodology'] =
+            methodologyFiles.first; // API seems to expect single file
       }
-      
+
       if (observationFiles != null && observationFiles.isNotEmpty) {
         formFields['auditObservation'] = observationFiles.first;
       }
-      
+
       if (actionPlanFiles != null && actionPlanFiles.isNotEmpty) {
         formFields['actionPlan'] = actionPlanFiles.first;
       }
-      
+
       if (actionEvidenceFiles != null && actionEvidenceFiles.isNotEmpty) {
         formFields['actionEvidence'] = actionEvidenceFiles.first;
       }
-      
+
       if (otherFiles != null && otherFiles.isNotEmpty) {
         // For multiple files, send as array or comma-separated string
         formFields['otherDocs'] = otherFiles.join(',');
       }
-      
+
       // Add any additional data
       if (data != null) {
-        formFields.addAll(data.map((key, value) => MapEntry(key, value.toString())));
+        formFields.addAll(
+          data.map((key, value) => MapEntry(key, value.toString())),
+        );
       }
-      
+
       // Create FormData
       FormData formData = FormData.fromMap(formFields);
-      
+
       // Debug: Log the data being sent
-      developer.log('Sending audit update FormData: $formFields', name: 'ApiService');
-      
+      developer.log(
+        'Sending audit update FormData: $formFields',
+        name: 'ApiService',
+      );
+
       final response = await _dio.put(
         '/texspin/api/audit-main/$auditId',
         data: formData,
@@ -2543,8 +2566,11 @@ class ApiService {
           },
         ),
       );
-      
-      developer.log('Audit update API response: ${response.data}', name: 'ApiService');
+
+      developer.log(
+        'Audit update API response: ${response.data}',
+        name: 'ApiService',
+      );
       return response.data;
     } on DioException catch (e) {
       throw _handleError(e);
@@ -2559,7 +2585,7 @@ class ApiService {
   }) async {
     try {
       final token = bearerToken ?? await _getToken();
-      
+
       final response = await _dio.put(
         '/texspin/api/audit-main/$auditId',
         data: auditData,
@@ -2580,23 +2606,24 @@ class ApiService {
   }) async {
     try {
       final token = bearerToken ?? await _getToken();
-      
+
       MultipartFile multipartFile;
-      
+
       if (fileBytes != null) {
         // For web platform, use bytes
         multipartFile = MultipartFile.fromBytes(fileBytes, filename: fileName);
       } else if (filePath != null) {
         // For mobile/desktop platforms, use file path
-        multipartFile = await MultipartFile.fromFile(filePath, filename: fileName);
+        multipartFile = await MultipartFile.fromFile(
+          filePath,
+          filename: fileName,
+        );
       } else {
         throw Exception('Either filePath or fileBytes must be provided');
       }
-      
-      FormData formData = FormData.fromMap({
-        'file': multipartFile,
-      });
-      
+
+      FormData formData = FormData.fromMap({'file': multipartFile});
+
       final response = await _dio.post(
         '/texspin/api/audit-main/upload', // Try audit-specific upload endpoint
         data: formData,
