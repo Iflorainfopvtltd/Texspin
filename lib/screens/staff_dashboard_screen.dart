@@ -10,6 +10,9 @@ import '../widgets/staff_department_tasks_dialog.dart';
 import '../screens/staff_individual_tasks_screen.dart';
 import '../widgets/staff_individual_tasks_dialog.dart';
 
+import '../screens/staff_audit_tasks_screen.dart';
+import '../widgets/staff_audit_tasks_dialog.dart';
+
 class StaffDashboardScreen extends StatelessWidget {
   final Function(Project project) onViewProject;
   final VoidCallback? onLogout;
@@ -38,7 +41,22 @@ class StaffDashboardScreen extends StatelessWidget {
         NavigationItem(
           icon: Icons.check_circle_outline,
           label: 'Audit Tasks',
-          onTap: () {},
+          onTap: () {
+            final screenWidth = MediaQuery.of(context).size.width;
+            if (screenWidth < 1200) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const StaffAuditTasksScreen(),
+                ),
+              );
+            } else {
+              showDialog(
+                context: context,
+                builder: (_) => const StaffAuditTasksDialog(),
+              );
+            }
+          },
         ),
         NavigationItem(
           icon: Icons.assignment_outlined,

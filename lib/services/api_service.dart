@@ -2753,4 +2753,156 @@ class ApiService {
       throw _handleError(e);
     }
   }
+
+  // Audit Main Status Update
+  Future<Map<String, dynamic>> respondToAuditTask({
+    required String auditId,
+    required String status,
+    String? rejectionReason,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+
+      final data = <String, dynamic>{'status': status};
+
+      if (status == 'rejected' && rejectionReason != null) {
+        data['rejectionReason'] = rejectionReason;
+      }
+
+      final response = await _dio.put(
+        '/texspin/api/audit-main/$auditId/status',
+        data: data,
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> submitAuditTask({
+    required String auditId,
+    required Map<String, dynamic> data,
+    // Supporting multiple file types as per AuditMain structure
+    String? methodologyPath,
+    String? observationPath,
+    String? actionPlanPath,
+    String? actionEvidencePath,
+    List<int>? methodologyBytes,
+    List<int>? observationBytes,
+    List<int>? actionPlanBytes,
+    List<int>? actionEvidenceBytes,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+
+      Map<String, dynamic> formFields = Map.from(data);
+      FormData formData = FormData.fromMap(formFields);
+
+      // Need to handle async file adding within the sync flow or ensure await
+      if (methodologyBytes != null) {
+        formData.files.add(
+          MapEntry(
+            'auditMethodology',
+            MultipartFile.fromBytes(
+              methodologyBytes,
+              filename: 'methodology.xlsx',
+            ),
+          ),
+        );
+      } else if (methodologyPath != null) {
+        formData.files.add(
+          MapEntry(
+            'auditMethodology',
+            await MultipartFile.fromFile(
+              methodologyPath,
+              filename: 'methodology.xlsx',
+            ),
+          ),
+        );
+      }
+
+      if (observationBytes != null) {
+        formData.files.add(
+          MapEntry(
+            'auditObservation',
+            MultipartFile.fromBytes(
+              observationBytes,
+              filename: 'observation.xlsx',
+            ),
+          ),
+        );
+      } else if (observationPath != null) {
+        formData.files.add(
+          MapEntry(
+            'auditObservation',
+            await MultipartFile.fromFile(
+              observationPath,
+              filename: 'observation.xlsx',
+            ),
+          ),
+        );
+      }
+
+      if (actionPlanBytes != null) {
+        formData.files.add(
+          MapEntry(
+            'actionPlan',
+            MultipartFile.fromBytes(
+              actionPlanBytes,
+              filename: 'actionPlan.xlsx',
+            ),
+          ),
+        );
+      } else if (actionPlanPath != null) {
+        formData.files.add(
+          MapEntry(
+            'actionPlan',
+            await MultipartFile.fromFile(
+              actionPlanPath,
+              filename: 'actionPlan.xlsx',
+            ),
+          ),
+        );
+      }
+
+      if (actionEvidenceBytes != null) {
+        formData.files.add(
+          MapEntry(
+            'actionEvidence',
+            MultipartFile.fromBytes(
+              actionEvidenceBytes,
+              filename: 'actionEvidence.xlsx',
+            ),
+          ),
+        );
+      } else if (actionEvidencePath != null) {
+        formData.files.add(
+          MapEntry(
+            'actionEvidence',
+            await MultipartFile.fromFile(
+              actionEvidencePath,
+              filename: 'actionEvidence.xlsx',
+            ),
+          ),
+        );
+      }
+
+      final response = await _dio.put(
+        '/texspin/api/audit-main/$auditId',
+        data: formData,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'multipart/form-data',
+          },
+        ),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
 }
