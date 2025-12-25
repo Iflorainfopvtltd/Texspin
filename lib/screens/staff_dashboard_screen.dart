@@ -7,6 +7,9 @@ import '../widgets/profile_dialog.dart';
 import '../screens/staff_department_tasks_screen.dart';
 import '../widgets/staff_department_tasks_dialog.dart';
 
+import '../screens/staff_individual_tasks_screen.dart';
+import '../widgets/staff_individual_tasks_dialog.dart';
+
 class StaffDashboardScreen extends StatelessWidget {
   final Function(Project project) onViewProject;
   final VoidCallback? onLogout;
@@ -66,7 +69,22 @@ class StaffDashboardScreen extends StatelessWidget {
         NavigationItem(
           icon: Icons.person_outline,
           label: 'Individual Tasks',
-          onTap: () {},
+          onTap: () {
+            final screenWidth = MediaQuery.of(context).size.width;
+            if (screenWidth < 1200) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const StaffIndividualTasksScreen(),
+                ),
+              );
+            } else {
+              showDialog(
+                context: context,
+                builder: (_) => const StaffIndividualTasksDialog(),
+              );
+            }
+          },
         ),
         NavigationItem(
           icon: Icons.notifications_outlined,

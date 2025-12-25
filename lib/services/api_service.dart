@@ -1441,6 +1441,76 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> respondToTask({
+    required String taskId,
+    required String status,
+    String? rejectionReason,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+
+      final data = <String, dynamic>{'status': status};
+
+      if (status == 'rejected' && rejectionReason != null) {
+        data['rejectionReason'] = rejectionReason;
+      }
+
+      final response = await _dio.put(
+        '/texspin/api/task/$taskId/status',
+        data: data,
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> submitTask({
+    required String taskId,
+    required String? filePath,
+    required List<int>? fileBytes,
+    required String fileName,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+
+      MultipartFile multipartFile;
+
+      if (fileBytes != null) {
+        // For web platform, use bytes
+        multipartFile = MultipartFile.fromBytes(fileBytes, filename: fileName);
+      } else if (filePath != null) {
+        // For mobile/desktop platforms, use file path
+        multipartFile = await MultipartFile.fromFile(
+          filePath,
+          filename: fileName,
+        );
+      } else {
+        throw Exception('Either filePath or fileBytes must be provided');
+      }
+
+      // Only sending file as per user request
+      FormData formData = FormData.fromMap({'file': multipartFile});
+
+      final response = await _dio.put(
+        '/texspin/api/task/$taskId/submit',
+        data: formData,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'multipart/form-data',
+          },
+        ),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
   Future<Map<String, dynamic>> createTask({
     required String name,
     required String description,
