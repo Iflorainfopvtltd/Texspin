@@ -76,11 +76,7 @@ class Activity {
   }
 }
 
-enum ActivityStatus {
-  notStarted,
-  inProgress,
-  completed,
-}
+enum ActivityStatus { notStarted, inProgress, completed }
 
 extension ActivityStatusExtension on ActivityStatus {
   String get displayName {
@@ -116,17 +112,9 @@ class Phase {
   final String name;
   final List<Activity> activities;
 
-  Phase({
-    required this.id,
-    required this.name,
-    required this.activities,
-  });
+  Phase({required this.id, required this.name, required this.activities});
 
-  Phase copyWith({
-    String? id,
-    String? name,
-    List<Activity>? activities,
-  }) {
+  Phase copyWith({String? id, String? name, List<Activity>? activities}) {
     return Phase(
       id: id ?? this.id,
       name: name ?? this.name,
@@ -207,7 +195,8 @@ class Project {
       teamMembers: teamMembers ?? this.teamMembers,
       planNumber: planNumber ?? this.planNumber,
       dateOfIssue: dateOfIssue ?? this.dateOfIssue,
-      teamLeaderAuthorization: teamLeaderAuthorization ?? this.teamLeaderAuthorization,
+      teamLeaderAuthorization:
+          teamLeaderAuthorization ?? this.teamLeaderAuthorization,
       totalWeeks: totalWeeks ?? this.totalWeeks,
       phases: phases ?? this.phases,
       createdAt: createdAt ?? this.createdAt,
@@ -222,11 +211,7 @@ class TeamMember {
   final String name;
   final String role;
 
-  TeamMember({
-    required this.id,
-    required this.name,
-    required this.role,
-  });
+  TeamMember({required this.id, required this.name, required this.role});
 }
 
 // API Entity Models
@@ -259,10 +244,7 @@ class Designation {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'name': name,
-      'status': status,
-    };
+    return {'name': name, 'status': status};
   }
 }
 
@@ -295,10 +277,7 @@ class Zone {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'name': name,
-      'status': status,
-    };
+    return {'name': name, 'status': status};
   }
 }
 
@@ -331,10 +310,7 @@ class Department {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'name': name,
-      'status': status,
-    };
+    return {'name': name, 'status': status};
   }
 }
 
@@ -367,13 +343,9 @@ class PhaseEntity {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'name': name,
-      'status': status,
-    };
+    return {'name': name, 'status': status};
   }
 }
-
 
 class WorkCategory {
   final String id;
@@ -404,10 +376,7 @@ class WorkCategory {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'name': name,
-      'status': status,
-    };
+    return {'name': name, 'status': status};
   }
 }
 
@@ -479,7 +448,6 @@ class Staff {
   }
 }
 
-
 class Task {
   final String id;
   final String name;
@@ -495,6 +463,7 @@ class Task {
   final String? viewUrl;
   final String? downloadUrl;
   final List<Map<String, dynamic>>? attachments;
+  final String? rejectionReason;
 
   Task({
     required this.id,
@@ -511,6 +480,7 @@ class Task {
     this.viewUrl,
     this.downloadUrl,
     this.attachments,
+    this.rejectionReason,
   });
 
   factory Task.fromJson(Map<String, dynamic> json) {
@@ -528,9 +498,10 @@ class Task {
       fileUrl: json['fileUrl'],
       viewUrl: json['viewUrl'],
       downloadUrl: json['downloadUrl'],
-      attachments: json['attachments'] != null 
+      attachments: json['attachments'] != null
           ? List<Map<String, dynamic>>.from(json['attachments'])
           : null,
+      rejectionReason: json['rejectionReason'],
     );
   }
 
@@ -550,6 +521,7 @@ class Task {
       if (viewUrl != null) 'viewUrl': viewUrl,
       if (downloadUrl != null) 'downloadUrl': downloadUrl,
       if (attachments != null) 'attachments': attachments,
+      if (rejectionReason != null) 'rejectionReason': rejectionReason,
     };
   }
 }
@@ -569,6 +541,7 @@ class DepartmentTask {
   final String? viewUrl;
   final String? downloadUrl;
   final List<Map<String, dynamic>>? attachments;
+  final String? rejectionReason;
 
   DepartmentTask({
     required this.id,
@@ -585,6 +558,7 @@ class DepartmentTask {
     this.viewUrl,
     this.downloadUrl,
     this.attachments,
+    this.rejectionReason,
   });
 
   factory DepartmentTask.fromJson(Map<String, dynamic> json) {
@@ -602,9 +576,10 @@ class DepartmentTask {
       fileUrl: json['fileUrl'],
       viewUrl: json['viewUrl'],
       downloadUrl: json['downloadUrl'],
-      attachments: json['attachments'] != null 
+      attachments: json['attachments'] != null
           ? List<Map<String, dynamic>>.from(json['attachments'])
           : null,
+      rejectionReason: json['rejectionReason'],
     );
   }
 
@@ -624,6 +599,7 @@ class DepartmentTask {
       if (viewUrl != null) 'viewUrl': viewUrl,
       if (downloadUrl != null) 'downloadUrl': downloadUrl,
       if (attachments != null) 'attachments': attachments,
+      if (rejectionReason != null) 'rejectionReason': rejectionReason,
     };
   }
 }
@@ -658,18 +634,13 @@ class AuditType {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'name': name,
-      'status': status,
-    };
+    return {'name': name, 'status': status};
   }
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is AuditType &&
-          runtimeType == other.runtimeType &&
-          id == other.id;
+      other is AuditType && runtimeType == other.runtimeType && id == other.id;
 
   @override
   int get hashCode => id.hashCode;
@@ -704,10 +675,7 @@ class AuditSegment {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'name': name,
-      'status': status,
-    };
+    return {'name': name, 'status': status};
   }
 
   @override
@@ -770,6 +738,7 @@ class AuditQuestion {
   @override
   int get hashCode => id.hashCode;
 }
+
 class AuditTemplate {
   final String id;
   final String name;
@@ -808,12 +777,14 @@ class AuditTemplate {
         'status': 'active', // Default status for nested objects
       }),
       auditQuestions: (json['auditQuestions'] as List? ?? [])
-          .map((q) => AuditQuestion.fromJson({
-                'id': q['_id'] ?? q['id'] ?? '',
-                'question': q['question'] ?? '',
-                'answer': q['answer'],
-                'status': 'active', // Default status for nested objects
-              }))
+          .map(
+            (q) => AuditQuestion.fromJson({
+              'id': q['_id'] ?? q['id'] ?? '',
+              'question': q['question'] ?? '',
+              'answer': q['answer'],
+              'status': 'active', // Default status for nested objects
+            }),
+          )
           .toList(),
       status: json['status'] ?? 'active',
       createdBy: json['createdBy']?.toString(),

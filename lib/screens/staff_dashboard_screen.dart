@@ -4,6 +4,14 @@ import '../theme/app_theme.dart';
 import '../widgets/custom_card.dart';
 import '../widgets/dashboard_layout.dart';
 import '../widgets/profile_dialog.dart';
+import '../screens/staff_department_tasks_screen.dart';
+import '../widgets/staff_department_tasks_dialog.dart';
+
+import '../screens/staff_individual_tasks_screen.dart';
+import '../widgets/staff_individual_tasks_dialog.dart';
+
+import '../screens/staff_audit_tasks_screen.dart';
+import '../widgets/staff_audit_tasks_dialog.dart';
 
 class StaffDashboardScreen extends StatelessWidget {
   final Function(Project project) onViewProject;
@@ -24,11 +32,7 @@ class StaffDashboardScreen extends StatelessWidget {
       subtitle: 'Staff Member',
       userName: userName ?? 'Staff',
       navigationItems: [
-        NavigationItem(
-          icon: Icons.dashboard,
-          label: 'Dashboard',
-          onTap: () {},
-        ),
+        NavigationItem(icon: Icons.dashboard, label: 'Dashboard', onTap: () {}),
         NavigationItem(
           icon: Icons.folder_outlined,
           label: 'New Projects',
@@ -37,12 +41,43 @@ class StaffDashboardScreen extends StatelessWidget {
         NavigationItem(
           icon: Icons.check_circle_outline,
           label: 'Audit Tasks',
-          onTap: () {},
+          onTap: () {
+            final screenWidth = MediaQuery.of(context).size.width;
+            if (screenWidth < 1200) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const StaffAuditTasksScreen(),
+                ),
+              );
+            } else {
+              showDialog(
+                context: context,
+                builder: (_) => const StaffAuditTasksDialog(),
+              );
+            }
+          },
         ),
         NavigationItem(
           icon: Icons.assignment_outlined,
           label: 'Department Tasks',
-          onTap: () {},
+          onTap: () {
+            final screenWidth = MediaQuery.of(context).size.width;
+            // Treat mobile and tablet (up to 1200px) as 'mobile' view (New Page)
+            if (screenWidth < 1200) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const StaffDepartmentTasksScreen(),
+                ),
+              );
+            } else {
+              showDialog(
+                context: context,
+                builder: (_) => const StaffDepartmentTasksDialog(),
+              );
+            }
+          },
         ),
         NavigationItem(
           icon: Icons.help_outline,
@@ -52,7 +87,22 @@ class StaffDashboardScreen extends StatelessWidget {
         NavigationItem(
           icon: Icons.person_outline,
           label: 'Individual Tasks',
-          onTap: () {},
+          onTap: () {
+            final screenWidth = MediaQuery.of(context).size.width;
+            if (screenWidth < 1200) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const StaffIndividualTasksScreen(),
+                ),
+              );
+            } else {
+              showDialog(
+                context: context,
+                builder: (_) => const StaffIndividualTasksDialog(),
+              );
+            }
+          },
         ),
         NavigationItem(
           icon: Icons.notifications_outlined,
@@ -82,11 +132,7 @@ class StaffDashboardScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.person,
-                    size: 80,
-                    color: AppTheme.blue600,
-                  ),
+                  Icon(Icons.person, size: 80, color: AppTheme.blue600),
                   const SizedBox(height: 24),
                   Text(
                     'Welcome, ${userName ?? 'Staff'}!',
@@ -100,10 +146,7 @@ class StaffDashboardScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   Text(
                     'current dashboard data',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: AppTheme.gray600,
-                    ),
+                    style: TextStyle(fontSize: 18, color: AppTheme.gray600),
                     textAlign: TextAlign.center,
                   ),
                 ],

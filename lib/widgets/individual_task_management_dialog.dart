@@ -12,10 +12,12 @@ class IndividualTaskManagementDialog extends StatefulWidget {
   const IndividualTaskManagementDialog({super.key});
 
   @override
-  State<IndividualTaskManagementDialog> createState() => _IndividualTaskManagementDialogState();
+  State<IndividualTaskManagementDialog> createState() =>
+      _IndividualTaskManagementDialogState();
 }
 
-class _IndividualTaskManagementDialogState extends State<IndividualTaskManagementDialog> {
+class _IndividualTaskManagementDialogState
+    extends State<IndividualTaskManagementDialog> {
   final ApiService _apiService = ApiService();
   final TextEditingController _searchController = TextEditingController();
   List<Task> _tasks = [];
@@ -54,7 +56,10 @@ class _IndividualTaskManagementDialogState extends State<IndividualTaskManagemen
         });
       }
     } catch (e) {
-      developer.log('Error loading tasks: $e', name: 'IndividualTaskManagement');
+      developer.log(
+        'Error loading tasks: $e',
+        name: 'IndividualTaskManagement',
+      );
       setState(() {
         _error = e.toString();
         _isLoading = false;
@@ -210,7 +215,7 @@ class _IndividualTaskManagementDialogState extends State<IndividualTaskManagemen
 
   void _showRejectDialog(Task task) {
     final TextEditingController reasonController = TextEditingController();
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -253,7 +258,11 @@ class _IndividualTaskManagementDialogState extends State<IndividualTaskManagemen
                 return;
               }
               Navigator.pop(context);
-              _reviewTask(task.id, 'rejected', rejectionReason: reasonController.text.trim());
+              _reviewTask(
+                task.id,
+                'rejected',
+                rejectionReason: reasonController.text.trim(),
+              );
             },
             variant: ButtonVariant.destructive,
             size: ButtonSize.sm,
@@ -266,19 +275,20 @@ class _IndividualTaskManagementDialogState extends State<IndividualTaskManagemen
   void _showReassignDialog(Task task) {
     showDialog(
       context: context,
-      builder: (context) => ReassignIndividualTaskDialog(
-        task: task,
-        onReassigned: _loadTasks,
-      ),
+      builder: (context) =>
+          ReassignIndividualTaskDialog(task: task, onReassigned: _loadTasks),
     );
   }
 
   Future<void> _sendReminder(String taskId) async {
     try {
-      final response = await _apiService.sendIndividualTaskReminder(taskId: taskId);
-      
+      final response = await _apiService.sendIndividualTaskReminder(
+        taskId: taskId,
+      );
+
       if (mounted) {
-        final successMessage = response['message']?.toString() ?? 'Reminder sent successfully';
+        final successMessage =
+            response['message']?.toString() ?? 'Reminder sent successfully';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(
@@ -301,7 +311,9 @@ class _IndividualTaskManagementDialogState extends State<IndividualTaskManagemen
               children: [
                 const Icon(Icons.error, color: Colors.white),
                 const SizedBox(width: 8),
-                Expanded(child: Text('Error sending reminder: ${e.toString()}')),
+                Expanded(
+                  child: Text('Error sending reminder: ${e.toString()}'),
+                ),
               ],
             ),
             backgroundColor: AppTheme.red500,
@@ -311,7 +323,11 @@ class _IndividualTaskManagementDialogState extends State<IndividualTaskManagemen
     }
   }
 
-  Future<void> _reviewTask(String taskId, String status, {String? rejectionReason}) async {
+  Future<void> _reviewTask(
+    String taskId,
+    String status, {
+    String? rejectionReason,
+  }) async {
     try {
       final response = await _apiService.reviewTask(
         taskId: taskId,
@@ -325,11 +341,11 @@ class _IndividualTaskManagementDialogState extends State<IndividualTaskManagemen
         if (response['message'] != null) {
           successMessage = response['message'].toString();
         } else {
-          successMessage = status == 'completed' 
-              ? 'Task approved successfully' 
+          successMessage = status == 'completed'
+              ? 'Task approved successfully'
               : 'Task rejected successfully';
         }
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(
@@ -339,7 +355,9 @@ class _IndividualTaskManagementDialogState extends State<IndividualTaskManagemen
                 Expanded(child: Text(successMessage)),
               ],
             ),
-            backgroundColor: status == 'completed' ? AppTheme.green500 : AppTheme.red500,
+            backgroundColor: status == 'completed'
+                ? AppTheme.green500
+                : AppTheme.red500,
           ),
         );
         _loadTasks(); // Refresh the task list
@@ -381,7 +399,7 @@ class _IndividualTaskManagementDialogState extends State<IndividualTaskManagemen
       if (task.downloadUrl != null && task.downloadUrl!.isNotEmpty) {
         fileUrl = task.downloadUrl;
         fileName = task.fileName ?? 'task_file';
-      } 
+      }
       // Fallback to attachments (old structure)
       else if (task.attachments != null && task.attachments!.isNotEmpty) {
         final attachment = task.attachments!.first;
@@ -406,7 +424,9 @@ class _IndividualTaskManagementDialogState extends State<IndividualTaskManagemen
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('Storage permission is required to download files'),
+                content: Text(
+                  'Storage permission is required to download files',
+                ),
                 backgroundColor: AppTheme.red500,
               ),
             );
@@ -441,16 +461,18 @@ class _IndividualTaskManagementDialogState extends State<IndividualTaskManagemen
 
       // Construct full URL using ApiService baseUrl
       final String fullUrl = ApiService.baseUrl + fileUrl;
-      
+
       // Download the file using our custom service
       final filePath = await FileDownloadService.downloadFile(
         url: fullUrl,
         fileName: fileName!,
         onProgress: (received, total) {
-          developer.log('Download progress: ${(received / total * 100).toStringAsFixed(1)}%');
+          developer.log(
+            'Download progress: ${(received / total * 100).toStringAsFixed(1)}%',
+          );
         },
       );
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -466,7 +488,10 @@ class _IndividualTaskManagementDialogState extends State<IndividualTaskManagemen
                       Text('$fileName downloaded successfully'),
                       Text(
                         'Saved to: ${filePath.split('/').last}',
-                        style: const TextStyle(fontSize: 12, color: Colors.white70),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.white70,
+                        ),
                       ),
                     ],
                   ),
@@ -492,7 +517,9 @@ class _IndividualTaskManagementDialogState extends State<IndividualTaskManagemen
               children: [
                 const Icon(Icons.error, color: Colors.white),
                 const SizedBox(width: 8),
-                Expanded(child: Text('Error downloading file: ${e.toString()}')),
+                Expanded(
+                  child: Text('Error downloading file: ${e.toString()}'),
+                ),
               ],
             ),
             backgroundColor: AppTheme.red500,
@@ -523,15 +550,15 @@ class _IndividualTaskManagementDialogState extends State<IndividualTaskManagemen
       backgroundColor: AppTheme.gray100,
       selectedColor: AppTheme.primary,
       checkmarkColor: Colors.white,
-      side: BorderSide(
-        color: isSelected ? AppTheme.primary : AppTheme.gray300,
-      ),
+      side: BorderSide(color: isSelected ? AppTheme.primary : AppTheme.gray300),
     );
   }
 
   DataRow _buildTaskDataRow(Task task) {
-    final assignedStaffName = '${task.assignedStaff['firstName'] ?? ''} ${task.assignedStaff['lastName'] ?? ''}'.trim();
-    
+    final assignedStaffName =
+        '${task.assignedStaff['firstName'] ?? ''} ${task.assignedStaff['lastName'] ?? ''}'
+            .trim();
+
     return DataRow(
       cells: [
         DataCell(
@@ -555,9 +582,7 @@ class _IndividualTaskManagementDialogState extends State<IndividualTaskManagemen
               task.description,
               overflow: TextOverflow.ellipsis,
               maxLines: 2,
-              style: const TextStyle(
-                color: AppTheme.gray600,
-              ),
+              style: const TextStyle(color: AppTheme.gray600),
             ),
           ),
         ),
@@ -574,30 +599,53 @@ class _IndividualTaskManagementDialogState extends State<IndividualTaskManagemen
         DataCell(
           Text(
             _formatDate(task.deadline),
-            style: const TextStyle(
-              color: AppTheme.gray700,
-            ),
+            style: const TextStyle(color: AppTheme.gray700),
           ),
         ),
         DataCell(
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 8,
-              vertical: 4,
-            ),
-            decoration: BoxDecoration(
-              color: _getStatusColor(task.status).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              task.status.toUpperCase(),
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                color: _getStatusColor(task.status),
-              ),
-            ),
-          ),
+          task.status.toLowerCase() == 'rejected'
+              ? Tooltip(
+                  message: task.rejectionReason ?? 'No reason provided',
+                  triggerMode: TooltipTriggerMode.tap,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _getStatusColor(
+                        task.status,
+                      ).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      task.status.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: _getStatusColor(task.status),
+                      ),
+                    ),
+                  ),
+                )
+              : Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(task.status).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    task.status.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: _getStatusColor(task.status),
+                    ),
+                  ),
+                ),
         ),
         DataCell(
           Row(
@@ -614,17 +662,23 @@ class _IndividualTaskManagementDialogState extends State<IndividualTaskManagemen
                   ),
                 // Approve button
                 IconButton(
-                  icon: const Icon(Icons.check_circle_outline, color: AppTheme.green600),
+                  icon: const Icon(
+                    Icons.check_circle_outline,
+                    color: AppTheme.green600,
+                  ),
                   onPressed: () => _showApproveDialog(task),
                   tooltip: 'Approve',
                 ),
                 // Reject button
                 IconButton(
-                  icon: const Icon(Icons.cancel_outlined, color: AppTheme.red500),
+                  icon: const Icon(
+                    Icons.cancel_outlined,
+                    color: AppTheme.red500,
+                  ),
                   onPressed: () => _showRejectDialog(task),
                   tooltip: 'Reject',
                 ),
-              ] 
+              ]
               // For rejected tasks: show reassign button
               else if (task.status.toLowerCase() == 'rejected') ...[
                 IconButton(
@@ -633,15 +687,18 @@ class _IndividualTaskManagementDialogState extends State<IndividualTaskManagemen
                   tooltip: 'Reassign',
                 ),
                 IconButton(
-                  icon: const Icon(Icons.delete_outline, color: AppTheme.red500),
+                  icon: const Icon(
+                    Icons.delete_outline,
+                    color: AppTheme.red500,
+                  ),
                   onPressed: () => _deleteTask(task.id),
                   tooltip: 'Delete',
                 ),
-              ] 
-              else ...[
+              ] else ...[
                 // For other tasks: show download (if available), edit and delete
                 // Download button (if downloadUrl is available or has attachments)
-                if ((task.downloadUrl != null && task.downloadUrl!.isNotEmpty) ||
+                if ((task.downloadUrl != null &&
+                        task.downloadUrl!.isNotEmpty) ||
                     (task.attachments != null && task.attachments!.isNotEmpty))
                   IconButton(
                     icon: const Icon(Icons.download, color: AppTheme.blue600),
@@ -651,21 +708,30 @@ class _IndividualTaskManagementDialogState extends State<IndividualTaskManagemen
                 // Reminder button (only for pending tasks)
                 if (task.status.toLowerCase() == 'pending')
                   IconButton(
-                    icon: const Icon(Icons.send_outlined, color: AppTheme.yellow500),
+                    icon: const Icon(
+                      Icons.send_outlined,
+                      color: AppTheme.yellow500,
+                    ),
                     onPressed: () => _sendReminder(task.id),
                     tooltip: 'Send Reminder',
                   ),
                 // Edit button (only for pending tasks)
                 if (task.status.toLowerCase() == 'pending')
                   IconButton(
-                    icon: const Icon(Icons.edit_outlined, color: AppTheme.blue600),
+                    icon: const Icon(
+                      Icons.edit_outlined,
+                      color: AppTheme.blue600,
+                    ),
                     onPressed: () => _showAddEditTaskDialog(task: task),
                     tooltip: 'Edit',
                   ),
                 // Delete button (only for pending tasks)
                 if (task.status.toLowerCase() == 'pending')
                   IconButton(
-                    icon: const Icon(Icons.delete_outline, color: AppTheme.red500),
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      color: AppTheme.red500,
+                    ),
                     onPressed: () => _deleteTask(task.id),
                     tooltip: 'Delete',
                   ),
@@ -802,11 +868,16 @@ class _IndividualTaskManagementDialogState extends State<IndividualTaskManagemen
                                 children: [
                                   CustomTextInput(
                                     controller: _searchController,
-                                    hint: 'Search by task name or staff name...',
+                                    hint:
+                                        'Search by task name or staff name...',
                                     onChanged: _filterTasks,
-                                    suffixIcon: _searchController.text.isNotEmpty
+                                    suffixIcon:
+                                        _searchController.text.isNotEmpty
                                         ? IconButton(
-                                            icon: const Icon(Icons.clear, size: 20),
+                                            icon: const Icon(
+                                              Icons.clear,
+                                              size: 20,
+                                            ),
                                             onPressed: () {
                                               _searchController.clear();
                                               _filterTasks('');
@@ -824,11 +895,20 @@ class _IndividualTaskManagementDialogState extends State<IndividualTaskManagemen
                                         const SizedBox(width: 8),
                                         _buildFilterChip('Pending', 'pending'),
                                         const SizedBox(width: 8),
-                                        _buildFilterChip('Submitted', 'submitted'),
+                                        _buildFilterChip(
+                                          'Submitted',
+                                          'submitted',
+                                        ),
                                         const SizedBox(width: 8),
-                                        _buildFilterChip('Approved', 'approved'),
+                                        _buildFilterChip(
+                                          'Approved',
+                                          'approved',
+                                        ),
                                         const SizedBox(width: 8),
-                                        _buildFilterChip('Rejected', 'rejected'),
+                                        _buildFilterChip(
+                                          'Rejected',
+                                          'rejected',
+                                        ),
                                       ],
                                     ),
                                   ),
@@ -883,54 +963,81 @@ class _IndividualTaskManagementDialogState extends State<IndividualTaskManagemen
                                       child: Container(
                                         decoration: BoxDecoration(
                                           color: AppTheme.gray50,
-                                          borderRadius: BorderRadius.circular(12),
-                                          border: Border.all(color: AppTheme.gray200),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                          border: Border.all(
+                                            color: AppTheme.gray200,
+                                          ),
                                         ),
                                         child: SingleChildScrollView(
                                           scrollDirection: Axis.horizontal,
                                           child: DataTable(
                                             columnSpacing: isMobile ? 16 : 16,
-                                            headingRowColor: WidgetStateProperty.all(AppTheme.blue50),
-                                            dataRowColor: WidgetStateProperty.all(Colors.white),
+                                            headingRowColor:
+                                                WidgetStateProperty.all(
+                                                  AppTheme.blue50,
+                                                ),
+                                            dataRowColor:
+                                                WidgetStateProperty.all(
+                                                  Colors.white,
+                                                ),
                                             columns: const [
                                               DataColumn(
                                                 label: Text(
                                                   'Task Name',
-                                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
                                                 ),
                                               ),
                                               DataColumn(
                                                 label: Text(
                                                   'Description',
-                                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
                                                 ),
                                               ),
                                               DataColumn(
                                                 label: Text(
                                                   'Assigned To',
-                                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
                                                 ),
                                               ),
                                               DataColumn(
                                                 label: Text(
                                                   'Deadline',
-                                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
                                                 ),
                                               ),
                                               DataColumn(
                                                 label: Text(
                                                   'Status',
-                                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
                                                 ),
                                               ),
                                               DataColumn(
                                                 label: Text(
                                                   'Actions',
-                                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
                                                 ),
                                               ),
                                             ],
-                                            rows: _filteredTasks.map((task) => _buildTaskDataRow(task)).toList(),
+                                            rows: _filteredTasks
+                                                .map(
+                                                  (task) =>
+                                                      _buildTaskDataRow(task),
+                                                )
+                                                .toList(),
                                           ),
                                         ),
                                       ),
@@ -962,13 +1069,19 @@ class AddEditIndividualTaskDialog extends StatefulWidget {
   final Task? task;
   final VoidCallback onSaved;
 
-  const AddEditIndividualTaskDialog({super.key, this.task, required this.onSaved});
+  const AddEditIndividualTaskDialog({
+    super.key,
+    this.task,
+    required this.onSaved,
+  });
 
   @override
-  State<AddEditIndividualTaskDialog> createState() => _AddEditIndividualTaskDialogState();
+  State<AddEditIndividualTaskDialog> createState() =>
+      _AddEditIndividualTaskDialogState();
 }
 
-class _AddEditIndividualTaskDialogState extends State<AddEditIndividualTaskDialog> {
+class _AddEditIndividualTaskDialogState
+    extends State<AddEditIndividualTaskDialog> {
   final ApiService _apiService = ApiService();
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
@@ -1117,7 +1230,9 @@ class _AddEditIndividualTaskDialogState extends State<AddEditIndividualTaskDialo
                 children: [
                   Expanded(
                     child: Text(
-                      widget.task == null ? 'Add Individual Task' : 'Edit Individual Task',
+                      widget.task == null
+                          ? 'Add Individual Task'
+                          : 'Edit Individual Task',
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -1131,7 +1246,7 @@ class _AddEditIndividualTaskDialogState extends State<AddEditIndividualTaskDialo
                 ],
               ),
               const SizedBox(height: 20),
-              
+
               CustomTextInput(
                 label: 'Task Name',
                 hint: 'Enter task name',
@@ -1145,7 +1260,7 @@ class _AddEditIndividualTaskDialogState extends State<AddEditIndividualTaskDialo
                 enabled: !_isLoading,
               ),
               const SizedBox(height: 16),
-              
+
               CustomTextInput(
                 label: 'Description',
                 hint: 'Enter task description',
@@ -1160,7 +1275,7 @@ class _AddEditIndividualTaskDialogState extends State<AddEditIndividualTaskDialo
                 enabled: !_isLoading,
               ),
               const SizedBox(height: 16),
-              
+
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1212,7 +1327,7 @@ class _AddEditIndividualTaskDialogState extends State<AddEditIndividualTaskDialo
                 ],
               ),
               const SizedBox(height: 16),
-              
+
               _isLoadingStaff
                   ? const Center(
                       child: Padding(
@@ -1241,7 +1356,7 @@ class _AddEditIndividualTaskDialogState extends State<AddEditIndividualTaskDialo
                       enabled: !_isLoading,
                     ),
               const SizedBox(height: 24),
-              
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -1277,10 +1392,12 @@ class ReassignIndividualTaskDialog extends StatefulWidget {
   });
 
   @override
-  State<ReassignIndividualTaskDialog> createState() => _ReassignIndividualTaskDialogState();
+  State<ReassignIndividualTaskDialog> createState() =>
+      _ReassignIndividualTaskDialogState();
 }
 
-class _ReassignIndividualTaskDialogState extends State<ReassignIndividualTaskDialog> {
+class _ReassignIndividualTaskDialogState
+    extends State<ReassignIndividualTaskDialog> {
   final ApiService _apiService = ApiService();
   DateTime? _deadline;
   String? _selectedStaffId;
@@ -1394,11 +1511,7 @@ class _ReassignIndividualTaskDialogState extends State<ReassignIndividualTaskDia
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.person_outline,
-                  color: AppTheme.primary,
-                  size: 24,
-                ),
+                Icon(Icons.person_outline, color: AppTheme.primary, size: 24),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -1416,7 +1529,7 @@ class _ReassignIndividualTaskDialogState extends State<ReassignIndividualTaskDia
               ],
             ),
             const SizedBox(height: 20),
-            
+
             // Staff Selection
             _isLoadingStaff
                 ? const Center(
@@ -1446,7 +1559,7 @@ class _ReassignIndividualTaskDialogState extends State<ReassignIndividualTaskDia
                     enabled: !_isLoading,
                   ),
             const SizedBox(height: 16),
-            
+
             // Deadline Selection
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1499,7 +1612,7 @@ class _ReassignIndividualTaskDialogState extends State<ReassignIndividualTaskDia
               ],
             ),
             const SizedBox(height: 24),
-            
+
             // Action Buttons
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -1520,34 +1633,33 @@ class _ReassignIndividualTaskDialogState extends State<ReassignIndividualTaskDia
       ),
     );
   }
-   
 }
 
- Widget _buildHeader(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppTheme.border)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.person_outline, color: AppTheme.gray600, size: 24),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Text(
-              'Individual Tasks',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w500,
-                color: AppTheme.gray900,
-              ),
+Widget _buildHeader(BuildContext context) {
+  return Container(
+    padding: const EdgeInsets.all(20),
+    decoration: const BoxDecoration(
+      border: Border(bottom: BorderSide(color: AppTheme.border)),
+    ),
+    child: Row(
+      children: [
+        const Icon(Icons.person_outline, color: AppTheme.gray600, size: 24),
+        const SizedBox(width: 12),
+        const Expanded(
+          child: Text(
+            'Individual Tasks',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w500,
+              color: AppTheme.gray900,
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.close, color: AppTheme.gray600),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-        ],
-      ),
-    );
-  }
+        ),
+        IconButton(
+          icon: const Icon(Icons.close, color: AppTheme.gray600),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ],
+    ),
+  );
+}
