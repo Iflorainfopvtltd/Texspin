@@ -588,18 +588,20 @@ class _AllAuditsDialogState extends State<AllAuditsDialog> {
     );
   }
 
-  void _showQuestionsDialog(Map<String, dynamic> audit) {
-    showDialog(
+  void _showQuestionsDialog(Map<String, dynamic> audit) async {
+    await showDialog(
       context: context,
       builder: (context) => _AuditQuestionsDialog(audit: audit),
     );
+    _fetchAudits();
   }
 
-  void _showAuditDetails(Map<String, dynamic> audit) {
-    showDialog(
+  void _showAuditDetails(Map<String, dynamic> audit) async {
+    await showDialog(
       context: context,
       builder: (context) => _AuditDetailsDialog(audit: audit),
     );
+    _fetchAudits();
   }
 
   void _editAudit(Map<String, dynamic> audit) {
@@ -1386,12 +1388,39 @@ class _AuditQuestionsDialog extends StatefulWidget {
 class _AuditQuestionsDialogState extends State<_AuditQuestionsDialog> {
   final ApiService _apiService = ApiService();
   bool _isClosingAudit = false;
+  late Map<String, dynamic> _audit;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _audit = widget.audit;
+  }
+
+  Future<void> _refreshAudit() async {
+    // Don't show loading spinner for refresh to avoid flicker
+    try {
+      final auditId = _audit['_id'] ?? _audit['id'];
+      final response = await _apiService.getAuditMainById(id: auditId);
+      if (mounted) {
+        setState(() {
+          if (response.containsKey('audit')) {
+            _audit = response['audit'];
+          } else {
+            _audit = response;
+          }
+        });
+      }
+    } catch (e) {
+      developer.log('Error refreshing audit: $e', name: 'AuditQuestionsDialog');
+    }
+  }
 
   // Check if all questions are approved and audit is not already closed
   bool _shouldShowCloseButton() {
-    final questions = widget.audit['auditQuestions'] as List? ?? [];
+    final questions = _audit['auditQuestions'] as List? ?? [];
     final auditStatus =
-        widget.audit['auditStatus']?.toString().toLowerCase() ?? 'open';
+        _audit['auditStatus']?.toString().toLowerCase() ?? 'open';
 
     // Don't show if audit is already closed
     if (auditStatus == 'close' || auditStatus == 'closed') {
@@ -1412,7 +1441,7 @@ class _AuditQuestionsDialogState extends State<_AuditQuestionsDialog> {
     setState(() => _isClosingAudit = true);
 
     try {
-      final auditId = widget.audit['_id'] ?? widget.audit['id'];
+      final auditId = _audit['_id'] ?? _audit['id'];
       await _apiService.closeAuditMain(id: auditId);
 
       if (mounted) {
@@ -1443,7 +1472,7 @@ class _AuditQuestionsDialogState extends State<_AuditQuestionsDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final questions = widget.audit['auditQuestions'] as List? ?? [];
+    final questions = _audit['auditQuestions'] as List? ?? [];
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
     final shouldShowCloseButton = _shouldShowCloseButton();
@@ -1909,12 +1938,12 @@ class _AuditQuestionsDialogState extends State<_AuditQuestionsDialog> {
     showDialog(
       context: context,
       builder: (context) => AssignQuestionDialog(
-        audit: widget.audit,
+        audit: _audit,
         question: question,
         isReassign: false,
         onAssignmentChanged: () {
           // Refresh the questions list
-          setState(() {});
+          _refreshAudit();
         },
       ),
     );
@@ -1924,12 +1953,12 @@ class _AuditQuestionsDialogState extends State<_AuditQuestionsDialog> {
     showDialog(
       context: context,
       builder: (context) => AssignQuestionDialog(
-        audit: widget.audit,
+        audit: _audit,
         question: question,
         isReassign: true,
         onAssignmentChanged: () {
           // Refresh the questions list
-          setState(() {});
+          _refreshAudit();
         },
       ),
     );
@@ -1951,12 +1980,12 @@ class _AuditQuestionsDialogState extends State<_AuditQuestionsDialog> {
     showDialog(
       context: context,
       builder: (context) => ReviewQuestionDialog(
-        audit: widget.audit,
+        audit: _audit,
         question: question,
         action: 'approve',
         onReviewCompleted: () {
           // Refresh the questions list
-          setState(() {});
+          _refreshAudit();
         },
       ),
     );
@@ -1966,12 +1995,12 @@ class _AuditQuestionsDialogState extends State<_AuditQuestionsDialog> {
     showDialog(
       context: context,
       builder: (context) => ReviewQuestionDialog(
-        audit: widget.audit,
+        audit: _audit,
         question: question,
         action: 'reject',
         onReviewCompleted: () {
           // Refresh the questions list
-          setState(() {});
+          _refreshAudit();
         },
       ),
     );
