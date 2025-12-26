@@ -1171,7 +1171,16 @@ class _AddEditIndividualTaskDialogState
     setState(() => _isLoading = true);
 
     try {
-      final deadlineStr = _deadline!.toIso8601String();
+      // Set time to noon to avoid timezone shift issues
+      final noonDate = DateTime(
+        _deadline!.year,
+        _deadline!.month,
+        _deadline!.day,
+        12,
+        0,
+        0,
+      );
+      final deadlineStr = noonDate.toIso8601String();
 
       if (widget.task == null) {
         await _apiService.createTask(
