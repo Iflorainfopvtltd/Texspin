@@ -1171,9 +1171,16 @@ class _AddEditDepartmentTaskDialogState
     setState(() => _isLoading = true);
 
     try {
-      final deadlineStr = _deadline!.toIso8601String().split(
-        'T',
-      )[0]; // Format as YYYY-MM-DD
+      // Set time to noon to avoid timezone shift issues
+      final noonDate = DateTime(
+        _deadline!.year,
+        _deadline!.month,
+        _deadline!.day,
+        12,
+        0,
+        0,
+      );
+      final deadlineStr = noonDate.toIso8601String().split('T')[0];
 
       if (widget.task == null) {
         await _apiService.createDepartmentTask(
@@ -1183,8 +1190,13 @@ class _AddEditDepartmentTaskDialogState
           assignedStaffId: _selectedStaffId!,
         );
       } else {
-        // Note: Update functionality would need to be implemented in the API
-        throw Exception('Editing department tasks is not yet supported');
+        await _apiService.updateDepartmentTask(
+          taskId: widget.task!.id,
+          name: _nameController.text.trim(),
+          description: _descriptionController.text.trim(),
+          deadline: deadlineStr,
+          assignedStaffId: _selectedStaffId!,
+        );
       }
 
       if (mounted) {

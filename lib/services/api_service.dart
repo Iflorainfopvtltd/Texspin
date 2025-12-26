@@ -2015,6 +2015,32 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> updateDepartmentTask({
+    required String taskId,
+    required String name,
+    required String description,
+    required String deadline,
+    required String assignedStaffId,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      final response = await _dio.put(
+        '/texspin/api/department-task/$taskId',
+        data: {
+          'name': name,
+          'description': description,
+          'deadline': deadline,
+          'assignedStaffId': assignedStaffId,
+        },
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
   Future<Map<String, dynamic>> reviewDepartmentTask({
     required String taskId,
     required String status, // 'completed' or 'rejected'
