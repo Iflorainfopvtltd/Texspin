@@ -192,10 +192,26 @@ class _StaffAuditTasksDialogState extends State<StaffAuditTasksDialog> {
                                 ),
                                 DataCell(Text(_formatDate(task.date))),
                                 DataCell(
-                                  Text(task.auditor?['fullName'] ?? 'N/A'),
+                                  Text(
+                                    (task.texspinStaffMember != null &&
+                                            task.texspinStaffMember!.isNotEmpty)
+                                        ? '${task.texspinStaffMember!.first['firstName'] ?? ''} ${task.texspinStaffMember!.first['lastName'] ?? ''}'
+                                              .trim()
+                                        : 'N/A',
+                                  ),
                                 ),
                                 DataCell(
-                                  Text(task.auditee?['fullName'] ?? 'N/A'),
+                                  Text(
+                                    (task.visitCompanyMemberName != null &&
+                                            task
+                                                .visitCompanyMemberName!
+                                                .isNotEmpty)
+                                        ? task
+                                                  .visitCompanyMemberName!
+                                                  .first['name'] ??
+                                              'N/A'
+                                        : 'N/A',
+                                  ),
                                 ),
                                 DataCell(_buildStatusBadge(task.status)),
                                 DataCell(
