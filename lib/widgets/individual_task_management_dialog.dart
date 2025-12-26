@@ -1136,10 +1136,17 @@ class _AddEditIndividualTaskDialogState
   }
 
   Future<void> _selectDate() async {
+    final now = DateTime.now();
+    // If we have an existing deadline that is in the past, allow selecting from that date
+    // otherwise restrict to today onwards
+    final firstDate = _deadline != null && _deadline!.isBefore(now)
+        ? _deadline!
+        : now;
+
     final picked = await showDatePicker(
       context: context,
-      initialDate: _deadline ?? DateTime.now(),
-      firstDate: DateTime.now(),
+      initialDate: _deadline ?? now,
+      firstDate: firstDate,
       lastDate: DateTime(2030),
     );
     if (picked != null) {
@@ -1233,158 +1240,162 @@ class _AddEditIndividualTaskDialogState
         padding: const EdgeInsets.all(24),
         child: Form(
           key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      widget.task == null
-                          ? 'Add Individual Task'
-                          : 'Edit Individual Task',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        widget.task == null
+                            ? 'Add Individual Task'
+                            : 'Edit Individual Task',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              CustomTextInput(
-                label: 'Task Name',
-                hint: 'Enter task name',
-                controller: _nameController,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter task name';
-                  }
-                  return null;
-                },
-                enabled: !_isLoading,
-              ),
-              const SizedBox(height: 16),
-
-              CustomTextInput(
-                label: 'Description',
-                hint: 'Enter task description',
-                controller: _descriptionController,
-                maxLines: 4,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter description';
-                  }
-                  return null;
-                },
-                enabled: !_isLoading,
-              ),
-              const SizedBox(height: 16),
-
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Deadline',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: AppTheme.foreground,
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.of(context).pop(),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  InkWell(
-                    onTap: _isLoading ? null : _selectDate,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
+                  ],
+                ),
+                const SizedBox(height: 20),
+
+                CustomTextInput(
+                  label: 'Task Name',
+                  hint: 'Enter task name',
+                  controller: _nameController,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Please enter task name';
+                    }
+                    return null;
+                  },
+                  enabled: !_isLoading,
+                ),
+                const SizedBox(height: 16),
+
+                CustomTextInput(
+                  label: 'Description',
+                  hint: 'Enter task description',
+                  controller: _descriptionController,
+                  maxLines: 4,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Please enter description';
+                    }
+                    return null;
+                  },
+                  enabled: !_isLoading,
+                ),
+                const SizedBox(height: 16),
+
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Deadline',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.foreground,
                       ),
-                      decoration: BoxDecoration(
-                        color: AppTheme.inputBackground,
-                        border: Border.all(color: AppTheme.border),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              _deadline != null
-                                  ? '${_deadline!.day}/${_deadline!.month}/${_deadline!.year}'
-                                  : 'Select deadline',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: _deadline != null
-                                    ? AppTheme.foreground
-                                    : AppTheme.mutedForeground,
+                    ),
+                    const SizedBox(height: 8),
+                    InkWell(
+                      onTap: _isLoading ? null : _selectDate,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.inputBackground,
+                          border: Border.all(color: AppTheme.border),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                _deadline != null
+                                    ? '${_deadline!.day}/${_deadline!.month}/${_deadline!.year}'
+                                    : 'Select deadline',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: _deadline != null
+                                      ? AppTheme.foreground
+                                      : AppTheme.mutedForeground,
+                                ),
                               ),
                             ),
-                          ),
-                          const Icon(
-                            Icons.calendar_today,
-                            color: AppTheme.mutedForeground,
-                            size: 20,
-                          ),
-                        ],
+                            const Icon(
+                              Icons.calendar_today,
+                              color: AppTheme.mutedForeground,
+                              size: 20,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
+                  ],
+                ),
+                const SizedBox(height: 16),
 
-              _isLoadingStaff
-                  ? const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(20),
-                        child: CircularProgressIndicator(),
+                _isLoadingStaff
+                    ? const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(20),
+                          child: CircularProgressIndicator(),
+                        ),
+                      )
+                    : SingleSelectDropdown<Staff>(
+                        label: 'Assign to Staff',
+                        isRequired: true,
+                        options: _staff,
+                        selectedId: _selectedStaffId,
+                        onSelectionChanged: (value) {
+                          setState(() => _selectedStaffId = value);
+                        },
+                        getDisplayText: (staff) => staff.fullName,
+                        getSubText: (staff) => staff.designation ?? staff.role,
+                        getId: (staff) => staff.id,
+                        hintText: 'Select staff member',
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please select a staff member';
+                          }
+                          return null;
+                        },
+                        enabled: !_isLoading,
                       ),
-                    )
-                  : SingleSelectDropdown<Staff>(
-                      label: 'Assign to Staff',
-                      isRequired: true,
-                      options: _staff,
-                      selectedId: _selectedStaffId,
-                      onSelectionChanged: (value) {
-                        setState(() => _selectedStaffId = value);
-                      },
-                      getDisplayText: (staff) => staff.fullName,
-                      getSubText: (staff) => staff.designation ?? staff.role,
-                      getId: (staff) => staff.id,
-                      hintText: 'Select staff member',
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please select a staff member';
-                        }
-                        return null;
-                      },
-                      enabled: !_isLoading,
-                    ),
-              const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Cancel'),
-                  ),
-                  const SizedBox(width: 12),
-                  CustomButton(
-                    text: _isLoading
-                        ? 'Saving...'
-                        : (widget.task == null ? 'Create Task' : 'Update Task'),
-                    onPressed: _isLoading ? null : _saveTask,
-                  ),
-                ],
-              ),
-            ],
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Cancel'),
+                    ),
+                    const SizedBox(width: 12),
+                    CustomButton(
+                      text: _isLoading
+                          ? 'Saving...'
+                          : (widget.task == null
+                                ? 'Create Task'
+                                : 'Update Task'),
+                      onPressed: _isLoading ? null : _saveTask,
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
