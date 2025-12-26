@@ -297,9 +297,8 @@ class _StaffAuditTasksDialogState extends State<StaffAuditTasksDialog> {
 
                               final isAssigned =
                                   status.toLowerCase() == 'assigned';
-                              final isApproved =
-                                  status.toLowerCase() == 'accepted' ||
-                                  status.toLowerCase() == 'approved';
+                              final isAccepted =
+                                  status.toLowerCase() == 'accepted';
                               final isRevision =
                                   status.toLowerCase() == 'revision';
 
@@ -321,6 +320,8 @@ class _StaffAuditTasksDialogState extends State<StaffAuditTasksDialog> {
                                       reason:
                                           question['reason']?.toString() ??
                                           question['rejectionReason']
+                                              ?.toString() ??
+                                          question['reviewRejectionReason']
                                               ?.toString(),
                                     ),
                                   ),
@@ -331,7 +332,7 @@ class _StaffAuditTasksDialogState extends State<StaffAuditTasksDialog> {
                                         // Attachment Menu
                                         _buildAttachmentMenu(task),
 
-                                        if (isApproved || isRevision) ...[
+                                        if (isAccepted || isRevision) ...[
                                           const SizedBox(width: 8),
                                           IconButton(
                                             icon: const Icon(
@@ -492,16 +493,39 @@ class _StaffAuditTasksDialogState extends State<StaffAuditTasksDialog> {
         reason.isNotEmpty &&
         (status.toLowerCase() == 'rejected' ||
             status.toLowerCase() == 'revision')) {
-      return Tooltip(
-        message: '$reason',
-        padding: const EdgeInsets.all(8),
-        margin: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Colors.black87,
-          borderRadius: BorderRadius.circular(4),
+      return GestureDetector(
+        onTap: () {
+          // Show persistent message on tap
+          ScaffoldMessenger.of(context).removeCurrentSnackBar();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Reason: $reason'),
+              duration: const Duration(seconds: 4),
+              action: SnackBarAction(
+                label: 'Dismiss',
+                onPressed: () {
+                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                },
+              ),
+            ),
+          );
+        },
+        // Also ensure mouse cursor indicates interactivity
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: Tooltip(
+            message: '$reason',
+            padding: const EdgeInsets.all(8),
+            margin: const EdgeInsets.all(8),
+            triggerMode: TooltipTriggerMode.tap, // Enable tap trigger
+            decoration: BoxDecoration(
+              color: Colors.black87,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            textStyle: const TextStyle(color: Colors.white),
+            child: badge,
+          ),
         ),
-        textStyle: const TextStyle(color: Colors.white),
-        child: badge,
       );
     }
 
