@@ -151,7 +151,8 @@ class StaffIndividualTaskCard extends StatelessWidget {
         color = AppTheme.blue500;
     }
 
-    return status.toLowerCase() == 'rejected'
+    return (status.toLowerCase() == 'rejected' ||
+            status.toLowerCase() == 'revision')
         ? Tooltip(
             message: task.rejectionReason ?? 'No reason provided',
             triggerMode: TooltipTriggerMode.tap,

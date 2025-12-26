@@ -13,7 +13,8 @@ class DepartmentTaskGridScreen extends StatefulWidget {
   const DepartmentTaskGridScreen({super.key});
 
   @override
-  State<DepartmentTaskGridScreen> createState() => _DepartmentTaskGridScreenState();
+  State<DepartmentTaskGridScreen> createState() =>
+      _DepartmentTaskGridScreenState();
 }
 
 class _DepartmentTaskGridScreenState extends State<DepartmentTaskGridScreen> {
@@ -55,7 +56,10 @@ class _DepartmentTaskGridScreenState extends State<DepartmentTaskGridScreen> {
         });
       }
     } catch (e) {
-      developer.log('Error loading department tasks: $e', name: 'DepartmentTaskGrid');
+      developer.log(
+        'Error loading department tasks: $e',
+        name: 'DepartmentTaskGrid',
+      );
       setState(() {
         _error = e.toString();
         _isLoading = false;
@@ -131,7 +135,9 @@ class _DepartmentTaskGridScreenState extends State<DepartmentTaskGridScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Department Task'),
-        content: const Text('Are you sure you want to delete this department task?'),
+        content: const Text(
+          'Are you sure you want to delete this department task?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -175,9 +181,7 @@ class _DepartmentTaskGridScreenState extends State<DepartmentTaskGridScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.gray50,
-      appBar: AppBar(
-        title: const Text('Department Tasks'),
-      ),
+      appBar: AppBar(title: const Text('Department Tasks')),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddEditTaskDialog(),
         backgroundColor: AppTheme.primary,
@@ -242,7 +246,7 @@ class _DepartmentTaskGridScreenState extends State<DepartmentTaskGridScreen> {
                             : const Icon(Icons.search),
                       ),
                       const SizedBox(height: 12),
-                      
+
                       // Filter Chips
                       SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
@@ -263,7 +267,7 @@ class _DepartmentTaskGridScreenState extends State<DepartmentTaskGridScreen> {
                     ],
                   ),
                 ),
-                
+
                 // Task Grid
                 Expanded(
                   child: _filteredTasks.isEmpty
@@ -272,7 +276,9 @@ class _DepartmentTaskGridScreenState extends State<DepartmentTaskGridScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                _tasks.isEmpty ? Icons.business : Icons.search_off,
+                                _tasks.isEmpty
+                                    ? Icons.business
+                                    : Icons.search_off,
                                 size: 64,
                                 color: AppTheme.gray300,
                               ),
@@ -300,21 +306,22 @@ class _DepartmentTaskGridScreenState extends State<DepartmentTaskGridScreen> {
                       : RefreshIndicator(
                           onRefresh: _loadTasks,
                           child: ListView.builder(
-                                padding: const EdgeInsets.all(16),
-                                itemCount: _filteredTasks.length,
-                                itemBuilder: (context, index) {
-                                  final task = _filteredTasks[index];
-                                  return Padding(
-                                    padding: const EdgeInsets.only(bottom: 16),
-                                    child: DepartmentTaskCard(
-                                      task: task,
-                                      isCompact: false,
-                                      onEdit: () => _showAddEditTaskDialog(task: task),
-                                      onDelete: () => _deleteTask(task.id),
-                                      onRefresh: _loadTasks,
-                                    ),
-                                  );
-                                },
+                            padding: const EdgeInsets.all(16),
+                            itemCount: _filteredTasks.length,
+                            itemBuilder: (context, index) {
+                              final task = _filteredTasks[index];
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 16),
+                                child: DepartmentTaskCard(
+                                  task: task,
+                                  isCompact: false,
+                                  onEdit: () =>
+                                      _showAddEditTaskDialog(task: task),
+                                  onDelete: () => _deleteTask(task.id),
+                                  onRefresh: _loadTasks,
+                                ),
+                              );
+                            },
                           ),
                         ),
                 ),
@@ -339,9 +346,7 @@ class _DepartmentTaskGridScreenState extends State<DepartmentTaskGridScreen> {
       backgroundColor: Colors.white,
       selectedColor: AppTheme.primary,
       checkmarkColor: Colors.white,
-      side: BorderSide(
-        color: isSelected ? AppTheme.primary : AppTheme.gray300,
-      ),
+      side: BorderSide(color: isSelected ? AppTheme.primary : AppTheme.gray300),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
     );
   }
@@ -358,10 +363,12 @@ class AddEditDepartmentTaskDialog extends StatefulWidget {
   });
 
   @override
-  State<AddEditDepartmentTaskDialog> createState() => _AddEditDepartmentTaskDialogState();
+  State<AddEditDepartmentTaskDialog> createState() =>
+      _AddEditDepartmentTaskDialogState();
 }
 
-class _AddEditDepartmentTaskDialogState extends State<AddEditDepartmentTaskDialog> {
+class _AddEditDepartmentTaskDialogState
+    extends State<AddEditDepartmentTaskDialog> {
   final ApiService _apiService = ApiService();
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
@@ -414,10 +421,17 @@ class _AddEditDepartmentTaskDialogState extends State<AddEditDepartmentTaskDialo
   }
 
   Future<void> _selectDate() async {
+    final now = DateTime.now();
+    // If we have an existing deadline that is in the past, allow selecting from that date
+    // otherwise restrict to today onwards
+    final firstDate = _deadline != null && _deadline!.isBefore(now)
+        ? _deadline!
+        : now;
+
     final picked = await showDatePicker(
       context: context,
-      initialDate: _deadline ?? DateTime.now(),
-      firstDate: DateTime.now(),
+      initialDate: _deadline ?? now,
+      firstDate: firstDate,
       lastDate: DateTime(2030),
     );
     if (picked != null) {
@@ -449,7 +463,16 @@ class _AddEditDepartmentTaskDialogState extends State<AddEditDepartmentTaskDialo
     setState(() => _isLoading = true);
 
     try {
-      final deadlineStr = _deadline!.toIso8601String().split('T')[0]; // Format as YYYY-MM-DD
+      // Set time to noon to avoid timezone shift issues
+      final noonDate = DateTime(
+        _deadline!.year,
+        _deadline!.month,
+        _deadline!.day,
+        12,
+        0,
+        0,
+      );
+      final deadlineStr = noonDate.toIso8601String().split('T')[0];
 
       if (widget.task == null) {
         await _apiService.createDepartmentTask(
@@ -459,9 +482,13 @@ class _AddEditDepartmentTaskDialogState extends State<AddEditDepartmentTaskDialo
           assignedStaffId: _selectedStaffId!,
         );
       } else {
-        // Note: Update functionality would need to be implemented in the API
-        // For now, we'll show a message that editing is not supported
-        throw Exception('Editing department tasks is not yet supported');
+        await _apiService.updateDepartmentTask(
+          taskId: widget.task!.id,
+          name: _nameController.text.trim(),
+          description: _descriptionController.text.trim(),
+          deadline: deadlineStr,
+          assignedStaffId: _selectedStaffId!,
+        );
       }
 
       if (mounted) {
@@ -505,14 +532,13 @@ class _AddEditDepartmentTaskDialogState extends State<AddEditDepartmentTaskDialo
               children: [
                 Row(
                   children: [
-                    Icon(
-                      Icons.business,
-                      color: AppTheme.primary,
-                    ),
+                    Icon(Icons.business, color: AppTheme.primary),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        widget.task == null ? 'Add Department Task' : 'Edit Department Task',
+                        widget.task == null
+                            ? 'Add Department Task'
+                            : 'Edit Department Task',
                         style: const TextStyle(
                           fontSize: 20,
                           overflow: TextOverflow.ellipsis,

@@ -161,7 +161,8 @@ class StaffTaskCard extends StatelessWidget {
       ),
     );
 
-    if (task.status.toLowerCase() == 'rejected') {
+    if (task.status.toLowerCase() == 'rejected' ||
+        task.status.toLowerCase() == 'revision') {
       return Tooltip(
         message: task.rejectionReason ?? 'No reason provided',
         triggerMode: TooltipTriggerMode.tap,

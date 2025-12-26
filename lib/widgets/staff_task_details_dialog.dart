@@ -121,6 +121,9 @@ class StaffTaskDetailsDialog extends StatelessWidget {
       if (task.status.toLowerCase() == 'rejected' &&
           task.rejectionReason != null)
         _buildInfoRowDetail('Rejection Reason', task.rejectionReason),
+      if (task.status.toLowerCase() == 'revision' &&
+          task.rejectionReason != null)
+        _buildInfoRowDetail('Revision Reason', task.rejectionReason),
     ], isMobile);
   }
 

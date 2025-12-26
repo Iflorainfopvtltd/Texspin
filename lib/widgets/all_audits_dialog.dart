@@ -49,18 +49,22 @@ class _AllAuditsDialogState extends State<AllAuditsDialog> {
       _filteredAudits = List.from(_audits);
     } else {
       _filteredAudits = _audits.where((audit) {
-        final auditNumber = (audit['auditNumber'] ?? '').toString().toLowerCase();
+        final auditNumber = (audit['auditNumber'] ?? '')
+            .toString()
+            .toLowerCase();
         final company = (audit['companyName'] ?? '').toString().toLowerCase();
         final location = (audit['location'] ?? '').toString().toLowerCase();
-        final template = (audit['auditTemplate']?['name'] ?? '').toString().toLowerCase();
+        final template = (audit['auditTemplate']?['name'] ?? '')
+            .toString()
+            .toLowerCase();
         final status = (audit['auditStatus'] ?? '').toString().toLowerCase();
         final query = _searchQuery.toLowerCase();
 
         return auditNumber.contains(query) ||
-               company.contains(query) ||
-               location.contains(query) ||
-               template.contains(query) ||
-               status.contains(query);
+            company.contains(query) ||
+            location.contains(query) ||
+            template.contains(query) ||
+            status.contains(query);
       }).toList();
     }
   }
@@ -98,9 +102,7 @@ class _AllAuditsDialogState extends State<AllAuditsDialog> {
     return Dialog(
       backgroundColor: Colors.white,
       insetPadding: EdgeInsets.all(isMobile ? 8 : 16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Container(
         constraints: BoxConstraints(
           maxWidth: isMobile ? screenWidth : 1200,
@@ -148,7 +150,11 @@ class _AllAuditsDialogState extends State<AllAuditsDialog> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.list_alt_outlined, color: AppTheme.gray600, size: 24),
+          const Icon(
+            Icons.list_alt_outlined,
+            color: AppTheme.gray600,
+            size: 24,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -182,7 +188,8 @@ class _AllAuditsDialogState extends State<AllAuditsDialog> {
       child: TextField(
         controller: _searchController,
         decoration: InputDecoration(
-          hintText: 'Search audits by number, company, location, template, or status...',
+          hintText:
+              'Search audits by number, company, location, template, or status...',
           filled: true,
           fillColor: AppTheme.inputBackground,
           border: const OutlineInputBorder(
@@ -206,7 +213,10 @@ class _AllAuditsDialogState extends State<AllAuditsDialog> {
                   },
                 )
               : null,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
+          ),
         ),
       ),
     );
@@ -237,11 +247,7 @@ class _AllAuditsDialogState extends State<AllAuditsDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
-                Icons.search_off,
-                size: 64,
-                color: AppTheme.gray500,
-              ),
+              const Icon(Icons.search_off, size: 64, color: AppTheme.gray500),
               const SizedBox(height: 24),
               const Text(
                 'No Results Found',
@@ -254,10 +260,7 @@ class _AllAuditsDialogState extends State<AllAuditsDialog> {
               const SizedBox(height: 12),
               Text(
                 'No audits match your search for "${_searchQuery}"',
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: AppTheme.gray600,
-                ),
+                style: const TextStyle(fontSize: 14, color: AppTheme.gray600),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
@@ -300,10 +303,7 @@ class _AllAuditsDialogState extends State<AllAuditsDialog> {
               SizedBox(height: 12),
               Text(
                 'Click the + button to create your first audit',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppTheme.gray600,
-                ),
+                style: TextStyle(fontSize: 14, color: AppTheme.gray600),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -321,14 +321,54 @@ class _AllAuditsDialogState extends State<AllAuditsDialog> {
         child: DataTable(
           headingRowColor: WidgetStateProperty.all(AppTheme.gray50),
           columns: const [
-            DataColumn(label: Text('Audit Number', style: TextStyle(fontWeight: FontWeight.w600))),
-            DataColumn(label: Text('Date', style: TextStyle(fontWeight: FontWeight.w600))),
-            DataColumn(label: Text('Template', style: TextStyle(fontWeight: FontWeight.w600))),
-            DataColumn(label: Text('Company', style: TextStyle(fontWeight: FontWeight.w600))),
-            DataColumn(label: Text('Location', style: TextStyle(fontWeight: FontWeight.w600))),
-            DataColumn(label: Text('Status', style: TextStyle(fontWeight: FontWeight.w600))),
-            DataColumn(label: Text('Questions', style: TextStyle(fontWeight: FontWeight.w600))),
-            DataColumn(label: Text('Actions', style: TextStyle(fontWeight: FontWeight.w600))),
+            DataColumn(
+              label: Text(
+                'Audit Number',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                'Date',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                'Template',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                'Company',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                'Location',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                'Status',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                'Questions',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                'Actions',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
           ],
           rows: _filteredAudits.map((audit) => _buildDataRow(audit)).toList(),
         ),
@@ -338,7 +378,7 @@ class _AllAuditsDialogState extends State<AllAuditsDialog> {
 
   DataRow _buildDataRow(Map<String, dynamic> audit) {
     final auditNumber = audit['auditNumber'] ?? 'N/A';
-    final date = audit['date'] != null 
+    final date = audit['date'] != null
         ? DateTime.parse(audit['date']).toString().split(' ')[0]
         : 'N/A';
     final template = audit['auditTemplate']?['name'] ?? 'N/A';
@@ -383,7 +423,7 @@ class _AllAuditsDialogState extends State<AllAuditsDialog> {
   Widget _buildStatusBadge(String status) {
     Color bgColor;
     Color textColor;
-    
+
     switch (status.toLowerCase()) {
       case 'open':
         bgColor = AppTheme.green100;
@@ -455,7 +495,7 @@ class _AllAuditsDialogState extends State<AllAuditsDialog> {
 
   Widget _buildMobileAuditCard(Map<String, dynamic> audit) {
     final auditNumber = audit['auditNumber'] ?? 'N/A';
-    final date = audit['date'] != null 
+    final date = audit['date'] != null
         ? DateTime.parse(audit['date']).toString().split(' ')[0]
         : 'N/A';
     final template = audit['auditTemplate']?['name'] ?? 'N/A';
@@ -541,28 +581,27 @@ class _AllAuditsDialogState extends State<AllAuditsDialog> {
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppTheme.gray700,
-            ),
+            style: const TextStyle(fontSize: 14, color: AppTheme.gray700),
           ),
         ),
       ],
     );
   }
 
-  void _showQuestionsDialog(Map<String, dynamic> audit) {
-    showDialog(
+  void _showQuestionsDialog(Map<String, dynamic> audit) async {
+    await showDialog(
       context: context,
       builder: (context) => _AuditQuestionsDialog(audit: audit),
     );
+    _fetchAudits();
   }
 
-  void _showAuditDetails(Map<String, dynamic> audit) {
-    showDialog(
+  void _showAuditDetails(Map<String, dynamic> audit) async {
+    await showDialog(
       context: context,
       builder: (context) => _AuditDetailsDialog(audit: audit),
     );
+    _fetchAudits();
   }
 
   void _editAudit(Map<String, dynamic> audit) {
@@ -645,9 +684,7 @@ class _AllAuditsDialogState extends State<AllAuditsDialog> {
               Navigator.pop(context);
               await _performDeleteAudit(audit);
             },
-            style: TextButton.styleFrom(
-              foregroundColor: AppTheme.red600,
-            ),
+            style: TextButton.styleFrom(foregroundColor: AppTheme.red600),
             child: const Text('Delete'),
           ),
         ],
@@ -659,7 +696,7 @@ class _AllAuditsDialogState extends State<AllAuditsDialog> {
     try {
       final auditId = audit['_id'] ?? audit['id'];
       await _apiService.deleteAuditMain(auditId: auditId);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -811,214 +848,205 @@ class _AuditDetailsDialog extends StatelessWidget {
   }
 
   Widget _buildBasicInfoSection(bool isMobile) {
-    return _buildSection(
-      'Basic Information',
-      Icons.info_outline,
-      [
-        _buildInfoRowDetail('Audit Number', audit['auditNumber']),
-        _buildInfoRowDetail('Date', audit['date'] != null 
+    return _buildSection('Basic Information', Icons.info_outline, [
+      _buildInfoRowDetail('Audit Number', audit['auditNumber']),
+      _buildInfoRowDetail(
+        'Date',
+        audit['date'] != null
             ? DateTime.parse(audit['date']).toString().split(' ')[0]
-            : 'N/A'),
-        _buildInfoRowDetail('Company', audit['companyName']),
-        _buildInfoRowDetail('Location', audit['location']),
-        _buildInfoRowDetail('Status', audit['auditStatus'], isStatus: true),
-        _buildInfoRowDetail('Created By', audit['createdBy']?['fullName']),
-        _buildInfoRowDetail('Created At', audit['createdAt'] != null 
+            : 'N/A',
+      ),
+      _buildInfoRowDetail('Company', audit['companyName']),
+      _buildInfoRowDetail('Location', audit['location']),
+      _buildInfoRowDetail('Status', audit['auditStatus'], isStatus: true),
+      _buildInfoRowDetail('Created By', audit['createdBy']?['fullName']),
+      _buildInfoRowDetail(
+        'Created At',
+        audit['createdAt'] != null
             ? DateTime.parse(audit['createdAt']).toString().split(' ')[0]
-            : 'N/A'),
-      ],
-      isMobile,
-    );
+            : 'N/A',
+      ),
+    ], isMobile);
   }
 
   Widget _buildTemplateInfoSection(bool isMobile) {
     final template = audit['auditTemplate'];
     if (template == null) {
-      return _buildSection(
-        'Template Information',
-        Icons.description_outlined,
-        [
-          const Text(
-            'No template information available',
-            style: TextStyle(
-              fontSize: 14,
-              color: AppTheme.gray600,
-              fontStyle: FontStyle.italic,
-            ),
+      return _buildSection('Template Information', Icons.description_outlined, [
+        const Text(
+          'No template information available',
+          style: TextStyle(
+            fontSize: 14,
+            color: AppTheme.gray600,
+            fontStyle: FontStyle.italic,
           ),
-        ],
-        isMobile,
-      );
+        ),
+      ], isMobile);
     }
 
-    return _buildSection(
-      'Template Information',
-      Icons.description_outlined,
-      [
-        _buildInfoRowDetail('Template Name', template['name']),
-        _buildInfoRowDetail('Segment', template['auditSegment']?['name']),
-        _buildInfoRowDetail('Type', template['auditType']?['name']),
-        _buildInfoRowDetail('Template Status', template['status']),
-      ],
-      isMobile,
-    );
+    return _buildSection('Template Information', Icons.description_outlined, [
+      _buildInfoRowDetail('Template Name', template['name']),
+      _buildInfoRowDetail('Segment', template['auditSegment']?['name']),
+      _buildInfoRowDetail('Type', template['auditType']?['name']),
+      _buildInfoRowDetail('Template Status', template['status']),
+    ], isMobile);
   }
 
   Widget _buildTeamInfoSection(bool isMobile) {
     final staff = audit['texspinStaffMember'] as List? ?? [];
     final visitors = audit['visitCompanyMemberName'] as List? ?? [];
 
-    return _buildSection(
-      'Team Information',
-      Icons.people_outline,
-      [
-        if (staff.isNotEmpty) ...[
-          const Text(
-            'Texspin Staff Members:',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: AppTheme.gray700,
-            ),
+    return _buildSection('Team Information', Icons.people_outline, [
+      if (staff.isNotEmpty) ...[
+        const Text(
+          'Texspin Staff Members:',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: AppTheme.gray700,
           ),
-          const SizedBox(height: 8),
-          ...staff.map((member) => Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: AppTheme.blue100,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Center(
-                    child: Text(
-                      (member['firstName']?[0] ?? '') + (member['lastName']?[0] ?? ''),
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.blue600,
+        ),
+        const SizedBox(height: 8),
+        ...staff
+            .map(
+              (member) => Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: AppTheme.blue100,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Center(
+                        child: Text(
+                          (member['firstName']?[0] ?? '') +
+                              (member['lastName']?[0] ?? ''),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.blue600,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${member['firstName'] ?? ''} ${member['lastName'] ?? ''}'
+                                .trim(),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: AppTheme.gray900,
+                            ),
+                          ),
+                          Text(
+                            member['email'] ?? '',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppTheme.gray600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${member['firstName'] ?? ''} ${member['lastName'] ?? ''}'.trim(),
+              ),
+            )
+            .toList(),
+        const SizedBox(height: 16),
+      ] else ...[
+        const Text(
+          'No Texspin staff members assigned',
+          style: TextStyle(
+            fontSize: 14,
+            color: AppTheme.gray600,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+        const SizedBox(height: 16),
+      ],
+
+      if (visitors.isNotEmpty) ...[
+        const Text(
+          'Visitor Company Members:',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: AppTheme.gray700,
+          ),
+        ),
+        const SizedBox(height: 8),
+        ...visitors
+            .map(
+              (visitor) => Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: AppTheme.green100,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.person,
+                          size: 16,
+                          color: AppTheme.green600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        visitor['name'] ?? 'Unknown Visitor',
                         style: const TextStyle(
                           fontSize: 14,
-                          fontWeight: FontWeight.w500,
                           color: AppTheme.gray900,
                         ),
                       ),
-                      Text(
-                        member['email'] ?? '',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppTheme.gray600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          )).toList(),
-          const SizedBox(height: 16),
-        ] else ...[
-          const Text(
-            'No Texspin staff members assigned',
-            style: TextStyle(
-              fontSize: 14,
-              color: AppTheme.gray600,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-          const SizedBox(height: 16),
-        ],
-
-        if (visitors.isNotEmpty) ...[
-          const Text(
-            'Visitor Company Members:',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: AppTheme.gray700,
-            ),
-          ),
-          const SizedBox(height: 8),
-          ...visitors.map((visitor) => Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: AppTheme.green100,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.person,
-                      size: 16,
-                      color: AppTheme.green600,
                     ),
-                  ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    visitor['name'] ?? 'Unknown Visitor',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: AppTheme.gray900,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          )).toList(),
-        ] else ...[
-          const Text(
-            'No visitor company members',
-            style: TextStyle(
-              fontSize: 14,
-              color: AppTheme.gray600,
-              fontStyle: FontStyle.italic,
-            ),
+              ),
+            )
+            .toList(),
+      ] else ...[
+        const Text(
+          'No visitor company members',
+          style: TextStyle(
+            fontSize: 14,
+            color: AppTheme.gray600,
+            fontStyle: FontStyle.italic,
           ),
-        ],
+        ),
       ],
-      isMobile,
-    );
+    ], isMobile);
   }
 
   Widget _buildQuestionsOverviewSection(bool isMobile) {
     final questions = audit['auditQuestions'] as List? ?? [];
-    
+
     if (questions.isEmpty) {
-      return _buildSection(
-        'Questions Overview',
-        Icons.quiz_outlined,
-        [
-          const Text(
-            'No questions available',
-            style: TextStyle(
-              fontSize: 14,
-              color: AppTheme.gray600,
-              fontStyle: FontStyle.italic,
-            ),
+      return _buildSection('Questions Overview', Icons.quiz_outlined, [
+        const Text(
+          'No questions available',
+          style: TextStyle(
+            fontSize: 14,
+            color: AppTheme.gray600,
+            fontStyle: FontStyle.italic,
           ),
-        ],
-        isMobile,
-      );
+        ),
+      ], isMobile);
     }
 
     // Calculate status counts
@@ -1030,50 +1058,47 @@ class _AuditDetailsDialog extends StatelessWidget {
 
     final totalQuestions = questions.length;
     final completedQuestions = statusCounts['Approved'] ?? 0;
-    final progress = totalQuestions > 0 ? completedQuestions / totalQuestions : 0.0;
+    final progress = totalQuestions > 0
+        ? completedQuestions / totalQuestions
+        : 0.0;
 
-    return _buildSection(
-      'Questions Overview',
-      Icons.quiz_outlined,
-      [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Total Questions: $totalQuestions',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: AppTheme.gray900,
-              ),
+    return _buildSection('Questions Overview', Icons.quiz_outlined, [
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'Total Questions: $totalQuestions',
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: AppTheme.gray900,
             ),
-            Text(
-              'Completed: $completedQuestions',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: AppTheme.green600,
-              ),
+          ),
+          Text(
+            'Completed: $completedQuestions',
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: AppTheme.green600,
             ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        LinearProgressIndicator(
-          value: progress,
-          backgroundColor: AppTheme.gray200,
-          valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.green500),
-        ),
-        const SizedBox(height: 16),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: statusCounts.entries.map((entry) {
-            return _buildStatusChip(entry.key, entry.value);
-          }).toList(),
-        ),
-      ],
-      isMobile,
-    );
+          ),
+        ],
+      ),
+      const SizedBox(height: 12),
+      LinearProgressIndicator(
+        value: progress,
+        backgroundColor: AppTheme.gray200,
+        valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.green500),
+      ),
+      const SizedBox(height: 16),
+      Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: statusCounts.entries.map((entry) {
+          return _buildStatusChip(entry.key, entry.value);
+        }).toList(),
+      ),
+    ], isMobile);
   }
 
   Widget _buildFilesSection(BuildContext context, bool isMobile) {
@@ -1088,96 +1113,104 @@ class _AuditDetailsDialog extends StatelessWidget {
 
     final otherDocs = audit['otherDocs'] as List? ?? [];
 
-    return _buildSection(
-      'Files & Documents',
-      Icons.folder_outlined,
-      [
-        ...files.entries.map((entry) {
-          final hasFile = entry.value != null && entry.value!.isNotEmpty;
+    return _buildSection('Files & Documents', Icons.folder_outlined, [
+      ...files.entries.map((entry) {
+        final hasFile = entry.value != null && entry.value!.isNotEmpty;
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Row(
+            children: [
+              Icon(
+                hasFile ? Icons.check_circle : Icons.radio_button_unchecked,
+                size: 16,
+                color: hasFile ? AppTheme.green600 : AppTheme.gray500,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  entry.key,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: hasFile ? AppTheme.gray900 : AppTheme.gray600,
+                  ),
+                ),
+              ),
+              if (hasFile)
+                IconButton(
+                  icon: const Icon(Icons.download, size: 16),
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Download file - Coming soon'),
+                      ),
+                    );
+                  },
+                  color: AppTheme.blue600,
+                  tooltip: 'Download',
+                ),
+            ],
+          ),
+        );
+      }).toList(),
+
+      if (otherDocs.isNotEmpty) ...[
+        const SizedBox(height: 12),
+        const Text(
+          'Other Documents:',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: AppTheme.gray700,
+          ),
+        ),
+        const SizedBox(height: 8),
+        ...otherDocs.asMap().entries.map((entry) {
+          final index = entry.key;
           return Padding(
-            padding: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.only(bottom: 4),
             child: Row(
               children: [
-                Icon(
-                  hasFile ? Icons.check_circle : Icons.radio_button_unchecked,
+                const Icon(
+                  Icons.insert_drive_file,
                   size: 16,
-                  color: hasFile ? AppTheme.green600 : AppTheme.gray500,
+                  color: AppTheme.gray600,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    entry.key,
-                    style: TextStyle(
+                    'Document ${index + 1}',
+                    style: const TextStyle(
                       fontSize: 14,
-                      color: hasFile ? AppTheme.gray900 : AppTheme.gray600,
+                      color: AppTheme.gray900,
                     ),
                   ),
                 ),
-                if (hasFile)
-                  IconButton(
-                    icon: const Icon(Icons.download, size: 16),
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Download file - Coming soon')),
-                      );
-                    },
-                    color: AppTheme.blue600,
-                    tooltip: 'Download',
-                  ),
+                IconButton(
+                  icon: const Icon(Icons.download, size: 16),
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Download file - Coming soon'),
+                      ),
+                    );
+                  },
+                  color: AppTheme.blue600,
+                  tooltip: 'Download',
+                ),
               ],
             ),
           );
         }).toList(),
-        
-        if (otherDocs.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          const Text(
-            'Other Documents:',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: AppTheme.gray700,
-            ),
-          ),
-          const SizedBox(height: 8),
-          ...otherDocs.asMap().entries.map((entry) {
-            final index = entry.key;
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Row(
-                children: [
-                  const Icon(Icons.insert_drive_file, size: 16, color: AppTheme.gray600),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Document ${index + 1}',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: AppTheme.gray900,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.download, size: 16),
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Download file - Coming soon')),
-                      );
-                    },
-                    color: AppTheme.blue600,
-                    tooltip: 'Download',
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
-        ],
       ],
-      isMobile,
-    );
+    ], isMobile);
   }
 
-  Widget _buildSection(String title, IconData icon, List<Widget> children, bool isMobile) {
+  Widget _buildSection(
+    String title,
+    IconData icon,
+    List<Widget> children,
+    bool isMobile,
+  ) {
     return Container(
       padding: EdgeInsets.all(isMobile ? 16 : 20),
       decoration: BoxDecoration(
@@ -1209,7 +1242,11 @@ class _AuditDetailsDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoRowDetail(String label, dynamic value, {bool isStatus = false}) {
+  Widget _buildInfoRowDetail(
+    String label,
+    dynamic value, {
+    bool isStatus = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -1227,7 +1264,7 @@ class _AuditDetailsDialog extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: isStatus 
+            child: isStatus
                 ? _buildStatusBadgeDetail(value?.toString() ?? 'N/A')
                 : Text(
                     value?.toString() ?? 'N/A',
@@ -1245,7 +1282,7 @@ class _AuditDetailsDialog extends StatelessWidget {
   Widget _buildStatusBadgeDetail(String status) {
     Color bgColor;
     Color textColor;
-    
+
     switch (status.toLowerCase()) {
       case 'open':
         bgColor = AppTheme.green100;
@@ -1285,7 +1322,7 @@ class _AuditDetailsDialog extends StatelessWidget {
   Widget _buildStatusChip(String status, int count) {
     Color bgColor;
     Color textColor;
-    
+
     switch (status) {
       case 'Pending':
         bgColor = AppTheme.gray100;
@@ -1351,23 +1388,52 @@ class _AuditQuestionsDialog extends StatefulWidget {
 class _AuditQuestionsDialogState extends State<_AuditQuestionsDialog> {
   final ApiService _apiService = ApiService();
   bool _isClosingAudit = false;
+  late Map<String, dynamic> _audit;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _audit = widget.audit;
+  }
+
+  Future<void> _refreshAudit() async {
+    // Don't show loading spinner for refresh to avoid flicker
+    try {
+      final auditId = _audit['_id'] ?? _audit['id'];
+      final response = await _apiService.getAuditMainById(id: auditId);
+      if (mounted) {
+        setState(() {
+          if (response.containsKey('audit')) {
+            _audit = response['audit'];
+          } else {
+            _audit = response;
+          }
+        });
+      }
+    } catch (e) {
+      developer.log('Error refreshing audit: $e', name: 'AuditQuestionsDialog');
+    }
+  }
 
   // Check if all questions are approved and audit is not already closed
   bool _shouldShowCloseButton() {
-    final questions = widget.audit['auditQuestions'] as List? ?? [];
-    final auditStatus = widget.audit['auditStatus']?.toString().toLowerCase() ?? 'open';
-    
+    final questions = _audit['auditQuestions'] as List? ?? [];
+    final auditStatus =
+        _audit['auditStatus']?.toString().toLowerCase() ?? 'open';
+
     // Don't show if audit is already closed
     if (auditStatus == 'close' || auditStatus == 'closed') {
       return false;
     }
-    
+
     // Don't show if no questions
     if (questions.isEmpty) return false;
-    
+
     // Only show if all questions are approved
-    return questions.every((question) => 
-        question['status']?.toString().toLowerCase() == 'approved');
+    return questions.every(
+      (question) => question['status']?.toString().toLowerCase() == 'approved',
+    );
   }
 
   // Close audit method
@@ -1375,7 +1441,7 @@ class _AuditQuestionsDialogState extends State<_AuditQuestionsDialog> {
     setState(() => _isClosingAudit = true);
 
     try {
-      final auditId = widget.audit['_id'] ?? widget.audit['id'];
+      final auditId = _audit['_id'] ?? _audit['id'];
       await _apiService.closeAuditMain(id: auditId);
 
       if (mounted) {
@@ -1406,7 +1472,7 @@ class _AuditQuestionsDialogState extends State<_AuditQuestionsDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final questions = widget.audit['auditQuestions'] as List? ?? [];
+    final questions = _audit['auditQuestions'] as List? ?? [];
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
     final shouldShowCloseButton = _shouldShowCloseButton();
@@ -1441,7 +1507,9 @@ class _AuditQuestionsDialogState extends State<_AuditQuestionsDialog> {
                           height: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
                           ),
                         )
                       : const Icon(Icons.check_circle),
@@ -1484,12 +1552,10 @@ class _AuditQuestionsDialogState extends State<_AuditQuestionsDialog> {
 
   Widget _buildQuestionsList(List questions, bool isMobile) {
     if (questions.isEmpty) {
-      return const Center(
-        child: Text('No questions available'),
-      );
+      return const Center(child: Text('No questions available'));
     }
 
-    return isMobile 
+    return isMobile
         ? _buildMobileQuestionsList(questions)
         : _buildDesktopQuestionsTable(questions);
   }
@@ -1502,11 +1568,36 @@ class _AuditQuestionsDialogState extends State<_AuditQuestionsDialog> {
         child: DataTable(
           headingRowColor: WidgetStateProperty.all(AppTheme.gray50),
           columns: const [
-            DataColumn(label: Text('Question', style: TextStyle(fontWeight: FontWeight.w600))),
-            DataColumn(label: Text('Status', style: TextStyle(fontWeight: FontWeight.w600))),
-            DataColumn(label: Text('Assigned To', style: TextStyle(fontWeight: FontWeight.w600))),
-            DataColumn(label: Text('Deadline', style: TextStyle(fontWeight: FontWeight.w600))),
-            DataColumn(label: Text('Actions', style: TextStyle(fontWeight: FontWeight.w600))),
+            DataColumn(
+              label: Text(
+                'Question',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                'Status',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                'Assigned To',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                'Deadline',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                'Actions',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
           ],
           rows: questions.map((q) => _buildQuestionRow(q)).toList(),
         ),
@@ -1581,10 +1672,7 @@ class _AuditQuestionsDialogState extends State<_AuditQuestionsDialog> {
             const SizedBox(height: 12),
             Text(
               'Deadline: $deadline',
-              style: const TextStyle(
-                fontSize: 12,
-                color: AppTheme.gray600,
-              ),
+              style: const TextStyle(fontSize: 12, color: AppTheme.gray600),
             ),
             const SizedBox(height: 12),
             Wrap(
@@ -1598,10 +1686,13 @@ class _AuditQuestionsDialogState extends State<_AuditQuestionsDialog> {
     );
   }
 
-  Widget _buildQuestionStatusBadgeWithData(String status, Map<String, dynamic> question) {
+  Widget _buildQuestionStatusBadgeWithData(
+    String status,
+    Map<String, dynamic> question,
+  ) {
     Color bgColor;
     Color textColor;
-    
+
     switch (status.toLowerCase()) {
       case 'pending':
         bgColor = AppTheme.gray100;
@@ -1654,13 +1745,11 @@ class _AuditQuestionsDialogState extends State<_AuditQuestionsDialog> {
     );
 
     // Add tooltip for rejected and revision statuses
-    if (status.toLowerCase() == 'rejected' || status.toLowerCase() == 'revision') {
+    if (status.toLowerCase() == 'rejected' ||
+        status.toLowerCase() == 'revision') {
       return Tooltip(
         message: _getRejectionReasonFromQuestion(status, question),
-        child: InkWell(
-          onTap: () => _showRejectionReasonDialogWithData(status, question),
-          child: statusBadge,
-        ),
+        child: statusBadge,
       );
     }
 
@@ -1670,7 +1759,7 @@ class _AuditQuestionsDialogState extends State<_AuditQuestionsDialog> {
   Widget _buildQuestionStatusBadge(String status) {
     Color bgColor;
     Color textColor;
-    
+
     switch (status.toLowerCase()) {
       case 'pending':
         bgColor = AppTheme.gray100;
@@ -1723,63 +1812,97 @@ class _AuditQuestionsDialogState extends State<_AuditQuestionsDialog> {
     );
 
     // Add tooltip for rejected and revision statuses
-    if (status.toLowerCase() == 'rejected' || status.toLowerCase() == 'revision') {
-      return Tooltip(
-        message: _getRejectionReason(status),
-        child: InkWell(
-          onTap: () => _showRejectionReasonDialog(status),
-          child: statusBadge,
-        ),
-      );
+    if (status.toLowerCase() == 'rejected' ||
+        status.toLowerCase() == 'revision') {
+      return Tooltip(message: _getRejectionReason(status), child: statusBadge);
     }
 
     return statusBadge;
   }
 
-  Widget _buildQuestionActionButtons(Map<String, dynamic> question, String status) {
+  Widget _buildQuestionActionButtons(
+    Map<String, dynamic> question,
+    String status,
+  ) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: _getActionButtonsForStatus(question, status),
     );
   }
 
-  List<Widget> _getActionButtonsForStatus(Map<String, dynamic> question, String status) {
+  List<Widget> _getActionButtonsForStatus(
+    Map<String, dynamic> question,
+    String status,
+  ) {
     switch (status.toLowerCase()) {
       case 'pending':
         return [
-          _buildActionButton(Icons.person_add, 'Assign', AppTheme.blue600, () => _assignStaff(question)),
+          _buildActionButton(
+            Icons.person_add,
+            'Assign',
+            AppTheme.blue600,
+            () => _assignStaff(question),
+          ),
         ];
-      
+
       case 'accepted':
         return []; // No action buttons for accepted status
-      
+
       case 'rejected':
         return [
-          _buildActionButton(Icons.swap_horiz, 'Reassign Staff', AppTheme.blue600, () => _reassignStaff(question)),
+          _buildActionButton(
+            Icons.swap_horiz,
+            'Reassign Staff',
+            AppTheme.blue600,
+            () => _reassignStaff(question),
+          ),
         ];
-      
+
       case 'submitted':
         return [
-          _buildActionButton(Icons.download, 'Download', AppTheme.green600, () => _downloadFile(question)),
-          _buildActionButton(Icons.check, 'Approve', AppTheme.green600, () => _approveSubmission(question)),
-          _buildActionButton(Icons.close, 'Reject', AppTheme.red500, () => _rejectSubmission(question)),
+          _buildActionButton(
+            Icons.download,
+            'Download',
+            AppTheme.green600,
+            () => _downloadFile(question),
+          ),
+          _buildActionButton(
+            Icons.check,
+            'Approve',
+            AppTheme.green600,
+            () => _approveSubmission(question),
+          ),
+          _buildActionButton(
+            Icons.close,
+            'Reject',
+            AppTheme.red500,
+            () => _rejectSubmission(question),
+          ),
         ];
-      
+
       case 'approved':
       case 'completed':
         return [
-          _buildActionButton(Icons.download, 'Download', AppTheme.green600, () => _downloadFile(question)),
+          _buildActionButton(
+            Icons.download,
+            'Download',
+            AppTheme.green600,
+            () => _downloadFile(question),
+          ),
         ];
-      
+
       case 'revision':
         return []; // No action buttons for revision status
-      
+
       default:
         return [];
     }
   }
 
-  List<Widget> _buildMobileActionButtons(Map<String, dynamic> question, String status) {
+  List<Widget> _buildMobileActionButtons(
+    Map<String, dynamic> question,
+    String status,
+  ) {
     final buttons = _getActionButtonsForStatus(question, status);
     return buttons.map((btn) {
       if (btn is IconButton) {
@@ -1796,7 +1919,12 @@ class _AuditQuestionsDialogState extends State<_AuditQuestionsDialog> {
     }).toList();
   }
 
-  Widget _buildActionButton(IconData icon, String tooltip, Color color, VoidCallback onPressed) {
+  Widget _buildActionButton(
+    IconData icon,
+    String tooltip,
+    Color color,
+    VoidCallback onPressed,
+  ) {
     return IconButton(
       icon: Icon(icon, size: 18),
       onPressed: onPressed,
@@ -1810,12 +1938,12 @@ class _AuditQuestionsDialogState extends State<_AuditQuestionsDialog> {
     showDialog(
       context: context,
       builder: (context) => AssignQuestionDialog(
-        audit: widget.audit,
+        audit: _audit,
         question: question,
         isReassign: false,
         onAssignmentChanged: () {
           // Refresh the questions list
-          setState(() {});
+          _refreshAudit();
         },
       ),
     );
@@ -1825,21 +1953,21 @@ class _AuditQuestionsDialogState extends State<_AuditQuestionsDialog> {
     showDialog(
       context: context,
       builder: (context) => AssignQuestionDialog(
-        audit: widget.audit,
+        audit: _audit,
         question: question,
         isReassign: true,
         onAssignmentChanged: () {
           // Refresh the questions list
-          setState(() {});
+          _refreshAudit();
         },
       ),
     );
   }
 
   void _sendReminder(Map<String, dynamic> question) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Reminder sent!')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Reminder sent!')));
   }
 
   void _downloadFile(Map<String, dynamic> question) {
@@ -1852,12 +1980,12 @@ class _AuditQuestionsDialogState extends State<_AuditQuestionsDialog> {
     showDialog(
       context: context,
       builder: (context) => ReviewQuestionDialog(
-        audit: widget.audit,
+        audit: _audit,
         question: question,
         action: 'approve',
         onReviewCompleted: () {
           // Refresh the questions list
-          setState(() {});
+          _refreshAudit();
         },
       ),
     );
@@ -1867,12 +1995,12 @@ class _AuditQuestionsDialogState extends State<_AuditQuestionsDialog> {
     showDialog(
       context: context,
       builder: (context) => ReviewQuestionDialog(
-        audit: widget.audit,
+        audit: _audit,
         question: question,
         action: 'reject',
         onReviewCompleted: () {
           // Refresh the questions list
-          setState(() {});
+          _refreshAudit();
         },
       ),
     );
@@ -1883,72 +2011,24 @@ class _AuditQuestionsDialogState extends State<_AuditQuestionsDialog> {
     // This should be replaced with actual API data from the question object
     // For now, returning a placeholder
     if (status.toLowerCase() == 'rejected') {
-      return 'Click to view rejection reason';
+      return 'Rejection reason available in details';
     } else if (status.toLowerCase() == 'revision') {
-      return 'Click to view revision reason';
+      return 'Revision reason available in details';
     }
     return '';
   }
 
   // Helper method to get rejection reason from question data
-  String _getRejectionReasonFromQuestion(String status, Map<String, dynamic> question) {
+  String _getRejectionReasonFromQuestion(
+    String status,
+    Map<String, dynamic> question,
+  ) {
     // Extract rejection reason from question data
     if (status.toLowerCase() == 'rejected') {
-      return question['rejectionReason'] ?? 'Click to view rejection reason';
+      return question['rejectionReason'] ?? 'No rejection reason provided';
     } else if (status.toLowerCase() == 'revision') {
-      return question['reviewRejectionReason'] ?? 'Click to view revision reason';
+      return question['reviewRejectionReason'] ?? 'No revision reason provided';
     }
     return '';
-  }
-
-  // Method to show rejection reason dialog
-  void _showRejectionReasonDialog(String status) {
-    // This should fetch the actual rejection reason from API
-    String reason = 'Rejection reason will be fetched from API';
-    
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('${status.toLowerCase() == 'rejected' ? 'Rejection' : 'Revision'} Reason'),
-        content: Text(reason),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Method to show rejection reason dialog with question data
-  void _showRejectionReasonDialogWithData(String status, Map<String, dynamic> question) {
-    String reason;
-    String title;
-    
-    if (status.toLowerCase() == 'rejected') {
-      reason = question['rejectionReason'] ?? 'No rejection reason provided';
-      title = 'Rejection Reason';
-    } else {
-      reason = question['reviewRejectionReason'] ?? 'No revision reason provided';
-      title = 'Revision Reason';
-    }
-    
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Container(
-          constraints: const BoxConstraints(maxWidth: 400),
-          child: Text(reason),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
   }
 }
