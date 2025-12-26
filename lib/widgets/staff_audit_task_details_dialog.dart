@@ -1,3 +1,4 @@
+import 'package:convert2dart/services/api_service.dart';
 import 'package:flutter/material.dart';
 import '../models/audit_main.dart';
 import '../theme/app_theme.dart';
@@ -14,7 +15,7 @@ class StaffAuditTaskDetailsDialog extends StatelessWidget {
   // For now I'll use a placeholder or assume ApiService.baseUrl + '/uploads/' + filename
   // BUT: check ApiService for getDownloadUrl logic? ApiService doesn't expose it directly publicly here.
   // Helper:
-  static const String _baseUrl = 'http://192.168.29.110:5000/uploads/';
+  // static const String _baseUrl = 'http://192.168.29.110:5000/uploads/';
   // Adjust path if needed. The User didn't specify, so I'll try to use a standard patterns or just show filename.
 
   const StaffAuditTaskDetailsDialog({super.key, required this.task});
@@ -227,7 +228,7 @@ class StaffAuditTaskDetailsDialog extends StatelessWidget {
             onPressed: () {
               String url = fileName;
               if (!url.startsWith('http')) {
-                url = '$_baseUrl$fileName';
+                url = '${ApiService.baseUrl}/uploads/$fileName';
               }
               _launchUrl(context, url);
             },

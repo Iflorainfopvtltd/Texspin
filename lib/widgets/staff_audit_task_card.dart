@@ -8,8 +8,8 @@ import 'dart:developer' as developer;
 class StaffAuditTaskCard extends StatelessWidget {
   final AuditMain task;
   final String? currentStaffId;
-  final VoidCallback onAccept;
-  final VoidCallback onReject;
+  final Function(String) onAccept;
+  final Function(String) onReject;
   final VoidCallback? onSubmit;
 
   const StaffAuditTaskCard({
@@ -91,11 +91,31 @@ class StaffAuditTaskCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Status Logic
-    final bool isPending = task.status.toLowerCase() == 'pending';
+    String status = task.status;
+    Map<String, dynamic> assignedQ = {};
+    if (task.auditQuestions != null && currentStaffId != null) {
+      assignedQ = task.auditQuestions!.firstWhere(
+        (q) => q['assignedTo'] == currentStaffId,
+        orElse: () => {},
+      );
+      if (assignedQ.isNotEmpty && assignedQ['status'] != null) {
+        status = assignedQ['status'];
+      }
+    }
+
+    final questionId = assignedQ['questionId']?.toString() ?? '';
+    final bool isAssigned = status.toLowerCase() == 'assigned';
+
+    final bool isPending =
+        status.toLowerCase() ==
+        'pending'; // Fallback logic? Or maybe removed if assigned covers it.
+    // User said: "if status assigned then we have to display accept and reject".
+    // I will prioritize isAssigned check for buttons.
+
     final bool isApproved =
-        task.status.toLowerCase() == 'approved' ||
-        task.status.toLowerCase() == 'accepted';
-    final bool isRevision = task.status.toLowerCase() == 'revision';
+        status.toLowerCase() == 'approved' ||
+        status.toLowerCase() == 'accepted';
+    final bool isRevision = status.toLowerCase() == 'revision';
 
     final String taskName = task.auditTemplate?['name'] ?? 'Audit Task';
 
@@ -187,10 +207,10 @@ class StaffAuditTaskCard extends StatelessWidget {
                         label: Text(isRevision ? 'Submit Revision' : 'Submit'),
                       ),
                     ],
-                    if (isPending) ...[
+                    if (isAssigned && questionId.isNotEmpty) ...[
                       const SizedBox(width: 8),
                       ElevatedButton(
-                        onPressed: onReject,
+                        onPressed: () => onReject(questionId),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.red500,
                           foregroundColor: Colors.white,
@@ -202,7 +222,7 @@ class StaffAuditTaskCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       ElevatedButton(
-                        onPressed: onAccept,
+                        onPressed: () => onAccept(questionId),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.green500,
                           foregroundColor: Colors.white,

@@ -93,7 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     // const SizedBox(height: 12),
                     const Text(
-                      'APQP Management System',
+                      'Project Management System',
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w500,
@@ -238,32 +238,31 @@ class _LoginScreenState extends State<LoginScreen> {
                       },
                     ),
 
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text(
-                          "Don't have an account? ",
-                          style: TextStyle(color: AppTheme.gray600),
-                        ),
-                        TextButton(
-                          onPressed: widget.onNavigateToRegister,
-                          style: TextButton.styleFrom(
-                            padding: EdgeInsets.zero,
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          child: const Text(
-                            'Create account',
-                            style: TextStyle(color: AppTheme.blue600),
-                          ),
-                        ),
-                      ],
-                    ),
-
+                    // const SizedBox(height: 16),
+                    // Row(
+                    //   mainAxisAlignment: MainAxisAlignment.center,
+                    //   children: [
+                    //     const Text(
+                    //       "Don't have an account? ",
+                    //       style: TextStyle(color: AppTheme.gray600),
+                    //     ),
+                    //     TextButton(
+                    //       onPressed: widget.onNavigateToRegister,
+                    //       style: TextButton.styleFrom(
+                    //         padding: EdgeInsets.zero,
+                    //         minimumSize: Size.zero,
+                    //         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    //       ),
+                    //       child: const Text(
+                    //         'Create account',
+                    //         style: TextStyle(color: AppTheme.blue600),
+                    //       ),
+                    //     ),
+                    //   ],
+                    // ),
                     const SizedBox(height: 32),
                     const Text(
-                      '© 2025 APQP Management System. All rights reserved by IFLORA INFO PVT LTD.',
+                      '© 2025 Project Management System. All rights reserved by IFLORA INFO PVT LTD.',
                       style: TextStyle(fontSize: 12, color: AppTheme.gray600),
                       textAlign: TextAlign.center,
                     ),

@@ -1,11 +1,12 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../utils/shared_preferences_manager.dart';
 import '../screens/app.dart';
 import 'dart:developer' as developer;
 
 class ApiService {
-  static const String baseUrl =
-      'http://192.168.29.110:5000'; // Update with actual base URL
+  static const String baseUrl = 'http://192.168.29.110:5000';
+  // static const String baseUrl = 'https://texspinapi.ifloriana.com';
   late final Dio _dio;
 
   // Singleton pattern to ensure consistent configuration
@@ -31,7 +32,6 @@ class ApiService {
     );
 
     // Debug logging to verify base URL configuration
-    print('🔥 ApiService initialized with baseUrl: $baseUrl');
   }
 
   // Create Activity
@@ -1625,14 +1625,11 @@ class ApiService {
 
       // Add files if provided
       final filesToUpload = files ?? (file != null ? [file] : <dynamic>[]);
-      print('API: Files to upload: ${filesToUpload.length}');
 
       for (final fileItem in filesToUpload) {
         if (fileItem != null) {
-          print('API: Processing file: ${fileItem.name}');
           // Use bytes for web platform, path for mobile
           if (fileItem.bytes != null) {
-            print('API: Using bytes for ${fileItem.name}');
             formData.files.add(
               MapEntry(
                 'attachments',
@@ -1643,7 +1640,6 @@ class ApiService {
               ),
             );
           } else if (fileItem.path != null) {
-            print('API: Using path for ${fileItem.name}');
             formData.files.add(
               MapEntry(
                 'attachments',
@@ -1705,14 +1701,11 @@ class ApiService {
 
       // Add files if provided
       final filesToUpload = files ?? (file != null ? [file] : <dynamic>[]);
-      print('API UPDATE: Files to upload: ${filesToUpload.length}');
 
       for (final fileItem in filesToUpload) {
         if (fileItem != null) {
-          print('API UPDATE: Processing file: ${fileItem.name}');
           // Use bytes for web platform, path for mobile
           if (fileItem.bytes != null) {
-            print('API UPDATE: Using bytes for ${fileItem.name}');
             formData.files.add(
               MapEntry(
                 'attachments',
@@ -1723,7 +1716,6 @@ class ApiService {
               ),
             );
           } else if (fileItem.path != null) {
-            print('API UPDATE: Using path for ${fileItem.name}');
             formData.files.add(
               MapEntry(
                 'attachments',
@@ -2572,6 +2564,31 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> respondToAuditQuestion({
+    required String auditId,
+    required String questionId,
+    required String action, // "approve" or "reject"
+    String? reason,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      final data = {'action': action};
+      if (action == 'reject' && reason != null) {
+        data['reason'] = reason;
+      }
+
+      final response = await _dio.patch(
+        '/texspin/api/audit-main/$auditId/staff-action/$questionId',
+        data: data,
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
   Future<Map<String, dynamic>> closeAuditMain({
     required String id,
     String? bearerToken,
@@ -2762,6 +2779,50 @@ class ApiService {
         '/texspin/api/audit-main/$auditId',
         data: auditData,
         options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // Upload Audit Question File
+  Future<Map<String, dynamic>> uploadAuditQuestionFile({
+    required String auditId,
+    required String questionId,
+    required String filePath,
+    List<int>? fileBytes,
+    required String fileName,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+
+      MultipartFile multipartFile;
+
+      if (kIsWeb) {
+        if (fileBytes == null) {
+          throw Exception('File bytes required for web');
+        }
+        multipartFile = MultipartFile.fromBytes(fileBytes, filename: fileName);
+      } else {
+        multipartFile = await MultipartFile.fromFile(
+          filePath,
+          filename: fileName,
+        );
+      }
+
+      FormData formData = FormData.fromMap({'taskFile': multipartFile});
+
+      final response = await _dio.patch(
+        '/texspin/api/audit-main/$auditId/upload-question-file/$questionId',
+        data: formData,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'multipart/form-data',
+          },
+        ),
       );
       return response.data;
     } on DioException catch (e) {

@@ -6,6 +6,7 @@ import '../theme/app_theme.dart';
 import '../utils/shared_preferences_manager.dart';
 
 import 'staff_audit_task_submission_dialog.dart';
+import 'staff_audit_question_submission_dialog.dart';
 import 'custom_text_input.dart';
 import 'dart:developer' as developer;
 
@@ -76,19 +77,21 @@ class _StaffAuditTasksDialogState extends State<StaffAuditTasksDialog> {
 
   Future<void> _handleTaskResponse(
     String auditId,
-    String status, {
+    String questionId,
+    String action, {
     String? reason,
   }) async {
     try {
-      await _apiService.respondToAuditTask(
+      await _apiService.respondToAuditQuestion(
         auditId: auditId,
-        status: status,
-        rejectionReason: reason,
+        questionId: questionId,
+        action: action,
+        reason: reason,
       );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Audit Task $status successfully')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Task $action successfully')));
         _loadTasks();
       }
     } catch (e) {
@@ -102,7 +105,6 @@ class _StaffAuditTasksDialogState extends State<StaffAuditTasksDialog> {
 
   Future<void> _downloadFile(String fileName, String label) async {
     try {
-      // Check storage permission first
       if (!await FileDownloadService.hasStoragePermission()) {
         final granted = await FileDownloadService.requestStoragePermission();
         if (!granted) {
@@ -129,28 +131,15 @@ class _StaffAuditTasksDialogState extends State<StaffAuditTasksDialog> {
         );
       }
 
-      // Assuming files are served from /uploads/ path if they are relative filenames
-      // If the API returns full URLs, this logic needs adjustment.
-      // Based on typical behavior, we'll try prepending base url + /uploads/ or similar if it's just a filename.
-      // However, usually API key responses like "previousDoc" are just filenames.
-      // Let's assume a standard path for now or just append to base URL if it looks like a path.
-
       String fileUrl = fileName;
       if (!fileName.startsWith('http')) {
-        // If it's just a filename, assume it's under /texspin/api/uploads/ or similar?
-        // Actually, let's use the file upload logic as a hint or just standard static file serving.
-        // If we don't know the accurate path, we might fail.
-        // For now, let's try assuming it's a relative path from baseUrl.
         fileUrl = '${ApiService.baseUrl}/$fileName';
-        // Note: You might need to adjust this path prefix based on backend static file serving config.
       }
 
       final filePath = await FileDownloadService.downloadFile(
         url: fileUrl,
         fileName: fileName.split('/').last,
-        onProgress: (received, total) {
-          // Optional: update progress UI
-        },
+        onProgress: (received, total) {},
       );
 
       if (mounted) {
@@ -177,12 +166,12 @@ class _StaffAuditTasksDialogState extends State<StaffAuditTasksDialog> {
     }
   }
 
-  void _showRejectDialog(String auditId) {
+  void _showRejectDialog(String auditId, String questionId) {
     final TextEditingController reasonController = TextEditingController();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Reject Audit Task'),
+        title: const Text('Reject Task'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -206,7 +195,8 @@ class _StaffAuditTasksDialogState extends State<StaffAuditTasksDialog> {
                 Navigator.pop(context);
                 _handleTaskResponse(
                   auditId,
-                  'rejected',
+                  questionId,
+                  'reject',
                   reason: reasonController.text,
                 );
               }
@@ -265,106 +255,135 @@ class _StaffAuditTasksDialogState extends State<StaffAuditTasksDialog> {
                             DataColumn(label: Text('Status')),
                             DataColumn(label: Text('Actions')),
                           ],
-                          rows: _tasks.map((task) {
-                            final isPending =
-                                task.status.toLowerCase() == 'pending';
-                            final isApproved =
-                                task.status.toLowerCase() == 'approved' ||
-                                task.status.toLowerCase() == 'accepted';
-                            final isRevision =
-                                task.status.toLowerCase() == 'revision';
+                          rows: _tasks.expand((task) {
+                            // Filter questions assigned to current staff
+                            final myQuestions =
+                                task.auditQuestions?.where((q) {
+                                  return q['assignedTo'] == _currentStaffId;
+                                }).toList() ??
+                                [];
 
-                            return DataRow(
-                              cells: [
-                                DataCell(
-                                  Text(task.auditTemplate?['name'] ?? 'N/A'),
+                            // If no specific questions, show one generic row (or none? existing logic showed one)
+                            if (myQuestions.isEmpty) {
+                              return [
+                                DataRow(
+                                  cells: [
+                                    DataCell(
+                                      Text(
+                                        task.auditTemplate?['name'] ?? 'N/A',
+                                      ),
+                                    ),
+                                    DataCell(Text(_formatDate(task.date))),
+                                    const DataCell(
+                                      Text('No questions assigned'),
+                                    ),
+                                    DataCell(
+                                      _buildStatusBadge(task.status),
+                                    ), // Fallback to task status
+                                    DataCell(_buildAttachmentMenu(task)),
+                                  ],
                                 ),
-                                DataCell(Text(_formatDate(task.date))),
-                                DataCell(
-                                  SizedBox(
-                                    width: 300,
-                                    child: _buildAssignedQuestions(task),
-                                  ),
-                                ),
-                                DataCell(
-                                  // Find the status of the first assigned question for this staff
-                                  Builder(
-                                    builder: (context) {
-                                      String status = task.status; // Default
-                                      if (task.auditQuestions != null &&
-                                          _currentStaffId != null) {
-                                        final assignedQ = task.auditQuestions!
-                                            .firstWhere(
-                                              (q) =>
-                                                  q['assignedTo'] ==
-                                                  _currentStaffId,
-                                              orElse: () => {},
-                                            );
-                                        if (assignedQ.isNotEmpty &&
-                                            assignedQ['status'] != null) {
-                                          status = assignedQ['status'];
-                                        }
-                                      }
-                                      return _buildStatusBadge(status);
-                                    },
-                                  ),
-                                ),
-                                DataCell(
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      // Attachment Menu
-                                      _buildAttachmentMenu(task),
+                              ];
+                            }
 
-                                      if (isApproved || isRevision) ...[
-                                        const SizedBox(width: 8),
-                                        IconButton(
-                                          icon: const Icon(
-                                            Icons.upload,
-                                            color: AppTheme.blue600,
-                                          ),
-                                          tooltip: isRevision
-                                              ? 'Submit Revision'
-                                              : 'Submit Audit',
-                                          onPressed: () {
-                                            showDialog(
-                                              context: context,
-                                              builder: (context) =>
-                                                  StaffAuditTaskSubmissionDialog(
-                                                    task: task,
-                                                    onSubmitted: _loadTasks,
-                                                  ),
-                                            );
-                                          },
-                                        ),
-                                      ],
-                                      if (isPending) ...[
-                                        IconButton(
-                                          icon: const Icon(
-                                            Icons.check_circle,
-                                            color: AppTheme.green600,
-                                          ),
-                                          tooltip: 'Accept',
-                                          onPressed: () => _handleTaskResponse(
-                                            task.id,
-                                            'approved',
-                                          ),
-                                        ),
-                                        IconButton(
-                                          icon: const Icon(
-                                            Icons.cancel,
-                                            color: AppTheme.red500,
-                                          ),
-                                          tooltip: 'Reject',
-                                          onPressed: () =>
-                                              _showRejectDialog(task.id),
-                                        ),
-                                      ],
-                                    ],
+                            // Create a row for each assigned question
+                            return myQuestions.map((question) {
+                              final status =
+                                  question['status']?.toString() ?? task.status;
+                              final qId = question['_id']?.toString() ?? '';
+                              final questionText =
+                                  question['question']?.toString() ??
+                                  'Unknown Question';
+
+                              final isAssigned =
+                                  status.toLowerCase() == 'assigned';
+                              final isApproved =
+                                  status.toLowerCase() == 'accepted' ||
+                                  status.toLowerCase() == 'approved';
+                              final isRevision =
+                                  status.toLowerCase() == 'revision';
+
+                              return DataRow(
+                                cells: [
+                                  DataCell(
+                                    Text(task.auditTemplate?['name'] ?? 'N/A'),
                                   ),
-                                ),
-                              ],
-                            );
+                                  DataCell(Text(_formatDate(task.date))),
+                                  DataCell(
+                                    SizedBox(
+                                      width: 300,
+                                      child: Text(questionText),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    _buildStatusBadge(
+                                      status,
+                                      reason:
+                                          question['reason']?.toString() ??
+                                          question['rejectionReason']
+                                              ?.toString(),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        // Attachment Menu
+                                        _buildAttachmentMenu(task),
+
+                                        if (isApproved || isRevision) ...[
+                                          const SizedBox(width: 8),
+                                          IconButton(
+                                            icon: const Icon(
+                                              Icons.upload,
+                                              color: AppTheme.blue600,
+                                            ),
+                                            tooltip: isRevision
+                                                ? 'Submit Revision'
+                                                : 'Submit Audit',
+                                            onPressed: () {
+                                              showDialog(
+                                                context: context,
+                                                builder: (context) =>
+                                                    StaffAuditQuestionSubmissionDialog(
+                                                      task: task,
+                                                      question: question,
+                                                      onSubmitted: _loadTasks,
+                                                    ),
+                                              );
+                                            },
+                                          ),
+                                        ],
+                                        if (isAssigned && qId.isNotEmpty) ...[
+                                          IconButton(
+                                            icon: const Icon(
+                                              Icons.check_circle,
+                                              color: AppTheme.green600,
+                                            ),
+                                            tooltip: 'Accept',
+                                            onPressed: () =>
+                                                _handleTaskResponse(
+                                                  task.id,
+                                                  qId,
+                                                  'approve',
+                                                ),
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(
+                                              Icons.cancel,
+                                              color: AppTheme.red500,
+                                            ),
+                                            tooltip: 'Reject',
+                                            onPressed: () =>
+                                                _showRejectDialog(task.id, qId),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              );
+                            });
                           }).toList(),
                         ),
                       ),
@@ -373,39 +392,6 @@ class _StaffAuditTasksDialogState extends State<StaffAuditTasksDialog> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildAssignedQuestions(AuditMain task) {
-    if (task.auditQuestions == null ||
-        task.auditQuestions!.isEmpty ||
-        _currentStaffId == null) {
-      return const Text('No questions assigned');
-    }
-
-    final assignedQuestions = task.auditQuestions!.where((q) {
-      return q['assignedTo'] == _currentStaffId;
-    }).toList();
-
-    if (assignedQuestions.isEmpty) {
-      return const Text('No questions assigned');
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: assignedQuestions.map((q) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 2.0),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('• ', style: TextStyle(fontWeight: FontWeight.bold)),
-              Expanded(child: Text(q['question'] ?? 'Unknown Question')),
-            ],
-          ),
-        );
-      }).toList(),
     );
   }
 
@@ -464,7 +450,7 @@ class _StaffAuditTasksDialogState extends State<StaffAuditTasksDialog> {
     );
   }
 
-  Widget _buildStatusBadge(String status) {
+  Widget _buildStatusBadge(String status, {String? reason}) {
     Color color;
     switch (status.toLowerCase()) {
       case 'accepted':
@@ -486,7 +472,7 @@ class _StaffAuditTasksDialogState extends State<StaffAuditTasksDialog> {
         color = AppTheme.blue500;
     }
 
-    return Container(
+    final badge = Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
@@ -501,6 +487,25 @@ class _StaffAuditTasksDialogState extends State<StaffAuditTasksDialog> {
         ),
       ),
     );
+
+    if (reason != null &&
+        reason.isNotEmpty &&
+        (status.toLowerCase() == 'rejected' ||
+            status.toLowerCase() == 'revision')) {
+      return Tooltip(
+        message: '$reason',
+        padding: const EdgeInsets.all(8),
+        margin: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.black87,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        textStyle: const TextStyle(color: Colors.white),
+        child: badge,
+      );
+    }
+
+    return badge;
   }
 
   String _formatDate(String dateStr) {

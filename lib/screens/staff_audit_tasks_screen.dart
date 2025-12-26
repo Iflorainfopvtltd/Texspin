@@ -74,19 +74,21 @@ class _StaffAuditTasksScreenState extends State<StaffAuditTasksScreen> {
 
   Future<void> _handleTaskResponse(
     String auditId,
-    String status, {
+    String questionId,
+    String action, {
     String? reason,
   }) async {
     try {
-      await _apiService.respondToAuditTask(
+      await _apiService.respondToAuditQuestion(
         auditId: auditId,
-        status: status,
-        rejectionReason: reason,
+        questionId: questionId,
+        action: action,
+        reason: reason,
       );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Audit Task $status successfully')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Task $action successfully')));
         _loadTasks();
       }
     } catch (e) {
@@ -98,12 +100,12 @@ class _StaffAuditTasksScreenState extends State<StaffAuditTasksScreen> {
     }
   }
 
-  void _showRejectDialog(String auditId) {
+  void _showRejectDialog(String auditId, String questionId) {
     final TextEditingController reasonController = TextEditingController();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Reject Audit Task'),
+        title: const Text('Reject Task'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -127,7 +129,8 @@ class _StaffAuditTasksScreenState extends State<StaffAuditTasksScreen> {
                 Navigator.pop(context);
                 _handleTaskResponse(
                   auditId,
-                  'rejected',
+                  questionId,
+                  'reject',
                   reason: reasonController.text,
                 );
               }
@@ -167,8 +170,9 @@ class _StaffAuditTasksScreenState extends State<StaffAuditTasksScreen> {
                   return StaffAuditTaskCard(
                     task: task,
                     currentStaffId: _currentStaffId,
-                    onAccept: () => _handleTaskResponse(task.id, 'approved'),
-                    onReject: () => _showRejectDialog(task.id),
+                    onAccept: (qId) =>
+                        _handleTaskResponse(task.id, qId, 'approve'),
+                    onReject: (qId) => _showRejectDialog(task.id, qId),
                     onSubmit: () {
                       showDialog(
                         context: context,
