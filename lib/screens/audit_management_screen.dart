@@ -79,7 +79,7 @@ class _AuditManagementScreenState extends State<AuditManagementScreen> {
           showDialog(
             context: context,
             builder: (context) => CreateAuditMainDialog(
-              onAuditCreated: () {
+              onAuditCreated: () {  
                 _fetchAudits();
               },
             ),

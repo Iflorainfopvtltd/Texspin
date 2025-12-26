@@ -178,6 +178,7 @@ class _IndividualTaskManagementDialogState
       case 'in progress':
         return AppTheme.blue500;
       case 'submitted':
+      case 'revision':
         return AppTheme.blue500;
       case 'rejected':
         return AppTheme.red500;
@@ -603,7 +604,8 @@ class _IndividualTaskManagementDialogState
           ),
         ),
         DataCell(
-          task.status.toLowerCase() == 'rejected'
+          (task.status.toLowerCase() == 'rejected' ||
+                  task.status.toLowerCase() == 'revision')
               ? Tooltip(
                   message: task.rejectionReason ?? 'No reason provided',
                   triggerMode: TooltipTriggerMode.tap,

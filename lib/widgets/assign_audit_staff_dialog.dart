@@ -74,13 +74,6 @@ class _AssignAuditStaffDialogState extends State<AssignAuditStaffDialog> {
 
     setState(() => _isSubmitting = true);
     try {
-      // TODO: Implement API call to assign staff to question
-      // await _apiService.assignQuestionToStaff({
-      //   'questionId': widget.question['_id'],
-      //   'staffIds': _selectedStaff,
-      //   'deadline': _selectedDeadline.toIso8601String(),
-      // });
-
       if (mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(

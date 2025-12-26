@@ -601,7 +601,8 @@ class DepartmentTaskCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                task.status.toLowerCase() == 'rejected'
+                (task.status.toLowerCase() == 'rejected' ||
+                        task.status.toLowerCase() == 'revision')
                     ? Tooltip(
                         message: task.rejectionReason ?? 'No reason provided',
                         triggerMode: TooltipTriggerMode.tap,
