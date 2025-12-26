@@ -421,10 +421,17 @@ class _AddEditDepartmentTaskDialogState
   }
 
   Future<void> _selectDate() async {
+    final now = DateTime.now();
+    // If we have an existing deadline that is in the past, allow selecting from that date
+    // otherwise restrict to today onwards
+    final firstDate = _deadline != null && _deadline!.isBefore(now)
+        ? _deadline!
+        : now;
+
     final picked = await showDatePicker(
       context: context,
-      initialDate: _deadline ?? DateTime.now(),
-      firstDate: DateTime.now(),
+      initialDate: _deadline ?? now,
+      firstDate: firstDate,
       lastDate: DateTime(2030),
     );
     if (picked != null) {
