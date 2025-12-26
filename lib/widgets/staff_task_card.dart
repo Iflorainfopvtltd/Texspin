@@ -46,7 +46,7 @@ class StaffTaskCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                _buildStatusBadge(task.status),
+                _buildStatusBadge(task),
               ],
             ),
             const SizedBox(height: 8),
@@ -128,9 +128,9 @@ class StaffTaskCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusBadge(String status) {
+  Widget _buildStatusBadge(DepartmentTask task) {
     Color color;
-    switch (status.toLowerCase()) {
+    switch (task.status.toLowerCase()) {
       case 'accepted':
       case 'completed':
         color = AppTheme.green500;
@@ -145,14 +145,14 @@ class StaffTaskCard extends StatelessWidget {
         color = AppTheme.blue500;
     }
 
-    return Container(
+    final badge = Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
-        status.toUpperCase(),
+        task.status.toUpperCase(),
         style: TextStyle(
           color: color,
           fontSize: 12,
@@ -160,6 +160,16 @@ class StaffTaskCard extends StatelessWidget {
         ),
       ),
     );
+
+    if (task.status.toLowerCase() == 'rejected') {
+      return Tooltip(
+        message: task.rejectionReason ?? 'No reason provided',
+        triggerMode: TooltipTriggerMode.tap,
+        child: badge,
+      );
+    }
+
+    return badge;
   }
 
   String _formatDate(String dateStr) {

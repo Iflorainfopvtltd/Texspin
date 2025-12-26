@@ -119,11 +119,8 @@ class StaffIndividualTaskDetailsDialog extends StatelessWidget {
       _buildInfoRowDetail('Created At', _formatDate(task.createdAt)),
       _buildInfoRowDetail('Updated At', _formatDate(task.updatedAt)),
       if (task.status.toLowerCase() == 'rejected' &&
-          task.toJson()['rejectionReason'] != null)
-        _buildInfoRowDetail(
-          'Rejection Reason',
-          task.toJson()['rejectionReason'],
-        ),
+          task.rejectionReason != null)
+        _buildInfoRowDetail('Rejection Reason', task.rejectionReason),
     ], isMobile);
   }
 

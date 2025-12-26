@@ -184,7 +184,7 @@ class _StaffIndividualTasksDialogState
                                     '${task.assignedStaff['firstName'] ?? ''} ${task.assignedStaff['lastName'] ?? ''}',
                                   ),
                                 ),
-                                DataCell(_buildStatusBadge(task.status)),
+                                DataCell(_buildStatusBadge(task)),
                                 DataCell(
                                   Row(
                                     mainAxisSize: MainAxisSize.min,
@@ -263,9 +263,9 @@ class _StaffIndividualTasksDialogState
     );
   }
 
-  Widget _buildStatusBadge(String status) {
+  Widget _buildStatusBadge(Task task) {
     Color color;
-    switch (status.toLowerCase()) {
+    switch (task.status.toLowerCase()) {
       case 'accepted':
       case 'approved':
       case 'completed':
@@ -284,14 +284,14 @@ class _StaffIndividualTasksDialogState
         color = AppTheme.blue500;
     }
 
-    return Container(
+    final badge = Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
-        status.toUpperCase(),
+        task.status.toUpperCase(),
         style: TextStyle(
           color: color,
           fontSize: 12,
@@ -299,6 +299,16 @@ class _StaffIndividualTasksDialogState
         ),
       ),
     );
+
+    if (task.status.toLowerCase() == 'rejected') {
+      return Tooltip(
+        message: task.rejectionReason ?? 'No reason provided',
+        triggerMode: TooltipTriggerMode.tap,
+        child: badge,
+      );
+    }
+
+    return badge;
   }
 
   String _formatDate(String dateStr) {

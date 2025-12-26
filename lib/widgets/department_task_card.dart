@@ -61,7 +61,7 @@ class DepartmentTaskCard extends StatelessWidget {
       if (task.downloadUrl != null && task.downloadUrl!.isNotEmpty) {
         fileUrl = task.downloadUrl;
         fileName = task.fileName ?? 'dept_task_file';
-      } 
+      }
       // Fallback to attachments (old structure)
       else if (task.attachments != null && task.attachments!.isNotEmpty) {
         final attachment = task.attachments!.first;
@@ -86,7 +86,9 @@ class DepartmentTaskCard extends StatelessWidget {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('Storage permission is required to download files'),
+                content: Text(
+                  'Storage permission is required to download files',
+                ),
                 backgroundColor: AppTheme.red500,
               ),
             );
@@ -121,16 +123,18 @@ class DepartmentTaskCard extends StatelessWidget {
 
       // Construct full URL using ApiService baseUrl
       final String fullUrl = ApiService.baseUrl + fileUrl;
-      
+
       // Download the file using our custom service
       final filePath = await FileDownloadService.downloadFile(
         url: fullUrl,
         fileName: fileName!,
         onProgress: (received, total) {
-          developer.log('Download progress: ${(received / total * 100).toStringAsFixed(1)}%');
+          developer.log(
+            'Download progress: ${(received / total * 100).toStringAsFixed(1)}%',
+          );
         },
       );
-      
+
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -146,7 +150,10 @@ class DepartmentTaskCard extends StatelessWidget {
                       Text('$fileName downloaded successfully'),
                       Text(
                         'Saved to: ${filePath.split('/').last}',
-                        style: const TextStyle(fontSize: 12, color: Colors.white70),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.white70,
+                        ),
                       ),
                     ],
                   ),
@@ -172,7 +179,9 @@ class DepartmentTaskCard extends StatelessWidget {
               children: [
                 const Icon(Icons.error, color: Colors.white),
                 const SizedBox(width: 8),
-                Expanded(child: Text('Error downloading file: ${e.toString()}')),
+                Expanded(
+                  child: Text('Error downloading file: ${e.toString()}'),
+                ),
               ],
             ),
             backgroundColor: AppTheme.red500,
@@ -210,7 +219,7 @@ class DepartmentTaskCard extends StatelessWidget {
 
   void _showRejectDialog(BuildContext context) {
     final TextEditingController reasonController = TextEditingController();
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -253,7 +262,11 @@ class DepartmentTaskCard extends StatelessWidget {
                 return;
               }
               Navigator.pop(context);
-              _reviewTask(context, 'rejected', rejectionReason: reasonController.text.trim());
+              _reviewTask(
+                context,
+                'rejected',
+                rejectionReason: reasonController.text.trim(),
+              );
             },
             variant: ButtonVariant.destructive,
             size: ButtonSize.sm,
@@ -266,20 +279,21 @@ class DepartmentTaskCard extends StatelessWidget {
   void _showReassignDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => ReassignTaskDialog(
-        task: task,
-        onReassigned: onRefresh,
-      ),
+      builder: (context) =>
+          ReassignTaskDialog(task: task, onReassigned: onRefresh),
     );
   }
 
   Future<void> _sendReminder(BuildContext context) async {
     try {
       final apiService = ApiService();
-      final response = await apiService.sendDepartmentTaskReminder(taskId: task.id);
-      
+      final response = await apiService.sendDepartmentTaskReminder(
+        taskId: task.id,
+      );
+
       if (context.mounted) {
-        final successMessage = response['message']?.toString() ?? 'Reminder sent successfully';
+        final successMessage =
+            response['message']?.toString() ?? 'Reminder sent successfully';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(
@@ -302,7 +316,9 @@ class DepartmentTaskCard extends StatelessWidget {
               children: [
                 const Icon(Icons.error, color: Colors.white),
                 const SizedBox(width: 8),
-                Expanded(child: Text('Error sending reminder: ${e.toString()}')),
+                Expanded(
+                  child: Text('Error sending reminder: ${e.toString()}'),
+                ),
               ],
             ),
             backgroundColor: AppTheme.red500,
@@ -312,7 +328,11 @@ class DepartmentTaskCard extends StatelessWidget {
     }
   }
 
-  Future<void> _reviewTask(BuildContext context, String status, {String? rejectionReason}) async {
+  Future<void> _reviewTask(
+    BuildContext context,
+    String status, {
+    String? rejectionReason,
+  }) async {
     try {
       final apiService = ApiService();
       final response = await apiService.reviewDepartmentTask(
@@ -327,11 +347,11 @@ class DepartmentTaskCard extends StatelessWidget {
         if (response['message'] != null) {
           successMessage = response['message'].toString();
         } else {
-          successMessage = status == 'completed' 
-              ? 'Task accepted successfully' 
+          successMessage = status == 'completed'
+              ? 'Task accepted successfully'
               : 'Task rejected successfully';
         }
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(
@@ -341,7 +361,9 @@ class DepartmentTaskCard extends StatelessWidget {
                 Expanded(child: Text(successMessage)),
               ],
             ),
-            backgroundColor: status == 'completed' ? AppTheme.green500 : AppTheme.red500,
+            backgroundColor: status == 'completed'
+                ? AppTheme.green500
+                : AppTheme.red500,
           ),
         );
         onRefresh?.call(); // Refresh the task list
@@ -367,7 +389,7 @@ class DepartmentTaskCard extends StatelessWidget {
 
   Widget _buildMobileActions(BuildContext context) {
     final status = task.status.toLowerCase();
-    
+
     if (status == 'submitted') {
       return Padding(
         padding: const EdgeInsets.only(top: 8),
@@ -540,8 +562,10 @@ class DepartmentTaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final assignedStaffName = '${task.assignedStaff['firstName'] ?? ''} ${task.assignedStaff['lastName'] ?? ''}'.trim();
-    
+    final assignedStaffName =
+        '${task.assignedStaff['firstName'] ?? ''} ${task.assignedStaff['lastName'] ?? ''}'
+            .trim();
+
     return Card(
       elevation: 2,
       margin: EdgeInsets.symmetric(
@@ -550,10 +574,7 @@ class DepartmentTaskCard extends StatelessWidget {
       ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: AppTheme.gray200,
-          width: 1,
-        ),
+        side: BorderSide(color: AppTheme.gray200, width: 1),
       ),
       child: Container(
         width: double.infinity,
@@ -565,11 +586,7 @@ class DepartmentTaskCard extends StatelessWidget {
             // Header Row
             Row(
               children: [
-                Icon(
-                  Icons.business,
-                  size: 16,
-                  color: AppTheme.primary,
-                ),
+                Icon(Icons.business, size: 16, color: AppTheme.primary),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -584,27 +601,54 @@ class DepartmentTaskCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _getStatusColor(task.status).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    task.status.toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: _getStatusColor(task.status),
-                    ),
-                  ),
-                ),
+                task.status.toLowerCase() == 'rejected'
+                    ? Tooltip(
+                        message: task.rejectionReason ?? 'No reason provided',
+                        triggerMode: TooltipTriggerMode.tap,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _getStatusColor(
+                              task.status,
+                            ).withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            task.status.toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: _getStatusColor(task.status),
+                            ),
+                          ),
+                        ),
+                      )
+                    : Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _getStatusColor(
+                            task.status,
+                          ).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          task.status.toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: _getStatusColor(task.status),
+                          ),
+                        ),
+                      ),
               ],
             ),
-            
+
             if (!isCompact) ...[
               const SizedBox(height: 8),
               Text(
@@ -618,25 +662,18 @@ class DepartmentTaskCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ],
-            
+
             const SizedBox(height: 12),
-            
+
             // Info Row
             Row(
               children: [
-                Icon(
-                  Icons.person_outline,
-                  size: 16,
-                  color: AppTheme.gray500,
-                ),
+                Icon(Icons.person_outline, size: 16, color: AppTheme.gray500),
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
                     assignedStaffName,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: AppTheme.gray700,
-                    ),
+                    style: TextStyle(fontSize: 13, color: AppTheme.gray700),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -649,18 +686,15 @@ class DepartmentTaskCard extends StatelessWidget {
                 const SizedBox(width: 4),
                 Text(
                   _formatDate(task.deadline),
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: AppTheme.gray700,
-                  ),
+                  style: TextStyle(fontSize: 13, color: AppTheme.gray700),
                 ),
               ],
             ),
-            
+
             if (showActions) ...[
               const SizedBox(height: 12),
               const Divider(height: 1),
-              
+
               // Actions Section with proper spacing
               _buildMobileActions(context),
             ],
@@ -675,11 +709,7 @@ class ReassignTaskDialog extends StatefulWidget {
   final DepartmentTask task;
   final VoidCallback? onReassigned;
 
-  const ReassignTaskDialog({
-    super.key,
-    required this.task,
-    this.onReassigned,
-  });
+  const ReassignTaskDialog({super.key, required this.task, this.onReassigned});
 
   @override
   State<ReassignTaskDialog> createState() => _ReassignTaskDialogState();
@@ -756,7 +786,9 @@ class _ReassignTaskDialogState extends State<ReassignTaskDialog> {
     setState(() => _isLoading = true);
 
     try {
-      final deadlineStr = _deadline!.toIso8601String().split('T')[0]; // Format as YYYY-MM-DD
+      final deadlineStr = _deadline!.toIso8601String().split(
+        'T',
+      )[0]; // Format as YYYY-MM-DD
 
       await _apiService.reassignDepartmentTask(
         taskId: widget.task.id,
@@ -817,7 +849,7 @@ class _ReassignTaskDialogState extends State<ReassignTaskDialog> {
               ],
             ),
             const SizedBox(height: 20),
-            
+
             // Staff Selection
             _isLoadingStaff
                 ? const Center(
@@ -847,7 +879,7 @@ class _ReassignTaskDialogState extends State<ReassignTaskDialog> {
                     enabled: !_isLoading,
                   ),
             const SizedBox(height: 16),
-            
+
             // Deadline Selection
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -900,7 +932,7 @@ class _ReassignTaskDialogState extends State<ReassignTaskDialog> {
               ],
             ),
             const SizedBox(height: 24),
-            
+
             // Action Buttons
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
