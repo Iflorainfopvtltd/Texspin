@@ -55,12 +55,9 @@ class SharedPreferencesManager {
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getString(_keyUserId);
     final password = prefs.getString(_keyPassword);
-    
+
     if (userId != null && password != null) {
-      return {
-        'userId': userId,
-        'password': password,
-      };
+      return {'userId': userId, 'password': password};
     }
     return null;
   }
@@ -126,9 +123,23 @@ class SharedPreferencesManager {
     }
     // Fallback to login data
     final loginData = await getLoginData();
-    if (loginData != null && loginData['staff'] != null) {
-      final staff = loginData['staff'] as Map<String, dynamic>;
-      return staff['id'] as String?;
+    if (loginData != null) {
+      // Check various keys where user data might be stored
+      Map<String, dynamic>? userData;
+      if (loginData['staff'] is Map) {
+        userData = loginData['staff'] as Map<String, dynamic>;
+      } else if (loginData['user'] is Map) {
+        userData = loginData['user'] as Map<String, dynamic>;
+      } else if (loginData['data'] is Map) {
+        userData = loginData['data'] as Map<String, dynamic>;
+      } else if (loginData.containsKey('_id') || loginData.containsKey('id')) {
+        // The loginData itself might be the user object
+        userData = loginData;
+      }
+
+      if (userData != null) {
+        return (userData['_id'] ?? userData['id']) as String?;
+      }
     }
     return null;
   }
@@ -167,4 +178,3 @@ class SharedPreferencesManager {
     return prefs.getString('fcm_token');
   }
 }
-

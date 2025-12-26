@@ -27,7 +27,7 @@ class AssignQuestionDialog extends StatefulWidget {
 class _AssignQuestionDialogState extends State<AssignQuestionDialog> {
   final ApiService _apiService = ApiService();
   final TextEditingController _deadlineController = TextEditingController();
-  
+
   List<Staff> _staff = [];
   String? _selectedStaffId;
   bool _isLoading = false;
@@ -82,13 +82,22 @@ class _AssignQuestionDialogState extends State<AssignQuestionDialog> {
   Future<void> _selectDate() async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: _selectedDeadline ?? DateTime.now().add(const Duration(days: 7)),
+      initialDate:
+          _selectedDeadline ?? DateTime.now().add(const Duration(days: 7)),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
     if (picked != null) {
       setState(() {
-        _selectedDeadline = picked;
+        // Set time to noon (12:00) to avoid timezone/date shifting issues when storing as UTC
+        _selectedDeadline = DateTime(
+          picked.year,
+          picked.month,
+          picked.day,
+          12,
+          0,
+          0,
+        );
         _deadlineController.text = picked.toString().split(' ')[0];
       });
     }
@@ -110,7 +119,7 @@ class _AssignQuestionDialogState extends State<AssignQuestionDialog> {
     try {
       final auditId = widget.audit['_id'] ?? widget.audit['id'];
       final questionId = widget.question['_id'] ?? widget.question['id'];
-      
+
       await _apiService.assignQuestionToStaff(
         auditId: auditId,
         questionId: questionId,
@@ -122,20 +131,27 @@ class _AssignQuestionDialogState extends State<AssignQuestionDialog> {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(widget.isReassign 
-                ? 'Question reassigned successfully!' 
-                : 'Question assigned successfully!'),
+            content: Text(
+              widget.isReassign
+                  ? 'Question reassigned successfully!'
+                  : 'Question assigned successfully!',
+            ),
             backgroundColor: AppTheme.green500,
           ),
         );
         widget.onAssignmentChanged();
       }
     } catch (e) {
-      developer.log('Error assigning question: $e', name: 'AssignQuestionDialog');
+      developer.log(
+        'Error assigning question: $e',
+        name: 'AssignQuestionDialog',
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error ${widget.isReassign ? 'reassigning' : 'assigning'} question: $e'),
+            content: Text(
+              'Error ${widget.isReassign ? 'reassigning' : 'assigning'} question: $e',
+            ),
             backgroundColor: AppTheme.red500,
           ),
         );
@@ -171,9 +187,7 @@ class _AssignQuestionDialogState extends State<AssignQuestionDialog> {
           children: [
             _buildHeader(isMobile),
             if (_isLoading)
-              const Expanded(
-                child: Center(child: CircularProgressIndicator()),
-              )
+              const Expanded(child: Center(child: CircularProgressIndicator()))
             else
               Expanded(child: _buildContent(isMobile)),
             _buildFooter(isMobile),
@@ -260,13 +274,14 @@ class _AssignQuestionDialogState extends State<AssignQuestionDialog> {
               });
             },
             getDisplayText: (staff) => staff.fullName,
-            getSubText: (staff) => '${staff.designation ?? ''} - ${staff.department ?? ''}',
+            getSubText: (staff) =>
+                '${staff.designation ?? ''} - ${staff.department ?? ''}',
             getId: (staff) => staff.id,
             hintText: 'Choose a staff member',
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Deadline Selection
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -298,16 +313,19 @@ class _AssignQuestionDialogState extends State<AssignQuestionDialog> {
                     borderRadius: BorderRadius.all(Radius.circular(6)),
                     borderSide: BorderSide(color: AppTheme.ring, width: 2),
                   ),
-                  suffixIcon: Icon(Icons.calendar_today, color: AppTheme.gray600),
+                  suffixIcon: Icon(
+                    Icons.calendar_today,
+                    color: AppTheme.gray600,
+                  ),
                 ),
                 readOnly: true,
                 onTap: _selectDate,
               ),
             ],
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Current Assignment Info (for reassign)
           if (widget.isReassign) ...[
             Container(
@@ -387,10 +405,13 @@ class _AssignQuestionDialogState extends State<AssignQuestionDialog> {
             size: isMobile ? ButtonSize.sm : ButtonSize.lg,
           ),
           CustomButton(
-            text: _isSubmitting 
-                ? (widget.isReassign ? 'Reassigning...' : 'Assigning...') 
+            text: _isSubmitting
+                ? (widget.isReassign ? 'Reassigning...' : 'Assigning...')
                 : (widget.isReassign ? 'Reassign' : 'Assign'),
-            onPressed: _isSubmitting || _selectedStaffId == null || _selectedDeadline == null
+            onPressed:
+                _isSubmitting ||
+                    _selectedStaffId == null ||
+                    _selectedDeadline == null
                 ? null
                 : _submitAssignment,
             size: isMobile ? ButtonSize.sm : ButtonSize.lg,

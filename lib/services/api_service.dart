@@ -2556,6 +2556,22 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> getStaffAuditMains({
+    required String staffId,
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      final response = await _dio.get(
+        '/texspin/api/audit-main/staff/$staffId',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
   Future<Map<String, dynamic>> closeAuditMain({
     required String id,
     String? bearerToken,

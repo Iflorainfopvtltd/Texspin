@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import '../models/audit_main.dart';
 import '../services/api_service.dart';
+import '../services/file_download_service.dart';
 import '../theme/app_theme.dart';
-import 'staff_audit_task_details_dialog.dart';
+import '../utils/shared_preferences_manager.dart';
+
 import 'staff_audit_task_submission_dialog.dart';
 import 'custom_text_input.dart';
+import 'dart:developer' as developer;
 
 class StaffAuditTasksDialog extends StatefulWidget {
   const StaffAuditTasksDialog({super.key});
@@ -18,6 +21,7 @@ class _StaffAuditTasksDialogState extends State<StaffAuditTasksDialog> {
   List<AuditMain> _tasks = [];
   bool _isLoading = true;
   String? _error;
+  String? _currentStaffId;
 
   @override
   void initState() {
@@ -32,10 +36,19 @@ class _StaffAuditTasksDialogState extends State<StaffAuditTasksDialog> {
     });
 
     try {
-      final response = await _apiService.getAuditMains();
+      final staffId = await SharedPreferencesManager.getStaffId();
+      if (staffId == null) {
+        throw Exception('Staff ID not found');
+      }
+
+      _currentStaffId = staffId;
+
+      final response = await _apiService.getStaffAuditMains(staffId: staffId);
       List<dynamic> list = [];
 
-      if (response.containsKey('auditMains')) {
+      if (response.containsKey('audits')) {
+        list = response['audits'] as List;
+      } else if (response.containsKey('auditMains')) {
         list = response['auditMains'] as List;
       } else if (response.containsKey('data')) {
         list = response['data'] as List;
@@ -82,6 +95,83 @@ class _StaffAuditTasksDialogState extends State<StaffAuditTasksDialog> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  Future<void> _downloadFile(String fileName, String label) async {
+    try {
+      // Check storage permission first
+      if (!await FileDownloadService.hasStoragePermission()) {
+        final granted = await FileDownloadService.requestStoragePermission();
+        if (!granted) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Storage permission is required to download files',
+                ),
+                backgroundColor: AppTheme.red500,
+              ),
+            );
+          }
+          return;
+        }
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Downloading $label...'),
+            duration: const Duration(seconds: 1),
+          ),
+        );
+      }
+
+      // Assuming files are served from /uploads/ path if they are relative filenames
+      // If the API returns full URLs, this logic needs adjustment.
+      // Based on typical behavior, we'll try prepending base url + /uploads/ or similar if it's just a filename.
+      // However, usually API key responses like "previousDoc" are just filenames.
+      // Let's assume a standard path for now or just append to base URL if it looks like a path.
+
+      String fileUrl = fileName;
+      if (!fileName.startsWith('http')) {
+        // If it's just a filename, assume it's under /texspin/api/uploads/ or similar?
+        // Actually, let's use the file upload logic as a hint or just standard static file serving.
+        // If we don't know the accurate path, we might fail.
+        // For now, let's try assuming it's a relative path from baseUrl.
+        fileUrl = '${ApiService.baseUrl}/$fileName';
+        // Note: You might need to adjust this path prefix based on backend static file serving config.
+      }
+
+      final filePath = await FileDownloadService.downloadFile(
+        url: fileUrl,
+        fileName: fileName.split('/').last,
+        onProgress: (received, total) {
+          // Optional: update progress UI
+        },
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('$label downloaded to $filePath'),
+            action: SnackBarAction(
+              label: 'Open',
+              onPressed: () => FileDownloadService.openFile(filePath),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      developer.log('Error downloading file: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error downloading $label: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -171,8 +261,7 @@ class _StaffAuditTasksDialogState extends State<StaffAuditTasksDialog> {
                           columns: const [
                             DataColumn(label: Text('Audit Name')),
                             DataColumn(label: Text('Scheduled Date')),
-                            DataColumn(label: Text('Auditor')),
-                            DataColumn(label: Text('Auditee')),
+                            DataColumn(label: Text('Assigned Questions')),
                             DataColumn(label: Text('Status')),
                             DataColumn(label: Text('Actions')),
                           ],
@@ -192,49 +281,43 @@ class _StaffAuditTasksDialogState extends State<StaffAuditTasksDialog> {
                                 ),
                                 DataCell(Text(_formatDate(task.date))),
                                 DataCell(
-                                  Text(
-                                    (task.texspinStaffMember != null &&
-                                            task.texspinStaffMember!.isNotEmpty)
-                                        ? '${task.texspinStaffMember!.first['firstName'] ?? ''} ${task.texspinStaffMember!.first['lastName'] ?? ''}'
-                                              .trim()
-                                        : 'N/A',
+                                  SizedBox(
+                                    width: 300,
+                                    child: _buildAssignedQuestions(task),
                                   ),
                                 ),
                                 DataCell(
-                                  Text(
-                                    (task.visitCompanyMemberName != null &&
-                                            task
-                                                .visitCompanyMemberName!
-                                                .isNotEmpty)
-                                        ? task
-                                                  .visitCompanyMemberName!
-                                                  .first['name'] ??
-                                              'N/A'
-                                        : 'N/A',
+                                  // Find the status of the first assigned question for this staff
+                                  Builder(
+                                    builder: (context) {
+                                      String status = task.status; // Default
+                                      if (task.auditQuestions != null &&
+                                          _currentStaffId != null) {
+                                        final assignedQ = task.auditQuestions!
+                                            .firstWhere(
+                                              (q) =>
+                                                  q['assignedTo'] ==
+                                                  _currentStaffId,
+                                              orElse: () => {},
+                                            );
+                                        if (assignedQ.isNotEmpty &&
+                                            assignedQ['status'] != null) {
+                                          status = assignedQ['status'];
+                                        }
+                                      }
+                                      return _buildStatusBadge(status);
+                                    },
                                   ),
                                 ),
-                                DataCell(_buildStatusBadge(task.status)),
                                 DataCell(
                                   Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.visibility,
-                                          color: AppTheme.blue600,
-                                        ),
-                                        tooltip: 'View Details',
-                                        onPressed: () {
-                                          showDialog(
-                                            context: context,
-                                            builder: (context) =>
-                                                StaffAuditTaskDetailsDialog(
-                                                  task: task,
-                                                ),
-                                          );
-                                        },
-                                      ),
-                                      if (isApproved || isRevision)
+                                      // Attachment Menu
+                                      _buildAttachmentMenu(task),
+
+                                      if (isApproved || isRevision) ...[
+                                        const SizedBox(width: 8),
                                         IconButton(
                                           icon: const Icon(
                                             Icons.upload,
@@ -254,6 +337,7 @@ class _StaffAuditTasksDialogState extends State<StaffAuditTasksDialog> {
                                             );
                                           },
                                         ),
+                                      ],
                                       if (isPending) ...[
                                         IconButton(
                                           icon: const Icon(
@@ -292,12 +376,101 @@ class _StaffAuditTasksDialogState extends State<StaffAuditTasksDialog> {
     );
   }
 
+  Widget _buildAssignedQuestions(AuditMain task) {
+    if (task.auditQuestions == null ||
+        task.auditQuestions!.isEmpty ||
+        _currentStaffId == null) {
+      return const Text('No questions assigned');
+    }
+
+    final assignedQuestions = task.auditQuestions!.where((q) {
+      return q['assignedTo'] == _currentStaffId;
+    }).toList();
+
+    if (assignedQuestions.isEmpty) {
+      return const Text('No questions assigned');
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: assignedQuestions.map((q) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('• ', style: TextStyle(fontWeight: FontWeight.bold)),
+              Expanded(child: Text(q['question'] ?? 'Unknown Question')),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildAttachmentMenu(AuditMain task) {
+    List<PopupMenuEntry<String>> menuItems = [];
+
+    // Helper to add menu item
+    void addMenuItem(String? file, String label, IconData icon) {
+      if (file != null && file.isNotEmpty) {
+        menuItems.add(
+          PopupMenuItem<String>(
+            value: file,
+            child: Row(
+              children: [
+                Icon(icon, color: AppTheme.primary, size: 20),
+                const SizedBox(width: 8),
+                Expanded(child: Text(label)),
+              ],
+            ),
+            onTap: () {
+              // We need to delay the async call slightly to allow menu to close
+              Future.delayed(
+                const Duration(milliseconds: 100),
+                () => _downloadFile(file, label),
+              );
+            },
+          ),
+        );
+      }
+    }
+
+    addMenuItem(task.previousDoc, 'Previous Doc', Icons.history);
+    addMenuItem(task.otherDoc, 'Other Doc', Icons.description);
+    addMenuItem(task.auditMethodology, 'Methodology', Icons.library_books);
+    addMenuItem(task.actionEvidence, 'Action Evidence', Icons.verified);
+
+    if (task.otherDocs != null && task.otherDocs!.isNotEmpty) {
+      for (int i = 0; i < task.otherDocs!.length; i++) {
+        addMenuItem(
+          task.otherDocs![i],
+          'Attachment ${i + 1}',
+          Icons.attach_file,
+        );
+      }
+    }
+
+    if (menuItems.isEmpty) {
+      // Return empty container if no attachments
+      return const SizedBox.shrink();
+    }
+
+    return PopupMenuButton<String>(
+      tooltip: 'View Attachments',
+      icon: const Icon(Icons.download_for_offline, color: AppTheme.primary),
+      itemBuilder: (BuildContext context) => menuItems,
+    );
+  }
+
   Widget _buildStatusBadge(String status) {
     Color color;
     switch (status.toLowerCase()) {
       case 'accepted':
       case 'approved':
       case 'completed':
+      case 'assigned': // Added logic for assigned
         color = AppTheme.green500;
         break;
       case 'rejected':

@@ -27,6 +27,7 @@ class AuditMain {
   final String? auditNumber;
   final String? companyName;
   final String? location;
+  final List<Map<String, dynamic>>? auditQuestions;
 
   AuditMain({
     required this.id,
@@ -50,6 +51,7 @@ class AuditMain {
     this.auditNumber,
     this.companyName,
     this.location,
+    this.auditQuestions,
   });
 
   factory AuditMain.fromJson(Map<String, dynamic> json) {
@@ -60,7 +62,6 @@ class AuditMain {
           json['auditStatus'] ??
           json['status'] ??
           'pending', // JSON uses 'auditStatus': 'open' but also has 'date' etc. Let's check status field. The JSON has "auditStatus": "open". It doesn't have a root "status". Wait.
-
       // The provided JSON has "auditStatus": "open".
       // Our previous code used "status". I should map "auditStatus" to "status" if "status" is missing.
       createdBy: json['createdBy'] is Map ? json['createdBy'] : null,
@@ -95,6 +96,9 @@ class AuditMain {
       auditNumber: json['auditNumber'],
       companyName: json['companyName'],
       location: json['location'],
+      auditQuestions: json['auditQuestions'] != null
+          ? List<Map<String, dynamic>>.from(json['auditQuestions'])
+          : null,
     );
   }
 

@@ -4,8 +4,8 @@ import '../services/api_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/staff_audit_task_card.dart';
 import '../widgets/custom_text_input.dart';
-import '../widgets/staff_audit_task_details_dialog.dart';
 import '../widgets/staff_audit_task_submission_dialog.dart';
+import '../utils/shared_preferences_manager.dart';
 
 class StaffAuditTasksScreen extends StatefulWidget {
   const StaffAuditTasksScreen({super.key});
@@ -19,6 +19,7 @@ class _StaffAuditTasksScreenState extends State<StaffAuditTasksScreen> {
   List<AuditMain> _tasks = [];
   bool _isLoading = true;
   String? _error;
+  String? _currentStaffId;
 
   @override
   void initState() {
@@ -33,10 +34,19 @@ class _StaffAuditTasksScreenState extends State<StaffAuditTasksScreen> {
     });
 
     try {
-      final response = await _apiService.getAuditMains();
+      final staffId = await SharedPreferencesManager.getStaffId();
+      if (staffId == null) {
+        throw Exception('Staff ID not found');
+      }
+
+      _currentStaffId = staffId;
+
+      final response = await _apiService.getStaffAuditMains(staffId: staffId);
       List<dynamic> list = [];
 
-      if (response.containsKey('auditMains')) {
+      if (response.containsKey('audits')) {
+        list = response['audits'] as List;
+      } else if (response.containsKey('auditMains')) {
         list = response['auditMains'] as List;
       } else if (response.containsKey('data')) {
         list = response['data'] as List;
@@ -156,15 +166,9 @@ class _StaffAuditTasksScreenState extends State<StaffAuditTasksScreen> {
                   final task = _tasks[index];
                   return StaffAuditTaskCard(
                     task: task,
+                    currentStaffId: _currentStaffId,
                     onAccept: () => _handleTaskResponse(task.id, 'approved'),
                     onReject: () => _showRejectDialog(task.id),
-                    onViewDetails: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) =>
-                            StaffAuditTaskDetailsDialog(task: task),
-                      );
-                    },
                     onSubmit: () {
                       showDialog(
                         context: context,
