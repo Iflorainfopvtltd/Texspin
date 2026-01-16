@@ -8,7 +8,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:Texspin/screens/create_project_screen.dart';
 import '../widgets/custom_button.dart';
+import '../widgets/custom_text_input.dart';
 
 class InquiryScreen extends StatefulWidget {
   final VoidCallback onCancel;
@@ -133,25 +135,15 @@ class _InquiryScreenState extends State<InquiryScreen> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.all(16),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: TextField(
-                        controller: _searchController,
-                        onChanged: (value) {
-                          setState(() {
-                            _searchQuery = value;
-                          });
-                        },
-                        decoration: const InputDecoration(
-                          hintText: 'Search by Staff or Customer...',
-                          border: InputBorder.none,
-                          suffixIcon: Icon(Icons.search),
-                        ),
-                      ),
+                    child: CustomTextInput(
+                      controller: _searchController,
+                      onChanged: (value) {
+                        setState(() {
+                          _searchQuery = value;
+                        });
+                      },
+                      hint: 'Search by Staff or Customer...',
+                      suffixIcon: const Icon(Icons.search),
                     ),
                   ),
                   Expanded(
@@ -674,55 +666,33 @@ class _InquiryCard extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: CustomButton(
-                      text: 'Preview',
-                      onPressed: () async {
-                        if (viewUrl.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("No file available")),
-                          );
-                          return;
-                        }
-                        final String directUrl = ApiService.baseUrl + viewUrl;
-                        final String googleViewerUrl =
-                            "https://docs.google.com/gview?embedded=true&url=${Uri.encodeComponent(directUrl)}";
-                        final Uri uri = Uri.parse(googleViewerUrl);
-                        try {
-                          bool launched = false;
-                          if (kIsWeb) {
-                            launched = await launchUrl(
-                              uri,
-                              mode: LaunchMode.platformDefault,
-                              webOnlyWindowName: '_blank',
-                            );
-                          } else {
-                            launched = await launchUrl(
-                              uri,
-                              mode: LaunchMode.externalApplication,
-                            );
-                            if (!launched) {
-                              launched = await launchUrl(
-                                uri,
-                                mode: LaunchMode.inAppWebView,
-                              );
-                            }
-                          }
-                          if (!launched) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Could not open file"),
-                              ),
-                            );
-                          }
-                        } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Error opening file")),
-                          );
-                        }
+                      text: 'Create Project',
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CreateProjectScreen(
+                              onSave: (project) {
+                                // Handle project creation success
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Project created successfully',
+                                    ),
+                                    backgroundColor: Colors.green,
+                                  ),
+                                );
+                              },
+                              onCancel: () => Navigator.pop(context),
+                            ),
+                          ),
+                        );
                       },
                       variant: ButtonVariant.ghost,
                       size: ButtonSize.lg,
                       icon: const Icon(
-                        Icons.document_scanner,
+                        Icons.add_task,
                         size: 18,
                         color: Colors.black54,
                       ),
@@ -754,61 +724,39 @@ class _InquiryCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: CustomButton(
-                      text: 'Preview',
-                      onPressed: () async {
-                        // Same onPressed as mobile (omitted for brevity)
-                        if (viewUrl.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("No file available")),
-                          );
-                          return;
-                        }
-                        final String directUrl = ApiService.baseUrl + viewUrl;
-                        final String googleViewerUrl =
-                            "https://docs.google.com/gview?embedded=true&url=${Uri.encodeComponent(directUrl)}";
-                        final Uri uri = Uri.parse(googleViewerUrl);
-                        try {
-                          bool launched = false;
-                          if (kIsWeb) {
-                            launched = await launchUrl(
-                              uri,
-                              mode: LaunchMode.platformDefault,
-                              webOnlyWindowName: '_blank',
-                            );
-                          } else {
-                            launched = await launchUrl(
-                              uri,
-                              mode: LaunchMode.externalApplication,
-                            );
-                            if (!launched) {
-                              launched = await launchUrl(
-                                uri,
-                                mode: LaunchMode.inAppWebView,
-                              );
-                            }
-                          }
-                          if (!launched) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Could not open file"),
-                              ),
-                            );
-                          }
-                        } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Error opening file")),
-                          );
-                        }
+                      text: 'Create Project',
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CreateProjectScreen(
+                              onSave: (project) {
+                                // Handle project creation success
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Project created successfully',
+                                    ),
+                                    backgroundColor: Colors.green,
+                                  ),
+                                );
+                              },
+                              onCancel: () => Navigator.pop(context),
+                            ),
+                          ),
+                        );
                       },
                       variant: ButtonVariant.ghost,
                       size: ButtonSize.lg,
                       icon: const Icon(
-                        Icons.document_scanner,
-                        size: 20,
+                        Icons.add_task,
+                        size: 18,
                         color: Colors.black54,
                       ),
                     ),
                   ),
+
                   const SizedBox(width: 12),
                   Expanded(
                     child: CustomButton(
