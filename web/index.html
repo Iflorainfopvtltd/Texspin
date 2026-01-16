@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base href="$FLUTTER_BASE_HREF">
+
+    <meta charset="UTF-8">
+    <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+    <meta name="description" content="A new Flutter project.">
+
+    <title>Texspin</title>
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- iOS meta tags & icons -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Texspin">
+    <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="favicon.png" />
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
+
+    <script>
+      // Updated Firebase configuration from firebase_options.dart
+      var firebaseConfig = {
+        apiKey: 'AIzaSyCoV9Ei5zpE2pD0PDtqa0HQKKj6WQiRZf8',
+        authDomain: 'texspin-22abe.firebaseapp.com',
+        projectId: 'texspin-22abe',
+        messagingSenderId: '873899912878',
+        storageBucket: 'texspin-22abe.firebasestorage.app',
+        appId: '1:873899912878:web:eb6afb0739f2ed73b4873f',
+        measurementId: 'G-34SN3GSVPS',
+      };
+      
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+    </script>
+    
+    <!-- Flutter loader script must come before main.dart.js -->
+    <script src="flutter.js" defer></script>
+    <script defer src="main.dart.js" type="application/javascript"></script>
+  </head>
+  <body>
+    <script>
+      window.addEventListener('load', function(ev) {
+        // Check if Flutter loader is available
+        if (typeof _flutter !== 'undefined') {
+          _flutter.loader.load({
+            onEntrypointLoaded: function(engineInitializer) {
+              engineInitializer.initializeEngine().then(function(appRunner) {
+                appRunner.runApp();
+              });
+            }
+          });
+        } else {
+          // Fallback if loader not available
+          console.error('Flutter loader not found');
+        }
+      });
+    </script>
+  </body>
+</html>
