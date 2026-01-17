@@ -872,6 +872,17 @@ class _AssignStaffDialogState extends State<AssignStaffDialog> {
     );
   }
 
+  int _getWeekNumber(DateTime date) {
+    // Algorithm to calculate ISO-8601 week number
+    final thurs = date.add(Duration(days: 4 - date.weekday));
+    final year = thurs.year;
+    final jan1 = DateTime(year, 1, 1);
+    final daysToNextThursday = (4 - jan1.weekday + 7) % 7;
+    final firstThursdayOfYear = jan1.add(Duration(days: daysToNextThursday));
+    final diff = thurs.difference(firstThursdayOfYear).inDays;
+    return 1 + (diff / 7).round();
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -1014,6 +1025,22 @@ class _AssignStaffDialogState extends State<AssignStaffDialog> {
                                       return;
                                     }
                                   }
+
+                                  // Auto-calculate weeks when moving from Step 2 (Date Range) to Step 3 (Weeks)
+                                  if (_currentStep == 2 &&
+                                      _startDate != null &&
+                                      _endDate != null) {
+                                    final startW = _getWeekNumber(_startDate!);
+                                    final endW = _getWeekNumber(_endDate!);
+                                    setState(() {
+                                      _startWeek = startW;
+                                      _endWeek = endW;
+                                      _startWeekController.text = startW
+                                          .toString();
+                                      _endWeekController.text = endW.toString();
+                                    });
+                                  }
+
                                   setState(() => _currentStep++);
                                 }
                               },
