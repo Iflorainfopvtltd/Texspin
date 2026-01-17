@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_button.dart';
+import '../widgets/custom_text_input.dart';
 import '../services/api_service.dart';
 import 'dart:developer' as developer;
 
@@ -442,32 +443,20 @@ class _AssignStaffDialogState extends State<AssignStaffDialog> {
       children: [
         Padding(
           padding: EdgeInsets.all(isMobile ? 16 : 24),
-          child: TextField(
+          child: CustomTextInput(
             controller: _searchController,
             onChanged: _filterStaff,
-            decoration: InputDecoration(
-              hintText: 'Search by name, email, or designation...',
-              prefixIcon: const Icon(Icons.search, color: AppTheme.gray500),
-              suffixIcon: _searchController.text.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear, size: 20),
-                      onPressed: () {
-                        _searchController.clear();
-                        _filterStaff('');
-                      },
-                    )
-                  : null,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: AppTheme.gray300),
-              ),
-              filled: true,
-              fillColor: AppTheme.gray50,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
-            ),
+            hint: 'Search by name, email, or designation...',
+            prefixIcon: const Icon(Icons.search, color: AppTheme.gray500),
+            suffixIcon: _searchController.text.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(Icons.clear, size: 20),
+                    onPressed: () {
+                      _searchController.clear();
+                      _filterStaff('');
+                    },
+                  )
+                : null,
           ),
         ),
         Expanded(
@@ -750,16 +739,8 @@ class _AssignStaffDialogState extends State<AssignStaffDialog> {
             ),
           ],
           const SizedBox(height: 24),
-          Text(
-            'Task Reminder (Days)',
-            style: TextStyle(
-              fontSize: isMobile ? 14 : 15,
-              fontWeight: FontWeight.w500,
-              color: AppTheme.gray900,
-            ),
-          ),
-          const SizedBox(height: 8),
-          TextField(
+          CustomTextInput(
+            label: 'Task Reminder (Days)',
             controller: _reminderController,
             keyboardType: TextInputType.number,
             onChanged: (value) {
@@ -767,19 +748,7 @@ class _AssignStaffDialogState extends State<AssignStaffDialog> {
                 _reminderDays = int.tryParse(value);
               });
             },
-            decoration: InputDecoration(
-              hintText: 'e.g. 4',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: AppTheme.gray300),
-              ),
-              filled: true,
-              fillColor: AppTheme.gray50,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
-            ),
+            hint: 'e.g. 4',
           ),
         ],
       ),
@@ -803,16 +772,8 @@ class _AssignStaffDialogState extends State<AssignStaffDialog> {
             ),
           ),
           const SizedBox(height: 24),
-          Text(
-            'Start Week',
-            style: TextStyle(
-              fontSize: isMobile ? 14 : 15,
-              fontWeight: FontWeight.w500,
-              color: AppTheme.gray900,
-            ),
-          ),
-          const SizedBox(height: 8),
-          TextField(
+          CustomTextInput(
+            label: 'Start Week',
             controller: _startWeekController,
             keyboardType: TextInputType.number,
             onChanged: (value) {
@@ -820,31 +781,11 @@ class _AssignStaffDialogState extends State<AssignStaffDialog> {
                 _startWeek = int.tryParse(value);
               });
             },
-            decoration: InputDecoration(
-              hintText: 'Enter start week (1-52)',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: AppTheme.gray300),
-              ),
-              filled: true,
-              fillColor: AppTheme.gray50,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
-            ),
+            hint: 'Enter start week (1-52)',
           ),
           const SizedBox(height: 24),
-          Text(
-            'End Week',
-            style: TextStyle(
-              fontSize: isMobile ? 14 : 15,
-              fontWeight: FontWeight.w500,
-              color: AppTheme.gray900,
-            ),
-          ),
-          const SizedBox(height: 8),
-          TextField(
+          CustomTextInput(
+            label: 'End Week',
             controller: _endWeekController,
             keyboardType: TextInputType.number,
             onChanged: (value) {
@@ -852,19 +793,7 @@ class _AssignStaffDialogState extends State<AssignStaffDialog> {
                 _endWeek = int.tryParse(value);
               });
             },
-            decoration: InputDecoration(
-              hintText: 'Enter end week (1-52)',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: AppTheme.gray300),
-              ),
-              filled: true,
-              fillColor: AppTheme.gray50,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
-            ),
+            hint: 'Enter end week (1-52)',
           ),
         ],
       ),

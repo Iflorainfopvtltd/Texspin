@@ -14,6 +14,7 @@ class CustomTextInput extends StatelessWidget {
   final int? maxLines;
   final String? Function(String?)? validator;
   final Widget? suffixIcon;
+  final Widget? prefixIcon;
   final TextInputAction? textInputAction;
   final FocusNode? focusNode;
   final bool isRequired;
@@ -32,6 +33,7 @@ class CustomTextInput extends StatelessWidget {
     this.maxLines = 1,
     this.validator,
     this.suffixIcon,
+    this.prefixIcon,
     this.textInputAction,
     this.focusNode,
     this.isRequired = false,
@@ -79,6 +81,7 @@ class CustomTextInput extends StatelessWidget {
             hintText: hint,
             hintStyle: const TextStyle(color: AppTheme.mutedForeground),
             errorText: errorText,
+            prefixIcon: prefixIcon,
             suffixIcon: suffixIcon,
             filled: true,
             fillColor: AppTheme.inputBackground,
