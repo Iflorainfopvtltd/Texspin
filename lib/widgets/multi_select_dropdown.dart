@@ -145,7 +145,7 @@ class _MultiSelectDropdownState<T> extends State<MultiSelectDropdown<T>> {
             if (widget.isRequired)
               const Text(
                 ' *',
-                style: TextStyle(color: Colors.red, fontSize: 16),
+                style: TextStyle(color: Color.fromARGB(255, 114, 112, 113)),
               ),
           ],
         ),

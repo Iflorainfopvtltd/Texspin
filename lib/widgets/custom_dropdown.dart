@@ -11,6 +11,7 @@ class CustomDropdownButtonFormField<T> extends StatelessWidget {
   final bool enabled;
   final String? Function(T?)? validator;
   final Widget? suffixIcon;
+  final bool isRequired;
 
   const CustomDropdownButtonFormField({
     super.key,
@@ -23,6 +24,7 @@ class CustomDropdownButtonFormField<T> extends StatelessWidget {
     this.enabled = true,
     this.validator,
     this.suffixIcon,
+    this.isRequired = false,
   });
 
   @override
@@ -31,12 +33,21 @@ class CustomDropdownButtonFormField<T> extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (label != null) ...[
-          Text(
-            label!,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: AppTheme.foreground,
+          RichText(
+            text: TextSpan(
+              text: label!,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: AppTheme.foreground,
+              ),
+              children: [
+                if (isRequired)
+                  const TextSpan(
+                    text: ' *',
+                    style: TextStyle(color: Color.fromARGB(255, 114, 112, 113)),
+                  ),
+              ],
             ),
           ),
           const SizedBox(height: 8),
@@ -46,10 +57,7 @@ class CustomDropdownButtonFormField<T> extends StatelessWidget {
           items: items,
           onChanged: enabled ? onChanged : null,
           validator: validator,
-          style: const TextStyle(
-            fontSize: 16,
-            color: AppTheme.foreground,
-          ),
+          style: const TextStyle(fontSize: 16, color: AppTheme.foreground),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: const TextStyle(color: AppTheme.mutedForeground),
@@ -75,13 +83,19 @@ class CustomDropdownButtonFormField<T> extends StatelessWidget {
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(6),
-              borderSide: const BorderSide(color: AppTheme.destructive, width: 3),
+              borderSide: const BorderSide(
+                color: AppTheme.destructive,
+                width: 3,
+              ),
             ),
             disabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(6),
               borderSide: const BorderSide(color: AppTheme.border),
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 10,
+            ),
           ),
           icon: const Icon(
             Icons.keyboard_arrow_down,
@@ -95,4 +109,3 @@ class CustomDropdownButtonFormField<T> extends StatelessWidget {
     );
   }
 }
-

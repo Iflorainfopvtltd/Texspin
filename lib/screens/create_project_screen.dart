@@ -625,11 +625,22 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Revision Date',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
+                    RichText(
+                      text: const TextSpan(
+                        text: 'Revision Date',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: AppTheme.foreground,
+                        ),
+                        children: [
+                          TextSpan(
+                            text: ' *',
+                            style: TextStyle(
+                              color: Color.fromARGB(255, 114, 112, 113),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -641,7 +652,10 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                         hintStyle: TextStyle(color: AppTheme.mutedForeground),
                         filled: true,
                         fillColor: AppTheme.inputBackground,
-                        suffixIcon: Icon(Icons.calendar_month),
+                        suffixIcon: Icon(
+                          Icons.calendar_month,
+                          color: AppTheme.gray500,
+                        ),
                         border: OutlineInputBorder(),
                       ),
                       readOnly: true,
@@ -660,7 +674,8 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
           ),
           const SizedBox(height: 16),
           CustomDropdownButtonFormField<String>(
-            label: 'Team Leader', // This field is REQUIRED (*)
+            label: 'Team Leader',
+            isRequired: true,
             hint: 'Select team leader',
 
             value: _teamLeader.isEmpty ? null : _teamLeader,
@@ -695,7 +710,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
           const SizedBox(height: 16),
           MultiSelectDropdown<Map<String, dynamic>>(
             label: 'Team Members',
-            isRequired: false,
+            isRequired: true,
             options: _teamMembers
                 .where((member) => member['designation'] != 'Team Leader')
                 .toList(),
@@ -745,11 +760,27 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                'Date of Issue',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
+                              RichText(
+                                text: const TextSpan(
+                                  text: 'Date of Issue',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                    color: AppTheme.foreground,
+                                  ),
+                                  children: [
+                                    TextSpan(
+                                      text: ' *',
+                                      style: TextStyle(
+                                        color: Color.fromARGB(
+                                          255,
+                                          114,
+                                          112,
+                                          113,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -760,7 +791,10 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                                   filled: true,
                                   fillColor: AppTheme.inputBackground,
                                   border: OutlineInputBorder(),
-                                  suffixIcon: Icon(Icons.calendar_month),
+                                  suffixIcon: Icon(
+                                    Icons.calendar_month,
+                                    color: AppTheme.gray500,
+                                  ),
                                 ),
                                 readOnly: true,
                                 onTap: () async {
@@ -804,11 +838,22 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Date of Issue',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
+                          RichText(
+                            text: const TextSpan(
+                              text: 'Date of Issue',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: AppTheme.foreground,
+                              ),
+                              children: [
+                                TextSpan(
+                                  text: ' *',
+                                  style: TextStyle(
+                                    color: Color.fromARGB(255, 114, 112, 113),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -819,6 +864,10 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                               filled: true,
                               fillColor: AppTheme.inputBackground,
                               border: OutlineInputBorder(),
+                              suffixIcon: Icon(
+                                Icons.calendar_month,
+                                color: AppTheme.gray500,
+                              ),
                             ),
                             readOnly: true,
                             onTap: () async {
