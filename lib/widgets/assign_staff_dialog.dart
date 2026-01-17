@@ -216,8 +216,6 @@ class _AssignStaffDialogState extends State<AssignStaffDialog> {
       case 2:
         return _startDate != null && _endDate != null;
       case 3:
-        return _startWeek != null && _endWeek != null;
-      case 4:
         return true;
       default:
         return false;
@@ -353,7 +351,7 @@ class _AssignStaffDialogState extends State<AssignStaffDialog> {
 
   Widget _buildStepIndicator(int screenWidth) {
     final isMobile = screenWidth < 600;
-    final steps = ['Select Staff', 'Date Range', 'Weeks', 'Review'];
+    final steps = ['Select Staff', 'Date Range', 'Review'];
 
     return Padding(
       padding: EdgeInsets.all(isMobile ? 16 : 24),
@@ -755,51 +753,6 @@ class _AssignStaffDialogState extends State<AssignStaffDialog> {
     );
   }
 
-  Widget _buildWeeksStep(int screenWidth) {
-    final isMobile = screenWidth < 600;
-
-    return Padding(
-      padding: EdgeInsets.all(isMobile ? 16 : 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Select Week Range',
-            style: TextStyle(
-              fontSize: isMobile ? 16 : 18,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.gray900,
-            ),
-          ),
-          const SizedBox(height: 24),
-          CustomTextInput(
-            label: 'Start Week',
-            controller: _startWeekController,
-            keyboardType: TextInputType.number,
-            onChanged: (value) {
-              setState(() {
-                _startWeek = int.tryParse(value);
-              });
-            },
-            hint: 'Enter start week (1-52)',
-          ),
-          const SizedBox(height: 24),
-          CustomTextInput(
-            label: 'End Week',
-            controller: _endWeekController,
-            keyboardType: TextInputType.number,
-            onChanged: (value) {
-              setState(() {
-                _endWeek = int.tryParse(value);
-              });
-            },
-            hint: 'Enter end week (1-52)',
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildReviewStep(int screenWidth) {
     final isMobile = screenWidth < 600;
 
@@ -961,8 +914,6 @@ class _AssignStaffDialogState extends State<AssignStaffDialog> {
                   ? _buildStaffSelectionStep(screenWidth.toInt())
                   : _currentStep == 2
                   ? _buildDateRangeStep(screenWidth.toInt())
-                  : _currentStep == 3
-                  ? _buildWeeksStep(screenWidth.toInt())
                   : _buildReviewStep(screenWidth.toInt()),
             ),
 
@@ -994,13 +945,13 @@ class _AssignStaffDialogState extends State<AssignStaffDialog> {
                         ),
                       const SizedBox(width: 12),
                       CustomButton(
-                        text: _currentStep == 4
+                        text: _currentStep == 3
                             ? (_isAssigning ? 'Assigning...' : 'Done')
                             : 'Next',
                         onPressed: _isAssigning || !_isStepValid()
                             ? null
                             : () {
-                                if (_currentStep == 4) {
+                                if (_currentStep == 3) {
                                   _assignStaff();
                                 } else {
                                   if (_currentStep == 2 &&
