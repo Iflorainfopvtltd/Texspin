@@ -284,6 +284,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
       _revisionNumberController.text.trim().isNotEmpty &&
       _revisionDateController.text.trim().isNotEmpty &&
       _teamLeader.isNotEmpty &&
+      _selectedMemberIds.isNotEmpty &&
       _planNumberController.text.trim().isNotEmpty &&
       _dateOfIssueController.text.trim().isNotEmpty &&
       _totalWeeks > 0 &&
@@ -618,6 +619,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                   isRequired: true,
                   hint: 'e.g., Rev 1.0',
                   controller: _revisionNumberController,
+                  onChanged: (_) => setState(() {}),
                 ),
               ),
               const SizedBox(width: 16),
