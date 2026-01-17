@@ -446,6 +446,23 @@ class ApiService {
     }
   }
 
+  // Get Single Project by ID
+  Future<Map<String, dynamic>> getProjectById(
+    String projectId, {
+    String? bearerToken,
+  }) async {
+    try {
+      final token = bearerToken ?? await _getToken();
+      final response = await _dio.get(
+        '/texspin/api/apqpproject/$projectId',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
   // Get Staff APQP Projects
   Future<Map<String, dynamic>> getStaffApqpProjects({
     required String staffId,

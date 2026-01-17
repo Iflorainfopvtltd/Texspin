@@ -70,6 +70,11 @@ class _AssignStaffDialogState extends State<AssignStaffDialog> {
   final TextEditingController _reminderController = TextEditingController();
   int? _reminderDays;
 
+  // Project Constraints
+  DateTime? _projectStartDate;
+  DateTime? _projectEndDate;
+  bool _isLoadingProject = true;
+
   @override
   void initState() {
     super.initState();
@@ -103,6 +108,38 @@ class _AssignStaffDialogState extends State<AssignStaffDialog> {
     }
 
     _fetchStaff();
+    _fetchProjectDetails();
+  }
+
+  Future<void> _fetchProjectDetails() async {
+    try {
+      final response = await _apiService.getProjectById(widget.projectId);
+      if (response['apqpProject'] != null) {
+        final project = response['apqpProject'];
+        final dateOfIssueStr = project['dateOfIssue'] as String?;
+        final totalWeeks = project['totalNumberOfWeeks'] as int? ?? 0;
+
+        if (dateOfIssueStr != null) {
+          final issueDate = DateTime.parse(dateOfIssueStr);
+          setState(() {
+            _projectStartDate = issueDate;
+            // Calculate max date based on total weeks (7 days per week)
+            _projectEndDate = issueDate.add(Duration(days: totalWeeks * 7));
+            _isLoadingProject = false;
+          });
+          developer.log(
+            'Project Dates: Start=$_projectStartDate, End=$_projectEndDate (Weeks: $totalWeeks)',
+            name: 'AssignStaffDialog',
+          );
+        }
+      }
+    } catch (e) {
+      developer.log(
+        'Error fetching project details: $e',
+        name: 'AssignStaffDialog',
+      );
+      setState(() => _isLoadingProject = false);
+    }
   }
 
   DateTime? _parseDate(String dateStr) {
@@ -190,19 +227,50 @@ class _AssignStaffDialogState extends State<AssignStaffDialog> {
   }
 
   Future<void> _selectDate(bool isStartDate) async {
+    // Determine bounds
+    final DateTime firstDate = isStartDate
+        ? (_projectStartDate ?? DateTime(2020))
+        : (_startDate ?? _projectStartDate ?? DateTime(2020));
+
+    final DateTime lastDate = _projectEndDate ?? DateTime(2030);
+
+    // If existing selection is invalid for new bounds, clear it?
+    // Or just let the picker handle it (picker usually crashes if initialDate is out of bounds)
+
+    DateTime initialDate = isStartDate
+        ? (_startDate ?? DateTime.now())
+        : (_endDate ?? DateTime.now());
+
+    // Ensure initialDate is within bounds
+    if (initialDate.isBefore(firstDate)) initialDate = firstDate;
+    if (initialDate.isAfter(lastDate)) initialDate = lastDate;
+
     final picked = await showDatePicker(
       context: context,
-      initialDate: isStartDate
-          ? (_startDate ?? DateTime.now())
-          : (_endDate ?? DateTime.now()),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
+      initialDate: initialDate,
+      firstDate: firstDate,
+      lastDate: lastDate,
     );
+
     if (picked != null) {
       setState(() {
         if (isStartDate) {
           _startDate = picked;
+          // If the new start date is after the existing end date, clear the end date
+          if (_endDate != null && _endDate!.isBefore(_startDate!)) {
+            _endDate = null;
+          }
         } else {
+          // Double check to ensure end date is valid relative to start date
+          if (_startDate != null && picked.isBefore(_startDate!)) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('End date cannot be before start date'),
+                backgroundColor: AppTheme.red500,
+              ),
+            );
+            return;
+          }
           _endDate = picked;
         }
       });
@@ -214,7 +282,13 @@ class _AssignStaffDialogState extends State<AssignStaffDialog> {
       case 1:
         return _selectedStaffId != null;
       case 2:
-        return _startDate != null && _endDate != null;
+        if (_startDate == null || _endDate == null) return false;
+        if (_projectStartDate != null &&
+            _startDate!.isBefore(_projectStartDate!))
+          return false;
+        if (_projectEndDate != null && _endDate!.isAfter(_projectEndDate!))
+          return false;
+        return true;
       case 3:
         return true;
       default:
