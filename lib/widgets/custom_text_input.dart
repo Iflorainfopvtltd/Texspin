@@ -16,6 +16,8 @@ class CustomTextInput extends StatelessWidget {
   final Widget? suffixIcon;
   final TextInputAction? textInputAction;
   final FocusNode? focusNode;
+  final bool isRequired;
+  final bool readOnly;
 
   const CustomTextInput({
     super.key,
@@ -32,6 +34,8 @@ class CustomTextInput extends StatelessWidget {
     this.suffixIcon,
     this.textInputAction,
     this.focusNode,
+    this.isRequired = false,
+    this.readOnly = false,
   });
 
   @override
@@ -40,12 +44,21 @@ class CustomTextInput extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (label != null) ...[
-          Text(
-            label!,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: AppTheme.foreground,
+          RichText(
+            text: TextSpan(
+              text: label!,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: AppTheme.foreground,
+              ),
+              children: [
+                if (isRequired)
+                  const TextSpan(
+                    text: ' *',
+                    style: TextStyle(color: Color.fromARGB(255, 114, 112, 113)),
+                  ),
+              ],
             ),
           ),
           const SizedBox(height: 8),
@@ -56,14 +69,12 @@ class CustomTextInput extends StatelessWidget {
           keyboardType: keyboardType,
           obscureText: obscureText,
           enabled: enabled,
+          readOnly: readOnly,
           maxLines: maxLines,
           validator: validator,
           textInputAction: textInputAction,
           focusNode: focusNode,
-          style: const TextStyle(
-            fontSize: 16,
-            color: AppTheme.foreground,
-          ),
+          style: const TextStyle(fontSize: 16, color: AppTheme.foreground),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: const TextStyle(color: AppTheme.mutedForeground),
@@ -89,17 +100,22 @@ class CustomTextInput extends StatelessWidget {
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(6),
-              borderSide: const BorderSide(color: AppTheme.destructive, width: 3),
+              borderSide: const BorderSide(
+                color: AppTheme.destructive,
+                width: 3,
+              ),
             ),
             disabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(6),
               borderSide: const BorderSide(color: AppTheme.border),
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 10,
+            ),
           ),
         ),
       ],
     );
   }
 }
-

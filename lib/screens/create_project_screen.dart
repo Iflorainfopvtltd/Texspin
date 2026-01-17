@@ -69,6 +69,69 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
     _fetchData();
   }
 
+  Future<void> _generatePlanNumber() async {
+    try {
+      final response = await _apiService.getProjects();
+
+      List<dynamic> projects = [];
+      if (response['apqpProjects'] != null) {
+        projects = response['apqpProjects'] as List;
+      } else if (response['projects'] != null) {
+        projects = response['projects'] as List;
+      } else if (response['data'] != null) {
+        projects = response is List
+            ? response as List<dynamic>
+            : List<dynamic>.from(response['data'] as List);
+      }
+
+      developer.log(
+        'Fetched ${projects.length} projects for plan number generation',
+        name: 'CreateProjectScreen',
+      );
+
+      int maxNumber = 0;
+      for (var project in projects) {
+        final planNumber = (project['planNumber'] as String? ?? '')
+            .toUpperCase();
+        if (planNumber.startsWith('PLN-')) {
+          final numberPart = planNumber.substring(4);
+          // Only consider valid integers
+          final number = int.tryParse(numberPart);
+          if (number != null && number > maxNumber) {
+            maxNumber = number;
+          }
+        }
+      }
+
+      // If found maxNumber is 0 (no projects) or random large numbers existed but we want to confirm sequence
+      // The logic is simply max + 1.
+      // If previous was PLN-1234 (random), next is PLN-1235.
+      // If user wants to reset to PLN-1, they must clear the DB or we'd need to ignore >1000?
+      // Assuming straightforward max+1 for safety.
+
+      if (mounted) {
+        setState(() {
+          _planNumberController.text = 'PLN-${maxNumber + 1}';
+        });
+        developer.log(
+          'Generated Plan Number: ${_planNumberController.text} (Max found: $maxNumber)',
+          name: 'CreateProjectScreen',
+        );
+      }
+    } catch (e) {
+      developer.log(
+        'Error generating plan number: $e',
+        name: 'CreateProjectScreen',
+      );
+      // Fallback to PLN-1 if fetch fails
+      if (mounted) {
+        setState(() {
+          _planNumberController.text = 'PLN-1';
+        });
+      }
+    }
+  }
+
   Future<void> _fetchData() async {
     setState(() => _isLoading = true);
     try {
@@ -159,12 +222,10 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
               .where((t) => t.status == 'active') // Only show active templates
               .toList();
         });
-      } else {
-        developer.log(
-          'No templates found in response. Response keys: ${templatesResponse.keys}',
-          name: 'CreateProjectScreen',
-        );
       }
+
+      // Generate Plan Number
+      await _generatePlanNumber();
     } catch (e) {
       developer.log('Error fetching data: $e', name: 'CreateProjectScreen');
       if (mounted) {
@@ -220,7 +281,6 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
       _customerNameController.text.trim().isNotEmpty &&
       _locationController.text.trim().isNotEmpty &&
       _partNameController.text.trim().isNotEmpty &&
-      _partNumberController.text.trim().isNotEmpty &&
       _revisionNumberController.text.trim().isNotEmpty &&
       _revisionDateController.text.trim().isNotEmpty &&
       _teamLeader.isNotEmpty &&
@@ -504,7 +564,8 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
               Expanded(
                 // This field is REQUIRED (*)
                 child: CustomTextInput(
-                  label: 'Customer Name *',
+                  label: 'Customer Name',
+                  isRequired: true,
                   hint: 'Enter customer name',
                   controller: _customerNameController,
                   onChanged: (_) => setState(() {}),
@@ -513,7 +574,8 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
               const SizedBox(width: 16),
               Expanded(
                 child: CustomTextInput(
-                  label: 'Customer Zone *',
+                  label: 'Customer Zone',
+                  isRequired: true,
                   hint: 'Enter customer zone',
                   controller: _locationController,
                   onChanged: (_) => setState(() {}),
@@ -527,7 +589,8 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
               Expanded(
                 // This field is REQUIRED (*)
                 child: CustomTextInput(
-                  label: 'Part Name *',
+                  label: 'Part Name',
+                  isRequired: true,
                   hint: 'e.g., Bearing',
                   controller: _partNameController,
                   onChanged: (_) => setState(() {}),
@@ -537,7 +600,8 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
               Expanded(
                 // This field is REQUIRED (*)
                 child: CustomTextInput(
-                  label: 'Part Number *',
+                  label: 'Part Number',
+                  isRequired: false,
                   hint: 'Enter part number',
                   controller: _partNumberController,
                   onChanged: (_) => setState(() {}),
@@ -550,7 +614,8 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
             children: [
               Expanded(
                 child: CustomTextInput(
-                  label: 'Revision Number *',
+                  label: 'Revision Number',
+                  isRequired: true,
                   hint: 'e.g., Rev 1.0',
                   controller: _revisionNumberController,
                 ),
@@ -561,7 +626,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Revision Date *',
+                      'Revision Date',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
@@ -576,6 +641,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                         hintStyle: TextStyle(color: AppTheme.mutedForeground),
                         filled: true,
                         fillColor: AppTheme.inputBackground,
+                        suffixIcon: Icon(Icons.calendar_month),
                         border: OutlineInputBorder(),
                       ),
                       readOnly: true,
@@ -594,8 +660,9 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
           ),
           const SizedBox(height: 16),
           CustomDropdownButtonFormField<String>(
-            label: 'Team Leader *', // This field is REQUIRED (*)
+            label: 'Team Leader', // This field is REQUIRED (*)
             hint: 'Select team leader',
+
             value: _teamLeader.isEmpty ? null : _teamLeader,
             items: _teamLeaders.map((leader) {
               final fullName = leader['fullName'] as String? ?? '';
@@ -666,7 +733,9 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                       children: [
                         Expanded(
                           child: CustomTextInput(
-                            label: 'Plan Number *',
+                            isRequired: true,
+                            readOnly: true,
+                            label: 'Plan Number',
                             hint: 'Enter plan number',
                             controller: _planNumberController,
                           ),
@@ -677,7 +746,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const Text(
-                                'Date of Issue *',
+                                'Date of Issue',
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w500,
@@ -691,6 +760,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                                   filled: true,
                                   fillColor: AppTheme.inputBackground,
                                   border: OutlineInputBorder(),
+                                  suffixIcon: Icon(Icons.calendar_month),
                                 ),
                                 readOnly: true,
                                 onTap: () async {
@@ -708,8 +778,9 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                     ),
                     const SizedBox(height: 16),
                     CustomTextInput(
-                      label: 'Project Duration (Weeks) *',
+                      label: 'Project Duration (Weeks)',
                       hint: 'Enter duration in weeks',
+                      isRequired: true,
                       controller: _totalWeeksController,
                       keyboardType: TextInputType.number,
                       onChanged: (_) => setState(() {}),
@@ -721,7 +792,9 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                   children: [
                     Expanded(
                       child: CustomTextInput(
-                        label: 'Plan Number *',
+                        label: 'Plan Number',
+                        isRequired: true,
+                        readOnly: true,
                         hint: 'Enter plan number',
                         controller: _planNumberController,
                       ),
@@ -732,7 +805,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'Date of Issue *',
+                            'Date of Issue',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
@@ -762,7 +835,8 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                     const SizedBox(width: 16),
                     Expanded(
                       child: CustomTextInput(
-                        label: 'Project Duration (Weeks) *',
+                        label: 'Project Duration (Weeks)',
+                        isRequired: true,
                         hint: 'Enter duration in weeks',
                         controller: _totalWeeksController,
                         keyboardType: TextInputType.number,
@@ -792,7 +866,8 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                       children: [
                         Expanded(
                           child: CustomTextInput(
-                            label: 'Project Volume Per Year *',
+                            label: 'Project Volume Per Year',
+                            isRequired: true,
                             hint: 'Enter volume per year',
                             controller: _projectVolumePerYearController,
                             keyboardType: TextInputType.number,
@@ -802,7 +877,8 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                         const SizedBox(width: 16),
                         Expanded(
                           child: CustomTextInput(
-                            label: 'Value Per Part *',
+                            label: 'Value Per Part',
+                            isRequired: true,
                             hint: 'Enter value per part',
                             controller: _valuePerPartController,
                             keyboardType: const TextInputType.numberWithOptions(
@@ -815,7 +891,8 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                     ),
                     const SizedBox(height: 16),
                     CustomTextInput(
-                      label: 'Project Value Per Annum *',
+                      label: 'Project Value Per Annum',
+                      isRequired: true,
                       hint: 'Auto-calculated',
                       controller: _projectValuePerAnnumController,
                       keyboardType: const TextInputType.numberWithOptions(
@@ -830,7 +907,8 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                   children: [
                     Expanded(
                       child: CustomTextInput(
-                        label: 'Project Volume Per Year *',
+                        label: 'Project Volume Per Year',
+                        isRequired: true,
                         hint: 'Enter volume per year',
                         controller: _projectVolumePerYearController,
                         keyboardType: TextInputType.number,
@@ -840,7 +918,8 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                     const SizedBox(width: 16),
                     Expanded(
                       child: CustomTextInput(
-                        label: 'Value Per Part *',
+                        label: 'Value Per Part',
+                        isRequired: true,
                         hint: 'Enter value per part',
                         controller: _valuePerPartController,
                         keyboardType: const TextInputType.numberWithOptions(
@@ -852,7 +931,8 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                     const SizedBox(width: 16),
                     Expanded(
                       child: CustomTextInput(
-                        label: 'Project Value Per Annum *',
+                        label: 'Project Value Per Annum',
+                        isRequired: true,
                         hint: 'Auto-calculated',
                         controller: _projectValuePerAnnumController,
                         keyboardType: const TextInputType.numberWithOptions(
