@@ -311,11 +311,13 @@ class _AssignStaffDialogState extends State<AssignStaffDialog> {
       }
 
       if (mounted) {
-        Navigator.of(context).pop();
+        Navigator.of(context).pop(); // Close the dialog
+
+        widget.onAssigned(); // Refresh the data in parent
 
         final message = isCurrentlyUnassigned
-            ? 'Staff assigned successfully! Returning to dashboard...'
-            : 'Staff reassigned successfully! Returning to dashboard...';
+            ? 'Staff assigned successfully!'
+            : 'Staff reassigned successfully!';
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -324,15 +326,6 @@ class _AssignStaffDialogState extends State<AssignStaffDialog> {
             duration: const Duration(seconds: 2),
           ),
         );
-
-        Future.delayed(const Duration(milliseconds: 100), () {
-          if (mounted) {
-            widget.onAssigned();
-            if (widget.onNavigateBack != null) {
-              widget.onNavigateBack!();
-            }
-          }
-        });
       }
     } catch (e) {
       developer.log('Error assigning staff: $e', name: 'AssignStaffDialog');
